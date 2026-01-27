@@ -463,7 +463,7 @@ export default function Leave() {
                                         {leaveDetailModal?.reason || "No reason provided"}
                                     </p>
                                 </div>
-                                {leaveDetails?.actionBy?.username &&
+                                {leaveDetails?.status != "Pending" &&
                                     <div className="grid grid-cols-2 gap-3">
                                         <p>
                                             <span className="font-medium">Actioned By:</span>{" "}
@@ -614,7 +614,7 @@ export default function Leave() {
                                         {leaveDetails?.reason || "No reason provided"}
                                     </p>
                                 </div>
-                                {leaveDetails?.actionBy?.username &&
+                                {leaveDetails?.status != "Pending" &&
                                     <div className="grid grid-cols-2 gap-3">
                                         <p>
                                             <span className="font-medium">Actioned By:</span>{" "}
