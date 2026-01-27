@@ -159,7 +159,7 @@ export default function MyProfile() {
                                         className="input"
                                     />
                                 ) : (
-                                    <p className="value">{userData?.dob.toString().split("T")[0] || "-"}</p>
+                                    <p className="value">{userData?.dob?.toString()?.split("T")[0] || "-"}</p>
                                 )}
                             </div>
 

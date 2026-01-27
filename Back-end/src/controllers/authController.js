@@ -83,13 +83,13 @@ export const getAllUsers = async (req, res) => {
 
 //Add new user
 export const addNewUser = async (req, res) => {
-  const { username, email, password, role, contact } = req.body;
+  const { username, email, password, role, contact, designation } = req.body;
   try {
     const existingUser = await User.findOne({ email });
     if (existingUser) return res.status(400).json({ message: 'User Mail already exists' });
 
     const hashedPassword = await bcrypt.hash(password, 12);
-    const user = new User({ username, email, password: hashedPassword, role, contact });
+    const user = new User({ username, email, password: hashedPassword, role, contact, designation });
     await user.save();
 
     // const token = jwt.sign({ id: user._id, role: user.role }, JWT_SECRET, { expiresIn: '1d' });

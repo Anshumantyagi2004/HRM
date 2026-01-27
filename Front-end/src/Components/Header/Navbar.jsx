@@ -34,6 +34,7 @@ export default function Navbar() {
     setUserOpen(false);
     localStorage.removeItem("token");
     localStorage.removeItem("userId");
+    localStorage.removeItem("userRole");
     navigate("/login");
   };
 
@@ -60,6 +61,8 @@ export default function Navbar() {
 
   const [formData, setFormData] = useState({
     username: "",
+    designation: "",
+    role: "",
     email: "",
     contact: "",
     password: "",
@@ -74,7 +77,7 @@ export default function Navbar() {
   };
 
   const handleSubmit = async (e) => {
-    if (formData?.username == "" && formData?.password == "" && formData?.email == "" && formData?.contact == "") return toast.error('Enter User Credentials First!');
+    if (formData?.username == "" || formData?.password == "" || formData?.role == "" || formData?.designation == "" || formData?.email == "" || formData?.contact == "") return toast.error('Enter User Credentials First!');
     const response = await fetch(BaseUrl + "newUser", {
       method: "POST",
       headers: {
@@ -210,7 +213,7 @@ export default function Navbar() {
         }`}
     />
 
-    {userData?.role == "admin" && <>
+    {userData?.role == "Admin" && <>
       <div className="fixed bottom-6 right-6 z-50">
         <button className="flex items-center justify-center h-14 w-14 rounded-full bg-indigo-600 text-white
              shadow-lg hover:bg-indigo-700 hover:shadow-xl active:scale-95 transition duration-200"
@@ -232,6 +235,24 @@ export default function Navbar() {
               onChange={handleChange}
               className="w-full mb-3 p-2 border rounded"
             />
+
+            <select value={formData?.designation} onChange={handleChange} name="designation"
+              className="w-full mb-3 p-2 border rounded">
+              <option value="">Designation</option>
+              <option value="Web Developer">Web Developer</option>
+              <option value="SEO">SEO</option>
+              <option value="Social Media">Social Media</option>
+              <option value="ADS Manger">ADS Manger</option>
+              <option value="Marketing">Marketing</option>
+            </select>
+
+            <select value={formData?.role} onChange={handleChange} name="role"
+              className="w-full mb-3 p-2 border rounded">
+              <option value="">Role</option>
+              <option value="Admin">Admin</option>
+              <option value="Sub Admin">Sub Admin</option>
+              <option value="Employee">Employee</option>
+            </select>
 
             <input
               type="email"

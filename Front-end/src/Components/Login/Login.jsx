@@ -32,6 +32,7 @@ function Login() {
     if (response.ok) {
       localStorage.setItem("token", data.token);
       localStorage.setItem("userId", data?.result?._id);
+      localStorage.setItem("userRole", data?.result?.role);
       toast.success('Login Sucessfully!')
       navigate("/");
     } else {

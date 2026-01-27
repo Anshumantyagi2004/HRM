@@ -1,15 +1,16 @@
-import { Eye, Search, X, Mail, Phone, User } from "lucide-react";
+import { Eye, Search, Mail, Phone, User, Handbag, Calendar, Transgender, MapPinHouse } from "lucide-react";
 import { useEffect, useState } from "react";
 import { BaseUrl } from "../../BaseApi/Api";
+import Modal from "../../Components/Modal/Modal";
 
 export default function Employees() {
- const [allUsers,setAllUsers]=useState([])
-  
+  const [allUsers, setAllUsers] = useState([])
+
   useEffect(() => {
     async function fetchMyProfile() {
       try {
         // const token = localStorage.getItem("token");
-        const res = await fetch(BaseUrl + "users" , {
+        const res = await fetch(BaseUrl + "users", {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -55,7 +56,7 @@ export default function Employees() {
             <thead>
               <tr className="bg-indigo-600 text-white text-left">
                 <th className="px-4 py-3">Name</th>
-                <th className="px-4 py-3">Role</th>
+                <th className="px-4 py-3">Designation</th>
                 <th className="px-4 py-3">Email</th>
                 <th className="px-4 py-3">Contact</th>
                 <th className="px-4 py-3 text-center">Action</th>
@@ -66,7 +67,7 @@ export default function Employees() {
               {allUsers.map((emp, idx) => (
                 <tr key={idx} className="border-b hover:bg-gray-50">
                   <td className="px-4 py-3 font-medium">{emp?.username}</td>
-                  <td className="px-4 py-3">{emp?.role}</td>
+                  <td className="px-4 py-3">{emp?.designation || "-"}</td>
                   <td className="px-4 py-3">{emp?.email}</td>
                   <td className="px-4 py-3">{emp?.contact}</td>
                   <td className="px-4 py-3 text-center">
@@ -85,56 +86,117 @@ export default function Employees() {
         </div>
       </div>
 
-      {/* ================= MODAL ================= */}
-      {open && selectedEmp && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/50" onClick={() => setOpen(false)} />
-          <div className="relative z-50 w-full max-w-md bg-white rounded-xl shadow-2xl animate-scaleIn">
-            <div className="flex justify-between items-center px-5 py-4 border-b">
-              <h2 className="text-lg font-semibold">Employee Details</h2>
-              <button onClick={() => setOpen(false)}>
-                <X className="text-gray-400 hover:text-gray-600" />
-              </button>
-            </div>
+      <Modal open={open} onClose={() => setOpen(false)}>
+        <Modal.Header title="Employee Details" />
 
-            <div className="p-5 space-y-4 text-sm text-gray-700">
-              <p className="flex items-center gap-2">
-                <User size={16} /> <span className="font-medium">Name:</span> {selectedEmp.username}
-              </p>
-              <p className="flex items-center gap-2">
-                <Mail size={16} /> <span className="font-medium">Email:</span> {selectedEmp.email}
-              </p>
-              <p className="flex items-center gap-2">
-                <Phone size={16} /> <span className="font-medium">Contact:</span> {selectedEmp.contact}
-              </p>
-              <p className="flex items-center gap-2">
-                <span className="font-medium">Role:</span> {selectedEmp.role}
-              </p>
-            </div>
+        <Modal.Body>
+          {selectedEmp &&
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-4 text-sm">
+              <div className="flex items-start gap-3">
+                <User size={18} className="text-indigo-500 mt-0.5" />
+                <div>
+                  <p className="text-gray-500">Name</p>
+                  <p className="font-medium text-gray-800">
+                    {selectedEmp?.username || "-"}
+                  </p>
+                </div>
+              </div>
 
-            <div className="flex justify-end px-5 py-4 border-t">
-              <button
-                onClick={() => setOpen(false)}
-                className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
-              >
-                Close
-              </button>
-            </div>
+              <div className="flex items-start gap-3">
+                <Calendar size={18} className="text-indigo-500 mt-0.5" />
+                <div>
+                  <p className="text-gray-500">Date of Birth</p>
+                  <p className="font-medium text-gray-800">
+                    {selectedEmp?.dob ? <>
+                      {new Date(selectedEmp?.dob)?.toISOString()?.split("T")[0]}</> : "-"}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <Mail size={18} className="text-indigo-500 mt-0.5" />
+                <div>
+                  <p className="text-gray-500">Personal Email</p>
+                  <p className="font-medium text-gray-800 break-all">
+                    {selectedEmp?.email || "-"}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <Mail size={18} className="text-indigo-500 mt-0.5" />
+                <div>
+                  <p className="text-gray-500">Company Email</p>
+                  <p className="font-medium text-gray-800 break-all">
+                    {selectedEmp?.officialEmail || "-"}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <Phone size={18} className="text-indigo-500 mt-0.5" />
+                <div>
+                  <p className="text-gray-500">Contact Number</p>
+                  <p className="font-medium text-gray-800">
+                    {selectedEmp?.contact || "-"}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <Phone size={18} className="text-indigo-500 mt-0.5" />
+                <div>
+                  <p className="text-gray-500">Alternate Contact</p>
+                  <p className="font-medium text-gray-800">
+                    {selectedEmp?.altContact || "-"}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <Handbag size={18} className="text-indigo-500 mt-0.5" />
+                <div>
+                  <p className="text-gray-500">Designation</p>
+                  <p className="font-medium text-gray-800">
+                    {selectedEmp?.designation || "-"}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <Transgender size={18} className="text-indigo-500 mt-0.5" />
+                <div>
+                  <p className="text-gray-500">Gender</p>
+                  <p className="font-medium text-gray-800">
+                    {selectedEmp?.gender || "-"}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <MapPinHouse size={18} className="text-indigo-500 mt-0.5" />
+                <div>
+                  <p className="text-gray-500">Current Address</p>
+                  <p className="font-medium text-gray-800">
+                    {selectedEmp?.address || "-"}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <MapPinHouse size={18} className="text-indigo-500 mt-0.5" />
+                <div>
+                  <p className="text-gray-500">Permanent Address</p>
+                  <p className="font-medium text-gray-800">
+                    {selectedEmp?.permanentAddress || "-"}
+                  </p>
+                </div>
+              </div>
+            </div>}
+        </Modal.Body>
+        <Modal.Footer>
+          <div className="flex justify-end w-full">
+            <button
+              onClick={() => setOpen(false)}
+              className="px-4 py-2 border rounded-lg text-gray-700 hover:bg-gray-100"
+            >
+              Close
+            </button>
           </div>
-        </div>
-      )}
-
-      <style>
-        {`
-          @keyframes scaleIn {
-            from { opacity: 0; transform: scale(0.9); }
-            to { opacity: 1; transform: scale(1); }
-          }
-          .animate-scaleIn {
-            animation: scaleIn 0.25s ease-out;
-          }
-        `}
-      </style>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 }
