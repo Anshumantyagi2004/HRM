@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import Leave from "../models/Leave.js";
+import { getUserSocketId } from "../socket/socket.js";
 
 export const applyLeave = async (req, res) => {
     try {
@@ -36,8 +37,8 @@ export const applyLeave = async (req, res) => {
 export const getAllLeave = async (req, res) => {
     try {
         const leave = await Leave.find()
-            .populate("user", "username email designation")
-            .populate("actionBy", "username email designation")
+            .populate("user", "username email designation profileImage")
+            .populate("actionBy", "username email designation profileImage")
             .sort({ createdAt: -1 });
 
         res.status(200).json(leave);
@@ -73,7 +74,7 @@ export const getLeaveByUser = async (req, res) => {
 //leave status update
 export const updateLeaveStatus = async (req, res) => {
     try {
-        const { status, actionBy, actionDate } = req.body;
+        const { status, actionBy } = req.body;
         const { id } = req.params;
 
         const leave = await Leave.findByIdAndUpdate(
@@ -81,10 +82,25 @@ export const updateLeaveStatus = async (req, res) => {
             {
                 status,
                 actionBy,
-                actionDate,
+                actionDate: new Date(),
             },
             { new: true }
-        );
+        ).populate("user"); // IMPORTANT
+
+        // 🔔 SOCKET NOTIFICATION
+        const employeeId = leave.user._id?.toString();
+        const socketId = getUserSocketId(employeeId);
+
+        if (socketId) {
+            req.io.to(socketId).emit("leave-status", {
+                status: leave.status,
+                leaveId: leave._id,
+            });
+
+            console.log("Leave status sent via socket to:", employeeId);
+        } else {
+            console.log("Employee not connected to socket");
+        }
 
         res.status(200).json({
             message: `Leave ${status} successfully`,
@@ -95,6 +111,7 @@ export const updateLeaveStatus = async (req, res) => {
         res.status(500).json({ message: "Failed to update leave" });
     }
 };
+
 
 //pending leave edit by user
 export const updateUserLeave = async (req, res) => {

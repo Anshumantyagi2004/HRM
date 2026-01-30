@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import Modal from "../../Components/Modal/Modal";
 import { BaseUrl } from "../../BaseApi/Api";
 import toast from "react-hot-toast";
+import { Link } from "react-router-dom";
 
 export default function Leave() {
     const [open, setOpen] = useState(false);
@@ -530,7 +531,17 @@ export default function Leave() {
                                 const totalDays = Math.floor((end - start) / (1000 * 60 * 60 * 24)) + 1;
                                 return (
                                     <tr key={idx} className="border-b hover:bg-gray-50">
-                                        <td className="px-4 py-3 font-medium">{emp?.user?.username}</td>
+                                        <td className="px-4 py-3 font-medium">
+                                            {/* {emp?.user?.username} */}
+                                            <Link to={`/userProfile/${emp?.user?._id}`} className="flex items-center justify-start">
+                                                {emp?.user?.profileImage ?
+                                                    <img src={emp?.user?.profileImage} alt={emp?.user?.username.slice(0, 1).toUpperCase()} className="w-8 h-8 rounded-full mr-2" />
+                                                    : <div className="w-8 h-8 rounded-full bg-indigo-500 text-white flex items-center justify-center mr-2">
+                                                        {emp?.user?.username.slice(0, 1).toUpperCase()}
+                                                    </div>}
+                                                {emp?.user?.username}
+                                            </Link>
+                                        </td>
                                         <td className="px-4 py-3">{emp?.user?.designation || "-"}</td>
                                         <td className="px-4 py-3">{emp?.leaveType}</td>
                                         <td className="px-4 py-3">{emp?.reason}</td>

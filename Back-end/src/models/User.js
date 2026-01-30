@@ -92,6 +92,22 @@ const userSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+
+    documents: [
+      {
+        type: {
+          type: String, // "aadhaar", "degree", "certificate"
+        },
+        url: String,
+        uploadedAt: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
+    profileImage: {
+      type: String,
+    },
   },
   { timestamps: true }
 );

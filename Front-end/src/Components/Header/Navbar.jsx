@@ -4,9 +4,12 @@ import { Menu, X, Gauge, Users, Calendar, User, Handbag, Bell, Sun, LogOut, User
 import { BaseUrl } from "../../BaseApi/Api";
 import Modal from "../Modal/Modal";
 import toast from "react-hot-toast";
+import { useNotification } from "../../Context/Notification";
+import SignToggle from "./ToggleButton";
 
 export default function Navbar() {
   const UserId = localStorage.getItem("userId")
+  const { notifications } = useNotification();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [userData, setUserData] = useState();
@@ -17,6 +20,7 @@ export default function Navbar() {
   const navigate = useNavigate();
 
   useEffect(() => {
+    fetchTodayAttendance()
     const handleClickOutside = (e) => {
       if (bellRef.current && !bellRef.current.contains(e.target)) {
         setNotificationOpen(false);
@@ -96,8 +100,119 @@ export default function Navbar() {
     }
   };
 
+  const [isClockedIn, setIsClockedIn] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const getUserLocation = () => {
+    return new Promise((resolve, reject) => {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          resolve({
+            latitude: pos.coords.latitude,
+            longitude: pos.coords.longitude,
+          });
+        },
+        (error) => {
+          if (error.code === 1) {
+            reject("Location permission denied, Turn on GPS");
+          } else if (error.code === 2) {
+            reject("Location unavailable. Turn on GPS");
+          } else if (error.code === 3) {
+            reject("Location request timed out");
+          } else {
+            reject("Unable to fetch location");
+          }
+        },
+        { enableHighAccuracy: true }
+      );
+    });
+  };
+
+  const handleClockIn = async () => {
+    try {
+      setLoading(true);
+      const location = await getUserLocation();
+
+      const res = await fetch(`${BaseUrl}clock-in/${UserId}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          latitude: location.latitude,
+          longitude: location.longitude,
+        }),
+      }
+      );
+      const data = await res.json();
+
+      if (!res.ok) {
+        toast.error(data.message || "Clock In failed");
+      } else {
+        setIsClockedIn(true);
+        toast.success(data.message || "Clock In successfully");
+      }
+
+    } catch (err) {
+      toast.error(err.message || err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatWorkDuration = (minutes) => {
+    const h = Math.floor(minutes / 60);
+    const m = minutes % 60;
+    return `${h}h ${m}m`;
+  };
+
+  const handleClockOut = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch(`${BaseUrl}clock-out/${UserId}`,
+        { method: "POST", }
+      );
+      const data = await res.json();
+
+      if (!res.ok) return toast.error(data.message);
+
+      setIsClockedIn(false);
+
+      toast.success(
+        `Clock Out successful 🕒 Work: ${formatWorkDuration(data.workDuration)}`
+      );
+
+    } catch (error) {
+      toast.error(error.message || "Clock out failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleToggleClock = () => {
+    if (!isClockedIn) handleClockIn();
+    else handleClockOut();
+  };
+
+  const fetchTodayAttendance = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch(`${BaseUrl}attendance/today/${UserId}`);
+      const data = await res.json();
+      if (res.ok && data.attendance) {
+        setIsClockedIn(true);
+      } else {
+        setIsClockedIn(false);
+      }
+    } catch (error) {
+      console.error("Failed to fetch attendance");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (<>
-    <nav className="bg-white shadow-md px-4 py-3 flex items-center justify-between sticky top-0 z-50">
+    <nav className="bg-white shadow-md px-4 py-2 flex items-center justify-between sticky top-0 z-50">
       <div className="flex items-center gap-3">
         {UserId &&
           <button
@@ -121,6 +236,11 @@ export default function Navbar() {
         </div>}
 
       <div className="flex items-center">
+        <SignToggle
+          onToggle={handleToggleClock}
+          isClockedIn={isClockedIn}
+          loading={loading}
+        />
         <button className="p-2 rounded-full hover:bg-gray-100 transition">
           <Sun size="22" />
         </button>
@@ -131,30 +251,52 @@ export default function Navbar() {
               className="relative p-2 rounded-full hover:bg-gray-100 transition"
             >
               <Bell size={22} />
-              {/* Optional badge */}
-              <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+              {notifications.length > 0 &&
+                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>}
             </button>
 
             {isNotificationOpen && (
-              <div
-                className="absolute right-0 mt-2 w-72 bg-white shadow-lg rounded-lg border z-50"
-              >
+              <div className="absolute right-0 mt-2 w-72 bg-white shadow-lg rounded-lg border z-50">
                 <div className="p-3 border-b font-medium text-gray-700">
                   Notifications
                 </div>
 
-                <div className="p-4 text-sm text-gray-500 text-center">
-                  No notifications available
-                </div>
+                {notifications.length > 0 ? (
+                  notifications.map((n, index) => (
+                    <div
+                      key={index}
+                      className={`p-3 border-l-4 ${n.status === "Approved"
+                        ? "border-green-500 bg-green-50"
+                        : "border-red-500 bg-red-50"
+                        }`}
+                    >
+                      <p className="text-sm font-medium">{n.message}</p>
+                      <p className="text-xs text-gray-500">
+                        {new Date(n.time).toLocaleTimeString()}
+                      </p>
+                    </div>
+                  ))
+                ) : (
+                  <div className="p-4 text-sm text-gray-500 text-center">
+                    No notifications
+                  </div>
+                )}
               </div>
             )}
+
           </div>
           <div className="relative" ref={userRef}>
             <button
               onClick={() => setUserOpen(!isUserOpen)}
               className="flex items-center gap-2 p-2 rounded-full hover:bg-gray-100 transition"
             >
-              <UserCircle size={26} className="text-gray-700" />
+              {userData?.profileImage ?
+                <img
+                  src={userData?.profileImage}
+                  alt="Add Profile"
+                  className="w-8 h-8 rounded-full object-cover border"
+                /> :
+                <UserCircle size={26} className="text-gray-700" />}
             </button>
 
             {isUserOpen && (

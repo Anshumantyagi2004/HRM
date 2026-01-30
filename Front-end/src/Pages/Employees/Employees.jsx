@@ -2,8 +2,10 @@ import { Eye, Search, Mail, Phone, User, Handbag, Calendar, Transgender, MapPinH
 import { useEffect, useState } from "react";
 import { BaseUrl } from "../../BaseApi/Api";
 import Modal from "../../Components/Modal/Modal";
+import { Link } from "react-router-dom";
 
 export default function Employees() {
+  const [userRole, setUserRole] = useState(localStorage.getItem("userRole"))
   const [allUsers, setAllUsers] = useState([])
 
   useEffect(() => {
@@ -55,7 +57,7 @@ export default function Employees() {
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-indigo-600 text-white text-left">
-                <th className="px-4 py-3">Name</th>
+                <th className="px-4 py-3" style={{ width: "200px" }}>Name</th>
                 <th className="px-4 py-3">Designation</th>
                 <th className="px-4 py-3">Email</th>
                 <th className="px-4 py-3">Contact</th>
@@ -66,7 +68,16 @@ export default function Employees() {
             <tbody>
               {allUsers.map((emp, idx) => (
                 <tr key={idx} className="border-b hover:bg-gray-50">
-                  <td className="px-4 py-3 font-medium">{emp?.username}</td>
+                  <td className="px-4 py-3 font-medium">
+                    <div className="flex items-center justify-start">
+                      {emp?.profileImage ?
+                        <img src={emp?.profileImage} alt={emp?.username.slice(0, 1).toUpperCase()} className="w-8 h-8 rounded-full mr-2" />
+                        : <div className="w-8 h-8 rounded-full bg-indigo-500 text-white flex items-center justify-center mr-2">
+                          {emp?.username.slice(0, 1).toUpperCase()}
+                        </div>}
+                      {emp?.username}
+                    </div>
+                  </td>
                   <td className="px-4 py-3">{emp?.designation || "-"}</td>
                   <td className="px-4 py-3">{emp?.email}</td>
                   <td className="px-4 py-3">{emp?.contact}</td>
@@ -88,9 +99,15 @@ export default function Employees() {
 
       <Modal open={open} onClose={() => setOpen(false)}>
         <Modal.Header title="Employee Details" />
-
         <Modal.Body>
-          {selectedEmp &&
+          {selectedEmp && <>
+            <div className="flex justify-center mb-4">
+              {selectedEmp?.profileImage ?
+                <img src={selectedEmp?.profileImage} alt={"Image"} className="w-24 h-24 rounded-full" />
+                : <div className="w-24 h-24 rounded-full bg-indigo-500 text-white flex items-center justify-center text-4xl">
+                  {selectedEmp?.username.slice(0, 1).toUpperCase()}
+                </div>}
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-4 text-sm">
               <div className="flex items-start gap-3">
                 <User size={18} className="text-indigo-500 mt-0.5" />
@@ -101,7 +118,6 @@ export default function Employees() {
                   </p>
                 </div>
               </div>
-
               <div className="flex items-start gap-3">
                 <Calendar size={18} className="text-indigo-500 mt-0.5" />
                 <div>
@@ -184,16 +200,23 @@ export default function Employees() {
                   </p>
                 </div>
               </div>
-            </div>}
+            </div>
+          </>}
         </Modal.Body>
         <Modal.Footer>
-          <div className="flex justify-end w-full">
+          <div className="flex justify-end w-full gap-2">
             <button
               onClick={() => setOpen(false)}
               className="px-4 py-2 border rounded-lg text-gray-700 hover:bg-gray-100"
             >
               Close
             </button>
+            {userRole === "Admin" &&
+              <Link to={`/userProfile/${selectedEmp?._id}`}>
+                <button className="px-4 py-2 border rounded-lg text-white hover:bg-indigo-700 bg-indigo-600">
+                  View Profile
+                </button>
+              </Link>}
           </div>
         </Modal.Footer>
       </Modal>

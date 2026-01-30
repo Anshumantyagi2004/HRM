@@ -1,0 +1,24 @@
+.toggle-btn {
+    width: 140px;
+    height: 40px;
+    border: none;
+    border-radius: 25px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.toggle-btn.in {
+    background: #4caf50;
+    color: white;
+}
+
+.toggle-btn.out {
+    background: #f44336;
+    color: white;
+}
+
+.toggle-btn:hover {
+    transform: scale(1.05);
+}
