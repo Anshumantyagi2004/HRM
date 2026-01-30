@@ -87,20 +87,20 @@ export const updateLeaveStatus = async (req, res) => {
             { new: true }
         ).populate("user"); // IMPORTANT
 
-        // 🔔 SOCKET NOTIFICATION
-        const employeeId = leave.user._id?.toString();
-        const socketId = getUserSocketId(employeeId);
+        // // 🔔 SOCKET NOTIFICATION
+        // const employeeId = leave.user._id?.toString();
+        // const socketId = getUserSocketId(employeeId);
 
-        if (socketId) {
-            req.io.to(socketId).emit("leave-status", {
-                status: leave.status,
-                leaveId: leave._id,
-            });
+        // if (socketId) {
+        //     req.io.to(socketId).emit("leave-status", {
+        //         status: leave.status,
+        //         leaveId: leave._id,
+        //     });
 
-            console.log("Leave status sent via socket to:", employeeId);
-        } else {
-            console.log("Employee not connected to socket");
-        }
+        //     console.log("Leave status sent via socket to:", employeeId);
+        // } else {
+        //     console.log("Employee not connected to socket");
+        // }
 
         res.status(200).json({
             message: `Leave ${status} successfully`,

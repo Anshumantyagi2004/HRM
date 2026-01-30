@@ -19,28 +19,28 @@ function AllRoute() {
   const userId = localStorage.getItem("userId")
   return (
     <>
-      <SocketProvider userId={userId}>
-        <NotificationProvider>
-          <Routes>
-            {/* <Route path="/" element={<Home />} /> */}
-            <Route path="/signup" element={<Signup />} />
-            <Route path="/login" element={<Login />} />
+      {/* <SocketProvider userId={userId}> */}
+      {/* <NotificationProvider> */}
+      <Routes>
+        {/* <Route path="/" element={<Home />} /> */}
+        <Route path="/signup" element={<Signup />} />
+        <Route path="/login" element={<Login />} />
 
-            <Route element={<ProtectedRoute />}>
-              <Route element={<MainLayout />}>
-                <Route path="/" element={<Home />} />
-                <Route path="/myProfile" element={<MyProfile />} />
-                <Route path="/userProfile/:userId" element={<UserProfile />} />
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/employees" element={<Employees />} />
-                <Route path="/leave" element={<Leave />} />
-                <Route path="/attendance" element={<Attendance />} />
-              </Route>
-            </Route>
-          </Routes>
-          <NotificationListener />
-        </NotificationProvider>
-      </SocketProvider>
+        <Route element={<ProtectedRoute />}>
+          <Route element={<MainLayout />}>
+            <Route path="/" element={<Home />} />
+            <Route path="/myProfile" element={<MyProfile />} />
+            <Route path="/userProfile/:userId" element={<UserProfile />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/employees" element={<Employees />} />
+            <Route path="/leave" element={<Leave />} />
+            <Route path="/attendance" element={<Attendance />} />
+          </Route>
+        </Route>
+      </Routes>
+      {/* <NotificationListener /> */}
+      {/* </NotificationProvider> */}
+      {/* </SocketProvider> */}
     </>
   );
 }

@@ -4,12 +4,13 @@ import { Menu, X, Gauge, Users, Calendar, User, Handbag, Bell, Sun, LogOut, User
 import { BaseUrl } from "../../BaseApi/Api";
 import Modal from "../Modal/Modal";
 import toast from "react-hot-toast";
-import { useNotification } from "../../Context/Notification";
+// import { useNotification } from "../../Context/Notification";
 import SignToggle from "./ToggleButton";
 
 export default function Navbar() {
   const UserId = localStorage.getItem("userId")
-  const { notifications } = useNotification();
+  // const { notifications } = useNotification();
+  const [notifications, setNotifications] = useState([]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [userData, setUserData] = useState();
