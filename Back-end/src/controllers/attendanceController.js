@@ -86,6 +86,7 @@ export const clockIn = async (req, res) => {
 
     const clockInTime = new Date();
     const lateBy = calculateLateMinutes(clockInTime);
+    console.log("Late by minutes:", lateBy, clockInTime);
     let status = "PRESENT";
     if (isAnomaly(clockInTime)) {
       status = "ANOMALIES";
@@ -161,7 +162,7 @@ export const clockOut = async (req, res) => {
 
     const now = new Date();
     const istNow = new Date(
-      now.toLocaleString("en-US", { timeZone: "Asia/Kolkata" })
+      // now.toLocaleString("en-US", { timeZone: "Asia/Kolkata" })
     );
 
     const startOfDay = new Date(istNow);

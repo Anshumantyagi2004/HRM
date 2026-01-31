@@ -402,7 +402,7 @@ export default function Attendance() {
                         </div>)}
                 </div>
             </div>
-        </div >
+        </div>
         :
         <div className="w-full px-1 md:px-3">
             <div className="bg-white shadow-md rounded-xl hover:shadow-lg transition md:p-5 p-2">
