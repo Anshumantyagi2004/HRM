@@ -24,25 +24,27 @@ const getDistanceInMeters = (lat1, lon1, lat2, lon2) => {
   return R * c;
 };
 
-const OFFICE_START_TIME = "09:30";
-const ANOMALY_TIME = "10:00";
-
-const isAnomaly = (clockInTime) => {
-  const [h, m] = ANOMALY_TIME.split(":");
-  const anomalyTime = new Date(clockInTime);
-  anomalyTime.setHours(h, m, 0, 0);
-
-  return clockInTime > anomalyTime;
-};
+const OFFICE_START_TIME = { h: 9, m: 30 };
+const ANOMALY_TIME = { h: 10, m: 0 };
 
 const calculateLateMinutes = (clockInTime) => {
-  const [h, m] = OFFICE_START_TIME.split(":");
-
   const officeTime = new Date(clockInTime);
-  officeTime.setHours(h, m, 0, 0);
+  officeTime.setHours(OFFICE_START_TIME.h, OFFICE_START_TIME.m, 0, 0);
 
-  const diff = clockInTime - officeTime;
-  return diff > 0 ? Math.floor(diff / (1000 * 60)) : 0;
+  const diff = clockInTime.getTime() - officeTime.getTime();
+  return diff > 0 ? Math.floor(diff / 60000) : 0;
+};
+
+const isAnomaly = (clockInTime) => {
+  const anomalyTime = new Date(clockInTime);
+  anomalyTime.setHours(ANOMALY_TIME.h, ANOMALY_TIME.m, 0, 0);
+
+  return clockInTime.getTime() > anomalyTime.getTime();
+};
+
+const getISTDate = () => {
+  const now = new Date();
+  return new Date(now.getTime() + (5.5 * 60 * 60 * 1000));
 };
 
 //Clock in
@@ -84,13 +86,10 @@ export const clockIn = async (req, res) => {
       });
     }
 
-    const clockInTime = new Date();
+    const clockInTime = getISTDate(); // 🔥 IMPORTANT
+
     const lateBy = calculateLateMinutes(clockInTime);
-    console.log("Late by minutes:", lateBy, clockInTime);
-    let status = "PRESENT";
-    if (isAnomaly(clockInTime)) {
-      status = "ANOMALIES";
-    }
+    const status = isAnomaly(clockInTime) ? "ANOMALIES" : "PRESENT";
 
     const attendance = await Attendance.create({
       userId,
