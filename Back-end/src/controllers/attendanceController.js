@@ -28,23 +28,26 @@ const OFFICE_START_TIME = { h: 9, m: 30 };
 const ANOMALY_TIME = { h: 10, m: 0 };
 
 const calculateLateMinutes = (clockInTime) => {
-  const officeTime = new Date(clockInTime);
-  officeTime.setHours(OFFICE_START_TIME.h, OFFICE_START_TIME.m, 0, 0);
+  const istOffset = 5.5 * 60; // minutes
+  const istHours = clockInTime.getUTCHours() + Math.floor(istOffset / 60);
+  const istMinutes = clockInTime.getUTCMinutes() + (istOffset % 60);
 
-  const diff = clockInTime.getTime() - officeTime.getTime();
-  return diff > 0 ? Math.floor(diff / 60000) : 0;
+  const officeStartMinutes = OFFICE_START_TIME.h * 60 + OFFICE_START_TIME.m;
+  const clockInMinutes = istHours * 60 + istMinutes;
+
+  const diff = clockInMinutes - officeStartMinutes;
+  return diff > 0 ? diff : 0;
 };
 
 const isAnomaly = (clockInTime) => {
-  const anomalyTime = new Date(clockInTime);
-  anomalyTime.setHours(ANOMALY_TIME.h, ANOMALY_TIME.m, 0, 0);
+  const istOffset = 5.5 * 60; // minutes
+  const istHours = clockInTime.getUTCHours() + Math.floor(istOffset / 60);
+  const istMinutes = clockInTime.getUTCMinutes() + (istOffset % 60);
 
-  return clockInTime.getTime() > anomalyTime.getTime();
-};
+  const anomalyMinutes = ANOMALY_TIME.h * 60 + ANOMALY_TIME.m;
+  const clockInMinutes = istHours * 60 + istMinutes;
 
-const getISTDate = () => {
-  const now = new Date();
-  return new Date(now.getTime() + (5.5 * 60 * 60 * 1000));
+  return clockInMinutes > anomalyMinutes;
 };
 
 //Clock in
@@ -54,9 +57,7 @@ export const clockIn = async (req, res) => {
     const { latitude, longitude } = req.body;
 
     if (!latitude || !longitude) {
-      return res.status(400).json({
-        message: "User location is required",
-      });
+      return res.status(400).json({ message: "User location is required" });
     }
 
     const distance = getDistanceInMeters(
@@ -67,9 +68,7 @@ export const clockIn = async (req, res) => {
     );
 
     if (distance > OFFICE_LOCATION.radius) {
-      return res.status(403).json({
-        message: "You are not inside the office location",
-      });
+      return res.status(403).json({ message: "You are not inside the office" });
     }
 
     const todayStart = new Date();
@@ -81,44 +80,34 @@ export const clockIn = async (req, res) => {
     });
 
     if (alreadyClockedIn) {
-      return res.status(400).json({
-        message: "You have already clocked in today",
-      });
+      return res.status(400).json({ message: "Already clocked in today" });
     }
 
-    const clockInTime = getISTDate(); // 🔥 IMPORTANT
-
-    const lateBy = calculateLateMinutes(clockInTime);
-    const status = isAnomaly(clockInTime) ? "ANOMALIES" : "PRESENT";
+    const clockInTimeUTC = new Date(); // ✅ save UTC
+    const lateBy = calculateLateMinutes(clockInTimeUTC);
+    const status = isAnomaly(clockInTimeUTC) ? "ANOMALIES" : "PRESENT";
 
     const attendance = await Attendance.create({
       userId,
       date: todayStart,
-      clockInTime,
+      clockInTime: clockInTimeUTC, // ✅ store UTC only
       lateBy,
       status,
       clockStatus: "CLOCKED_IN",
-      userLocation: {
-        latitude,
-        longitude,
-      },
-
-      officeLocation: {
-        latitude: OFFICE_LOCATION.latitude,
-        longitude: OFFICE_LOCATION.longitude,
-        radius: OFFICE_LOCATION.radius,
-      },
+      userLocation: { latitude, longitude },
+      officeLocation: OFFICE_LOCATION,
     });
 
     res.status(201).json({
       message: "Clock In successful",
       data: attendance,
+      lateBy,
+      status,
     });
+
   } catch (error) {
     console.error("Clock In Error:", error);
-    res.status(500).json({
-      message: "Internal server error",
-    });
+    res.status(500).json({ message: "Internal server error" });
   }
 };
 
