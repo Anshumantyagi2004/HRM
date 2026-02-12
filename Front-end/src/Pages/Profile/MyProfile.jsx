@@ -1,17 +1,25 @@
-import { Mail, Phone, Camera, Pencil, Facebook, Linkedin, Instagram, X } from "lucide-react";
+import { Camera, Pencil, Facebook, Linkedin, Instagram, Download } from "lucide-react";
 import { useEffect, useState } from "react";
 import { BaseUrl } from "../../BaseApi/Api";
 import "./Profile.css"
 import Modal from "../../Components/Modal/Modal";
 import toast from "react-hot-toast";
+import { useSelector, useDispatch } from "react-redux";
+import { logout } from "../../Redux/authSlice";
+import PersonalInfo from "./PersonalInfo";
+import Education from "./Education";
+import Documents from "./Documents";
+import Work from "./Work";
+import Rules from "./Rules";
 
 export default function MyProfile() {
-    const [UserId, setUserId] = useState(localStorage.getItem("userId"))
+    const dispatch = useDispatch();
+    const { isAuthenticated, user } = useSelector((state) => state.auth);
+    const [UserId, setUserId] = useState(user?._id)
     const [userData, setUserData] = useState();
+    const [text, setText] = useState("PersonalInfo");
     const [editText, setEditText] = useState("");
-    const [preview, setPreview] = useState("");
     const [loading, setLoading] = useState(false);
-    const [documentModal, setDocumentModal] = useState(false);
 
     const handleImageChange = async (e) => {
         const file = e.target.files[0];
@@ -22,15 +30,8 @@ export default function MyProfile() {
 
         try {
             setLoading(true);
-            const res = await fetch(
-                `${BaseUrl}api/upload-profile/${UserId}`,
-                {
-                    method: "POST",
-                    body: formData, // ✅ FormData directly
-                    // headers: {
-                    //   Authorization: `Bearer ${token}`, // only if required
-                    // },
-                }
+            const res = await fetch(`${BaseUrl}api/upload-profile`,
+                { method: "POST", body: formData, credentials: "include" }
             );
             const data = await res.json();
 
@@ -97,14 +98,7 @@ export default function MyProfile() {
     useEffect(() => {
         async function fetchMyProfile() {
             try {
-                const token = localStorage.getItem("token");
-                const res = await fetch(BaseUrl + "user" + "/" + UserId, {
-                    method: "GET",
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${token}`,
-                    },
-                });
+                const res = await fetch(BaseUrl + "user", { credentials: "include", });
                 const data = await res.json();
                 setUserData(data);
             } catch (error) {
@@ -115,15 +109,12 @@ export default function MyProfile() {
         fetchMyProfile()
     }, [UserId])
 
-    const handleSave = async () => {
+    const handleSavePersonal = async () => {
         try {
-            // const token = localStorage.getItem("token");
-            const res = await fetch(`${BaseUrl}user/${UserId}`, {
+            const res = await fetch(`${BaseUrl}user`, {
                 method: "PATCH",
-                headers: {
-                    "Content-Type": "application/json",
-                    // Authorization: `Bearer ${token}`,
-                },
+                headers: { "Content-Type": "application/json", },
+                credentials: "include",
                 body: JSON.stringify(formData),
             });
             const data = await res.json();
@@ -139,13 +130,16 @@ export default function MyProfile() {
         }
     };
 
-    const handleDocuments = () => {
-        setDocumentModal(true)
-    }
-
+    //Documents
+    const [allDocs, setAllDocs] = useState([]);
+    const [preview, setPreview] = useState("");
+    const [documentModal, setDocumentModal] = useState(false);
     const [documentType, setDocumentType] = useState("");
     const [file, setFile] = useState(null);
     const [previewDoc, setPreviewDoc] = useState(null);
+    const handleDocuments = () => {
+        setDocumentModal(true)
+    }
 
     const handleFileChange = (e) => {
         const selectedFile = e.target.files[0];
@@ -167,33 +161,17 @@ export default function MyProfile() {
             return;
         }
         const formData = new FormData();
-        formData.append("file", file); // must match multer
+        formData.append("file", file);
         formData.append("documentType", documentType);
         try {
-            const res = await fetch(
-                `${BaseUrl}api/upload-document/${UserId}`,
-                {
-                    method: "POST",
-                    body: formData,
-                }
-            );
-
+            const res = await fetch(`${BaseUrl}api/upload-document`, { method: "POST", body: formData, credentials: "include", });
             const data = await res.json();
             if (!res.ok) return toast.error(data.message || "Error uploading document");
             setDocumentModal(false)
             setDocumentType("")
             setFile(null);
             setPreviewDoc(null);
-            const token = localStorage.getItem("token");
-            const res1 = await fetch(BaseUrl + "user" + "/" + UserId, {
-                method: "GET",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-            const data1 = await res1.json();
-            setUserData(data1);
+            fetchDocs()
             toast.success("Document uploaded successfully");
         } catch (err) {
             console.error(err);
@@ -201,10 +179,306 @@ export default function MyProfile() {
         }
     };
 
+    const fetchDocs = async () => {
+        try {
+            const response = await fetch(`${BaseUrl}api/get-document`, { credentials: "include", });
+            if (!response.ok) {
+                toast.error("No Docs Available");
+            } else {
+                const data = await response.json();
+                console.log(data);
+                setAllDocs(data?.data)
+            }
+        } catch (error) {
+            toast.error("Add Education Error:", error.message);
+        }
+    };
+
+    //Education
+    const [eduEdit, setEduEdit] = useState(false);
+    const [qualificationModal, setQualificationModal] = useState(false);
+    const [userQualification, setUserQualification] = useState([]);
+    const [formDataEdu, setFormDataEdu] = useState({
+        qualificationType: "",
+        courseName: "",
+        courseType: "",
+        stream: "",
+        courseStartDate: "",
+        courseEndDate: "",
+        collegeName: "",
+        universityName: "",
+    });
+
+    const handleChangeEdu = (e) => {
+        const { name, value } = e.target;
+        setFormDataEdu(prev => ({
+            ...prev,
+            [name]: value,
+        }));
+    };
+
+    const addEducation = async () => {
+        if (formDataEdu?.qualificationType == "" || formDataEdu?.courseName == "" || formDataEdu?.courseType == "" || formDataEdu?.stream == "" || formDataEdu?.courseStartDate == "" || formDataEdu?.courseEndDate == "" || formDataEdu?.collegeName == "" || formDataEdu?.universityName == "") return toast.error('Enter all feild!');
+        try {
+            const response = await fetch(`${BaseUrl}userEducation`,
+                {
+                    credentials: "include",
+                    method: "POST",
+                    headers: { "Content-Type": "application/json", },
+                    body: JSON.stringify(formDataEdu),
+                }
+            );
+            if (!response.ok) {
+                toast.error(data.message || "Failed to add education");
+            } else {
+                const data = await response.json();
+                toast.success("Added Successfully")
+                console.log(data);
+                setFormDataEdu();
+                setQualificationModal(false)
+                fetchEducation()
+            }
+        } catch (error) {
+            toast.error("Add Education Error:", error.message);
+        }
+    };
+
+    const fetchEducation = async () => {
+        try {
+            const response = await fetch(`${BaseUrl}userEducation`, { credentials: "include", });
+            if (!response.ok) {
+                toast.error("Failed");
+            } else {
+                const data = await response.json();
+                setUserQualification(data?.data)
+            }
+        } catch (error) {
+            toast.error("Add Education Error:", error.message);
+        }
+    };
+
+    const deleteEducation = async (e) => {
+        console.log(e);
+        // try {
+        //     const response = await fetch(`${BaseUrl}userEducation/${UserId}`,
+        //         {
+        //             method: "POST",
+        //             headers: {
+        //                 "Content-Type": "application/json",
+        //                 // Authorization: `Bearer ${token}`, // if using auth
+        //             },
+        //             body: JSON.stringify(formDataEdu),
+        //         }
+        //     );
+        //     if (!response.ok) {
+        //         toast.error(data.message || "Failed to add education");
+        //     } else {
+        //         const data = await response.json();
+        //         toast.success("Added Successfully")
+        //         console.log(data);
+        //         setFormDataEdu();
+        //         setQualificationModal(false)
+        //         setUserQualification(user?.education)
+        //     }
+        // } catch (error) {
+        //     toast.error("Add Education Error:", error.message);
+        // }
+    };
+
+    //WORK
+    const [workEdit, setWorkEdit] = useState(false);
+    const [workModal, setWorkModal] = useState(false);
+    const [workInfoForm, setWorkInfoForm] = useState({
+        empId: "",
+        joiningDate: "",
+        empType: "",
+        workLocation: "",
+        designation: "",
+        department: "",
+        workExperince: "",
+    });
+    const [workInfo, setWorkInfo] = useState();
+    const [workHistoryForm, setWorkHistoryForm] = useState({
+        department: "",
+        designation: "",
+        from: "",
+        to: "",
+        orgName: "",
+        orgLocation: "",
+    });
+
+    const handleChangeWork = (e) => {
+        const { name, value } = e.target;
+        setWorkHistoryForm(prev => ({
+            ...prev,
+            [name]: value,
+        }));
+    };
+
+    const handleChangeWorkInfo = (e) => {
+        const { name, value } = e.target;
+        setWorkInfoForm(prev => ({
+            ...prev,
+            [name]: value,
+        }));
+    };
+
+    const addWork = async () => {
+        try {
+            const payload = Object.fromEntries(
+                Object.entries(workInfoForm).filter(
+                    ([_, value]) => value !== "" && value !== null && value !== undefined
+                )
+            );
+
+            if (Object.keys(payload).length === 0) {
+                toast.error("No fields to update");
+                return;
+            }
+
+            const response = await fetch(`${BaseUrl}userWork`, {
+                credentials: "include",
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                toast.error(data.message || "Failed to save work info");
+            } else {
+                toast.success("Saved Successfully");
+                setEditText("");
+                fetchWork();
+            }
+
+        } catch (error) {
+            toast.error("Something went wrong");
+        }
+    };
+
+    const fetchWork = async () => {
+        try {
+            const response = await fetch(`${BaseUrl}userWork`, { credentials: "include", });
+            if (!response.ok) {
+                toast.error("Failed");
+            } else {
+                const data = await response.json();
+                console.log(data);
+
+                setWorkInfo(data?.data[0])
+            }
+        } catch (error) {
+            toast.error("Add Education Error:", error.message);
+        }
+    };
+
+    const addWorkHistory = async () => {
+        try {
+            const response = await fetch(`${BaseUrl}userWorkHistory`,
+                {
+                    credentials: "include",
+                    method: "POST",
+                    headers: { "Content-Type": "application/json", },
+                    body: JSON.stringify(workHistoryForm),
+                }
+            );
+            if (!response.ok) {
+                toast.error(data.message || "Failed to add Work");
+            } else {
+                const data = await response.json();
+                toast.success("Added Successfully")
+                console.log(data);
+                setEditText("")
+                setWorkModal(false)
+                setWorkHistoryForm()
+                fetchWork()
+            }
+        } catch (error) {
+            toast.error("Add Education Error:", error.message);
+        }
+    };
+
+    //RULES
+    const [rulesForm, setRulesForm] = useState({
+        shiftStartTime: "",
+        shiftOutTime: "",
+        inTimeGrace: "",
+        outTimeGrace: "",
+        fullDay: "",
+        halfDay: "",
+        casualLeave: "",
+        sickLeave: "",
+        lossOfPay: "",
+        compOff: "",
+    });
+
+    const [rulesInfo, setRulesInfo] = useState();
+
+    const handleChangeRules = (e) => {
+        const { name, value } = e.target;
+        setRulesForm(prev => ({
+            ...prev,
+            [name]: value,
+        }));
+    };
+
+    const addRules = async () => {
+        try {
+            const payload = Object.fromEntries(
+                Object.entries(rulesForm).filter(
+                    ([_, value]) => value !== "" && value !== null && value !== undefined
+                )
+            );
+
+            if (Object.keys(payload).length === 0) {
+                toast.error("No fields to update");
+                return;
+            }
+
+            const response = await fetch(`${BaseUrl}userRules`, {
+                credentials: "include",
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload),
+            });
+            const data = await response.json();
+
+            if (!response.ok) {
+                toast.error(data.message || "Failed to save info");
+            } else {
+                toast.success("Saved Successfully");
+                setEditText("");
+                fetchRules();
+            }
+
+        } catch (error) {
+            toast.error("Something went wrong");
+        }
+    };
+
+    const fetchRules = async () => {
+        try {
+            const response = await fetch(`${BaseUrl}userRules`, { credentials: "include", });
+            if (!response.ok) {
+                toast.error("Failed");
+            } else {
+                const data = await response.json();
+                console.log(data);
+                setRulesInfo(data)
+            }
+        } catch (error) {
+            toast.error("Add Education Error:", error.message);
+            console.log(error);
+
+        }
+    };
+
     return (
         <div className="w-full px-3 py-4">
             <div className="grid grid-cols-12 gap-4">
-                <div className="col-span-12 md:col-span-3">
+                <div className="col-span-12 md:col-span-3 space-y-4">
                     <div className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition p-6">
                         <div className="relative w-28 h-28 mx-auto mb-3">
                             <img
@@ -231,374 +505,114 @@ export default function MyProfile() {
                         </div>
 
                         <h2 className="text-lg font-semibold text-gray-800 text-center">{userData?.username || "User Name"}</h2>
-                        <p className="text-sm text-gray-500 mt-1 text-center">{userData?.designation || "Job Designation"}</p>
+                        {/* <p className="text-sm text-gray-500 mt-1 text-center">{userData?.designation || "Job Designation"}</p> */}
                         <p className="text-sm text-gray-500 text-center">{userData?.email || "Email.com"}</p>
                     </div>
                 </div>
 
-                <div className="col-span-12 md:col-span-6 space-y-4">
-                    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition p-6">
-                        {/* Header */}
-                        <div className="flex justify-between items-center mb-6">
-                            <h2 className="text-lg font-semibold text-gray-800">
-                                Personal Information
-                            </h2>
-
-                            <button
-                                className="p-2 rounded-full hover:bg-gray-100 transition"
-                                onClick={() => setEditText("PersonalInfo")}
-                            >
-                                <Pencil size={18} className="text-gray-600" />
-                            </button>
-                        </div>
-
-                        {/* Form Grid */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4 text-sm">
-                            <div className="flex flex-col gap-1">
-                                <label className="font-medium text-gray-500">Full Name</label>
-                                {editText === "PersonalInfo" ? (
-                                    <input
-                                        // value={formData.username || ""}
-                                        name="username"
-                                        onChange={handleChange}
-                                        value={formData?.username || userData?.username || ""}
-                                        className="input"
-                                    />
-                                ) : (
-                                    <p className="value">{userData?.username || "User Name"}</p>
-                                )}
-                            </div>
-
-                            <div className="flex flex-col gap-1">
-                                <label className="font-medium text-gray-500">DOB</label>
-                                {editText === "PersonalInfo" ? (
-                                    <input
-                                        type="date"
-                                        name="dob"
-                                        onChange={handleChange}
-                                        value={formData?.dob || userData?.dob || ""}
-                                        className="input"
-                                    />
-                                ) : (
-                                    <p className="value">{userData?.dob?.toString()?.split("T")[0] || "-"}</p>
-                                )}
-                            </div>
-
-                            <div className="flex flex-col gap-1">
-                                <label className="font-medium text-gray-500">Gender</label>
-                                {editText === "PersonalInfo" ? (
-                                    <select className="input"
-                                        name="gender"
-                                        onChange={handleChange}
-                                        value={formData?.gender || userData?.gender || ""}>
-                                        <option value="">Select</option>
-                                        <option>Male</option>
-                                        <option>Female</option>
-                                        <option>Other</option>
-                                    </select>
-                                ) : (
-                                    <p className="value">{userData?.gender || "-"}</p>
-                                )}
-                            </div>
-
-                            <div className="flex flex-col gap-1">
-                                <label className="font-medium text-gray-500">Blood Group</label>
-                                {editText === "PersonalInfo" ? (
-                                    <select className="input"
-                                        name="bloodGroup"
-                                        onChange={handleChange}
-                                        value={formData?.bloodGroup || userData?.bloodGroup || ""}>
-                                        <option value="">Select</option>
-                                        <option>A+</option>
-                                        <option>A-</option>
-                                        <option>B+</option>
-                                        <option>B-</option>
-                                        <option>O+</option>
-                                        <option>O-</option>
-                                        <option>AB+</option>
-                                        <option>AB-</option>
-                                    </select>
-                                ) : (
-                                    <p className="value">{userData?.bloodGroup || "-"}</p>
-                                )}
-                            </div>
-
-                            <div className="flex flex-col gap-1">
-                                <label className="font-medium text-gray-500">Marital Status</label>
-                                {editText === "PersonalInfo" ? (
-                                    <select className="input"
-                                        name="maritalStatus"
-                                        onChange={handleChange}
-                                        value={formData?.maritalStatus || userData?.maritalStatus || ""}>
-                                        <option value="">Select</option>
-                                        <option>Single</option>
-                                        <option>Married</option>
-                                    </select>
-                                ) : (
-                                    <p className="value">{userData?.maritalStatus || "-"}</p>
-                                )}
-                            </div>
-
-                            <div className={`flex justify-end gap-3 items-end transition-all duration-300
-                                ${editText === "PersonalInfo"
-                                    ? "opacity-100 pointer-events-auto"
-                                    : "opacity-0 pointer-events-none"
-                                }`}>
-                                <button onClick={() => setEditText("")}
-                                    className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100">
-                                    Cancel
-                                </button>
-
-                                <button className="px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700" onClick={handleSave}>
-                                    Save
-                                </button>
-                            </div>
-                        </div>
+                <div className="col-span-12 md:col-span-6 space-y-2">
+                    <div className="flex items-center gap-2">
+                        <button onClick={() => setText("PersonalInfo")} className="bg-indigo-600 text-white hover:bg-indigo-700 px-2 py-1 rounded-md">Personal</button>
+                        <button onClick={() => { setText("Education"); fetchEducation() }} className="bg-indigo-600 text-white hover:bg-indigo-700 px-2 py-1 rounded-md">Education</button>
+                        <button onClick={() => { setText("Work"); fetchWork() }} className="bg-indigo-600 text-white hover:bg-indigo-700 px-2 py-1 rounded-md">Work</button>
+                        <button onClick={() => { setText("Documents"); fetchDocs() }} className="bg-indigo-600 text-white hover:bg-indigo-700 px-2 py-1 rounded-md">Documents</button>
+                        <button onClick={() => { setText("Rules"); fetchRules() }} className="bg-indigo-600 text-white hover:bg-indigo-700 px-2 py-1 rounded-md">Rules</button>
                     </div>
 
-                    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition p-6">
-                        {/* Header */}
-                        <div className="flex justify-between items-center mb-6">
-                            <h2 className="text-lg font-semibold text-gray-800">
-                                Contact Information
-                            </h2>
+                    {text == "PersonalInfo" &&
+                        <PersonalInfo
+                            handleSavePersonal={handleSavePersonal}
+                            editText={editText}
+                            setEditText={setEditText}
+                            userData={userData}
+                            handleChange={handleChange}
+                            formData={formData}
+                        />}
 
-                            <button
-                                className="p-2 rounded-full hover:bg-gray-100 transition"
-                                onClick={() => setEditText("ContactInfo")}
-                            >
-                                <Pencil size={18} className="text-gray-600" />
-                            </button>
-                        </div>
+                    {text == "Education" &&
+                        <Education
+                            userQualification={userQualification}
+                            setQualificationModal={setQualificationModal}
+                            setFormDataEdu={setFormDataEdu}
+                            setEduEdit={setEduEdit}
+                            deleteEducation={deleteEducation}
+                        />}
 
-                        {/* Grid */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4 text-sm">
-                            <div className="flex flex-col gap-1">
-                                <label className="font-medium text-gray-500 flex items-center gap-1">
-                                    <Mail size={14} /> Personal Email
-                                </label>
+                    {text == "Documents" &&
+                        <Documents
+                            handleDocuments={handleDocuments}
+                            allDocs={allDocs}
+                            handleFileChange={handleFileChange}
+                            uploadDocument={uploadDocument}
+                        />}
 
-                                {editText === "ContactInfo" ? (
-                                    <input
-                                        type="email"
-                                        name="email"
-                                        onChange={handleChange}
-                                        value={formData?.email || userData?.email || ""}
-                                        className="input"
-                                    />
-                                ) : (
-                                    <p className="value">{userData?.email || "-"}</p>
-                                )}
-                            </div>
+                    {text == "Work" &&
+                        <Work
+                            editText={editText}
+                            setEditText={setEditText}
+                            workInfo={workInfo}
+                            addWork={addWork}
+                            handleChangeWorkInfo={handleChangeWorkInfo}
+                            workInfoForm={workInfoForm}
+                            setWorkModal={setWorkModal}
+                            setWorkHistoryForm={setWorkHistoryForm}
+                            setWorkEdit={setWorkEdit}
+                        />}
 
-                            <div className="flex flex-col gap-1">
-                                <label className="font-medium text-gray-500 flex items-center gap-1">
-                                    <Mail size={14} /> Company Email
-                                </label>
-
-                                {editText === "ContactInfo" ? (
-                                    <input
-                                        type="email"
-                                        name="officialEmail"
-                                        onChange={handleChange}
-                                        value={formData?.officialEmail || userData?.officialEmail || ""}
-                                        className="input"
-                                    />
-                                ) : (
-                                    <p className="value">{userData?.officialEmail || "-"}</p>
-                                )}
-                            </div>
-
-                            <div className="flex flex-col gap-1">
-                                <label className="font-medium text-gray-500 flex items-center gap-1">
-                                    <Phone size={14} /> Contact
-                                </label>
-
-                                {editText === "ContactInfo" ? (
-                                    <input
-                                        type="tel"
-                                        name="contact"
-                                        onChange={handleChange}
-                                        value={formData?.contact || userData?.contact || ""}
-                                        className="input"
-                                    />
-                                ) : (
-                                    <p className="value">{userData?.contact || "-"}</p>
-                                )}
-                            </div>
-
-                            <div className="flex flex-col gap-1">
-                                <label className="font-medium text-gray-500 flex items-center gap-1">
-                                    <Phone size={14} /> Alternate Contact
-                                </label>
-
-                                {editText === "ContactInfo" ? (
-                                    <input
-                                        type="tel"
-                                        name="altContact"
-                                        onChange={handleChange}
-                                        value={formData?.altContact || userData?.altContact || ""}
-                                        className="input"
-                                    />
-                                ) : (
-                                    <p className="value">{userData?.altContact || "-"}</p>
-                                )}
-                            </div>
-                            {editText === "ContactInfo" && <>
-                                <div></div>
-                                <div className={`flex justify-end gap-3 items-center transition-all duration-300
-                                    ${editText === "ContactInfo" ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}>
-                                    <button onClick={() => setEditText("")}
-                                        className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100">
-                                        Cancel
-                                    </button>
-
-                                    <button className="px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700" onClick={handleSave}>
-                                        Save
-                                    </button>
-                                </div>
-                            </>}
-                        </div>
-                    </div>
-
-                    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition p-6">
-                        {/* Header */}
-                        <div className="flex justify-between items-center mb-6">
-                            <h2 className="text-lg font-semibold text-gray-800">
-                                Addresses
-                            </h2>
-
-                            <button
-                                className="p-2 rounded-full hover:bg-gray-100 transition"
-                                onClick={() => setEditText("Address")}
-                            >
-                                <Pencil size={18} className="text-gray-600" />
-                            </button>
-                        </div>
-
-                        {/* Content */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4 text-sm">
-                            <div className="flex flex-col gap-1">
-                                <label className="font-medium text-gray-500">
-                                    Current Address
-                                </label>
-
-                                {editText === "Address" ? (
-                                    <textarea
-                                        rows={3}
-                                        name="address"
-                                        onChange={handleChange}
-                                        value={formData?.address || userData?.address || ""}
-                                        className="border border-gray-300 rounded-md px-3 py-2 resize-none 
-                                            focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                    />
-                                ) : (
-                                    <p className="text-gray-800 font-medium min-h-[3rem]">
-                                        {userData?.address || "-"}
-                                    </p>
-                                )}
-                            </div>
-                            <div className="flex flex-col gap-1">
-                                <label className="font-medium text-gray-500">
-                                    Permanent Address
-                                </label>
-
-                                {editText === "Address" ? (
-                                    <textarea
-                                        rows={3}
-                                        name="permanentAddress"
-                                        onChange={handleChange}
-                                        value={formData?.permanentAddress || userData?.permanentAddress || ""}
-                                        className="border border-gray-300 rounded-md px-3 py-2 resize-none 
-                                        focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                    />
-                                ) : (
-                                    <p className="text-gray-800 font-medium min-h-[3rem]">
-                                        {userData?.permanentAddress || "-"}
-                                    </p>
-                                )}
-                            </div>
-                            {editText === "Address" && <>
-                                <div></div>
-                                <div className={`flex justify-end gap-3 items-center transition-all duration-300
-                                    ${editText === "Address" ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}>
-                                    <button onClick={() => setEditText("")}
-                                        className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100">
-                                        Cancel
-                                    </button>
-
-                                    <button className="px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700" onClick={handleSave}>
-                                        Save
-                                    </button>
-                                </div>
-                            </>}
-                        </div>
-                    </div>
+                    {text == "Rules" &&
+                        <Rules
+                            user={user}
+                            editText={editText}
+                            setEditText={setEditText}
+                            rulesForm={rulesForm}
+                            setRulesForm={setRulesForm}
+                            handleChangeRules={handleChangeRules}
+                            rulesInfo={rulesInfo}
+                            addRules={addRules}
+                        />}
                 </div>
 
                 <div className="col-span-12 md:col-span-3 space-y-4">
-                    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition p-6">
-                        <div className="flex justify-between items-center">
+                    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition p-4">
+                        <div className="flex justify-between items-center mb-4">
                             <h2 className="text-lg font-semibold text-gray-800">
-                                Documents
+                                Id Card
                             </h2>
-                            <button className="p-2 rounded-full hover:bg-gray-100 transition" onClick={handleDocuments}>
-                                <Pencil size={18} />
+                            <button className="p-2 rounded-full text-indigo-600 bg-indigo-50 hover:bg-indigo-100 transition">
+                                <Download size={18} />
                             </button>
                         </div>
 
-                        <div className="mt-4 space-y-3">
-                            {userData?.documents?.length > 0 ? (
-                                userData.documents.map((doc, index) => (
-                                    <div
-                                        key={index}
-                                        className="flex items-center justify-between rounded-lg border border-gray-100 p-3 hover:bg-gray-50 transition"
-                                    >
-                                        <div className="flex items-center gap-3">
-                                            <div className="h-9 w-9 rounded-md bg-blue-50 text-blue-600 flex items-center justify-center">
-                                                📄
-                                            </div>
-
-                                            <span className="font-medium text-gray-800">
-                                                {doc.type}
-                                            </span>
-                                        </div>
-
-                                        <a
-                                            href={doc.url}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="text-sm font-medium text-blue-600 hover:underline"
-                                        >
-                                            View
-                                        </a>
-                                    </div>
-                                ))
-                            ) : (
-                                <div className="flex items-center justify-between rounded-lg border border-gray-100 p-3 hover:bg-gray-50 transition"
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <div className="h-9 w-9 rounded-md bg-blue-50 text-blue-600 flex items-center justify-center">
-                                            <X />
-                                        </div>
-
-                                        <span className="font-medium text-gray-800 text-sm">
-                                            No documents uploaded yet.
-                                        </span>
-                                    </div>
-
-                                    <button
-                                        onClick={handleDocuments}
-                                        className="text-sm font-medium text-blue-600 hover:underline"
-                                    >
-                                        Add
-                                    </button>
+                        <div className="flex justify-center">
+                            <div className="w-full max-w-sm bg-white rounded-2xl border shadow-lg p-6 flex flex-col items-center text-center">
+                                <div className="w-28 h-28 rounded-full overflow-hidden border-4 border-blue-500 shadow-md">
+                                    <img
+                                        src={user?.profileImage}
+                                        alt="profile"
+                                        className="w-full h-full object-cover"
+                                    />
                                 </div>
-                            )}
+
+                                <h2 className="mt-4 text-xl font-semibold text-gray-800">
+                                    {user?.username}
+                                </h2>
+
+                                <p className="text-sm text-blue-600 font-medium">
+                                    Software Engineer
+                                </p>
+
+                                <p className="text-sm text-gray-600">
+                                    Web Solution
+                                </p>
+
+                                <p className="mt-2 text-xs text-gray-500 text-center">
+                                    {userData?.address}
+                                </p>
+                            </div>
                         </div>
                     </div>
 
-                    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition p-6">
+                    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition p-4">
                         <div className="flex justify-between items-center mb-4">
                             <h2 className="text-lg font-semibold text-gray-800">
                                 Social Media
@@ -689,7 +703,237 @@ export default function MyProfile() {
                         </div>
                     </Modal.Footer>
                 </Modal>
+
+                <Modal open={qualificationModal} onClose={() => setQualificationModal(false)}>
+                    <Modal.Header title="Add Qualification Here" />
+                    <Modal.Body>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            <div className="bg-white w-full max-w-md">
+                                <select
+                                    value={formDataEdu?.qualificationType}
+                                    name="qualificationType"
+                                    onChange={handleChangeEdu}
+                                    className="input w-full"
+                                    defaultValue={""}
+                                >
+                                    <option value="" disabled>Select Qualification Type</option>
+                                    <option value="Graduation">Graduation</option>
+                                    <option value="Post Graduation">Post Graduation</option>
+                                    <option value="Diploma">Diploma</option>
+                                    <option value="Certificate">Certificate</option>
+                                    <option value="Professional Course">Professional Course</option>
+                                    <option value="Doctorate">Doctorate (PhD)</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+
+                            <div className="bg-white w-full max-w-md">
+                                <input
+                                    type="text"
+                                    name="courseName"
+                                    value={formDataEdu?.courseName}
+                                    onChange={handleChangeEdu}
+                                    placeholder="Course Name"
+                                    className="input w-full"
+                                />
+                            </div>
+
+                            <div className="bg-white w-full max-w-md">
+                                <select
+                                    value={formDataEdu?.courseType}
+                                    name="courseType"
+                                    onChange={handleChangeEdu}
+                                    className="input w-full"
+                                    defaultValue={""}
+                                >
+                                    <option value="" disabled>Select Course Type</option>
+                                    <option value="Full Time">Full Time</option>
+                                    <option value="Part Time">Part Time</option>
+                                    <option value="Correspondence">Correspondence / Distance</option>
+                                </select>
+                            </div>
+
+                            <div className="bg-white w-full max-w-md">
+                                <input
+                                    type="text"
+                                    name="stream"
+                                    value={formDataEdu?.stream}
+                                    onChange={handleChangeEdu}
+                                    placeholder="Stream / Specialization"
+                                    className="input w-full"
+                                />
+                            </div>
+
+                            <div className="bg-white w-full max-w-md">
+                                <input
+                                    type="date"
+                                    name="courseStartDate"
+                                    value={formDataEdu?.courseStartDate}
+                                    onChange={handleChangeEdu}
+                                    className="input w-full"
+                                />
+                            </div>
+
+                            <div className="bg-white w-full max-w-md">
+                                <input
+                                    type="date"
+                                    name="courseEndDate"
+                                    value={formDataEdu?.courseEndDate}
+                                    onChange={handleChangeEdu}
+                                    className="input w-full"
+                                />
+                            </div>
+
+                            <div className="bg-white w-full max-w-md">
+                                <input
+                                    type="text"
+                                    name="collegeName"
+                                    value={formDataEdu?.collegeName}
+                                    onChange={handleChangeEdu}
+                                    placeholder="College Name"
+                                    className="input w-full"
+                                />
+                            </div>
+
+                            <div className="bg-white w-full max-w-md">
+                                <input
+                                    type="text"
+                                    name="universityName"
+                                    value={formDataEdu?.universityName}
+                                    onChange={handleChangeEdu}
+                                    placeholder="University Name"
+                                    className="input w-full"
+                                />
+                            </div>
+                        </div>
+                    </Modal.Body>
+                    <Modal.Footer>
+                        <div className="flex justify-end gap-2 w-full">
+                            <button
+                                onClick={() => { setQualificationModal(false); setFormDataEdu(); setEduEdit(false) }}
+                                className="px-4 py-2 border rounded-lg text-gray-700 hover:bg-gray-100"
+                            >
+                                Close
+                            </button>
+                            {eduEdit ?
+                                <button
+                                    // onClick={() => addEducation()}
+                                    className="px-4 py-2 border rounded-lg text-white hover:bg-indigo-700 bg-indigo-600"
+                                >
+                                    Edit
+                                </button>
+                                : <button
+                                    onClick={() => addEducation()}
+                                    className="px-4 py-2 border rounded-lg text-white hover:bg-indigo-700 bg-indigo-600"
+                                >
+                                    Add
+                                </button>}
+                        </div>
+                    </Modal.Footer>
+                </Modal>
+
+                <Modal open={workModal} onClose={() => setWorkModal(false)}>
+                    <Modal.Header title="Add Work History Here" />
+                    <Modal.Body>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            <div className="bg-white w-full max-w-md">
+                                <select
+                                    value={workHistoryForm?.department}
+                                    name="department"
+                                    onChange={handleChangeWork}
+                                    className="input w-full"
+                                    defaultValue={""}
+                                >
+                                    <option value="" disabled>Select Department</option>
+                                    <option value="Web Solutions">Web Solutions</option>
+                                    <option value="SEO">SEO</option>
+                                    <option value="Ads Manger">Ads Manger</option>
+                                    <option value="Social Media">Social Media</option>
+                                    <option value="Marketing">Marketing</option>
+                                    <option value="Sales">Sales</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+
+                            <div className="bg-white w-full max-w-md">
+                                <input
+                                    type="text"
+                                    name="designation"
+                                    value={workHistoryForm?.designation}
+                                    onChange={handleChangeWork}
+                                    placeholder="Your Designation"
+                                    className="input w-full"
+                                />
+                            </div>
+
+                            <div className="bg-white w-full max-w-md">
+                                <input
+                                    type="date"
+                                    name="from"
+                                    value={workHistoryForm?.from}
+                                    onChange={handleChangeWork}
+                                    className="input w-full"
+                                />
+                            </div>
+
+                            <div className="bg-white w-full max-w-md">
+                                <input
+                                    type="date"
+                                    name="to"
+                                    value={workHistoryForm?.to}
+                                    onChange={handleChangeWork}
+                                    className="input w-full"
+                                />
+                            </div>
+
+                            <div className="bg-white w-full max-w-md">
+                                <input
+                                    type="text"
+                                    name="orgName"
+                                    value={workHistoryForm?.orgName}
+                                    onChange={handleChangeWork}
+                                    placeholder="Org Name"
+                                    className="input w-full"
+                                />
+                            </div>
+
+                            <div className="bg-white w-full max-w-md">
+                                <input
+                                    type="text"
+                                    name="orgLocation"
+                                    value={workHistoryForm?.orgLocation}
+                                    onChange={handleChangeWork}
+                                    placeholder="Org Location"
+                                    className="input w-full"
+                                />
+                            </div>
+                        </div>
+                    </Modal.Body>
+                    <Modal.Footer>
+                        <div className="flex justify-end gap-2 w-full">
+                            <button
+                                onClick={() => { setWorkModal(false); setWorkHistoryForm(); setWorkEdit(false) }}
+                                className="px-4 py-2 border rounded-lg text-gray-700 hover:bg-gray-100"
+                            >
+                                Close
+                            </button>
+                            {workEdit ?
+                                <button
+                                    // onClick={() => addEducation()}
+                                    className="px-4 py-2 border rounded-lg text-white hover:bg-indigo-700 bg-indigo-600"
+                                >
+                                    Edit
+                                </button>
+                                : <button
+                                    onClick={() => addWorkHistory()}
+                                    className="px-4 py-2 border rounded-lg text-white hover:bg-indigo-700 bg-indigo-600"
+                                >
+                                    Add
+                                </button>}
+                        </div>
+                    </Modal.Footer>
+                </Modal>
             </div>
-        </div>
+        </div >
     );
 }

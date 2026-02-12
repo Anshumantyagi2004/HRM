@@ -4,21 +4,24 @@ import { Menu, X, Gauge, Users, Calendar, User, Handbag, Bell, Sun, LogOut, User
 import { BaseUrl } from "../../BaseApi/Api";
 import Modal from "../Modal/Modal";
 import toast from "react-hot-toast";
-// import { useNotification } from "../../Context/Notification";
 import SignToggle from "./ToggleButton";
+import { useSelector, useDispatch } from "react-redux";
+import { logout } from "../../Redux/authSlice";
 
 export default function Navbar() {
-  const UserId = localStorage.getItem("userId")
-  // const { notifications } = useNotification();
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const { isAuthenticated, user } = useSelector((state) => state.auth);
+
+  // const UserId = localStorage.getItem(user?._id)
+  const [UserId, setUserId] = useState(user?._id)
   const [notifications, setNotifications] = useState([]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
-  const [userData, setUserData] = useState();
   const [isNotificationOpen, setNotificationOpen] = useState(false);
   const bellRef = useRef(null);
   const [isUserOpen, setUserOpen] = useState(false);
   const userRef = useRef(null);
-  const navigate = useNavigate();
 
   useEffect(() => {
     fetchTodayAttendance()
@@ -34,39 +37,23 @@ export default function Navbar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleLogout = () => {
-    setUserData()
-    setUserOpen(false);
-    localStorage.removeItem("token");
-    localStorage.removeItem("userId");
-    localStorage.removeItem("userRole");
-    navigate("/login");
-  };
+  const handleLogout = async () => {
+    try {
+      await fetch(BaseUrl + "logout", {
+        method: "POST",
+        credentials: "include", // 🔥 send cookie
+      });
 
-  useEffect(() => {
-    async function fetchMyProfile() {
-      try {
-        const token = localStorage.getItem("token");
-        const res = await fetch(BaseUrl + "user" + "/" + UserId, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        const data = await res.json();
-        setUserData(data);
-      } catch (error) {
-        console.error("Fetch profile error:", error);
-        throw error;
-      }
-    };
-    fetchMyProfile()
-  }, [UserId])
+      dispatch(logout());
+      toast.success("Logged out successfully");
+      navigate("/login");
+    } catch (error) {
+      toast.error("Logout failed");
+    }
+  };
 
   const [formData, setFormData] = useState({
     username: "",
-    designation: "",
     role: "",
     email: "",
     contact: "",
@@ -82,7 +69,7 @@ export default function Navbar() {
   };
 
   const handleSubmit = async (e) => {
-    if (formData?.username == "" || formData?.password == "" || formData?.role == "" || formData?.designation == "" || formData?.email == "" || formData?.contact == "") return toast.error('Enter User Credentials First!');
+    if (formData?.username == "" || formData?.password == "" || formData?.role == "" ||  formData?.email == "" || formData?.contact == "") return toast.error('Enter User Credentials First!');
     const response = await fetch(BaseUrl + "newUser", {
       method: "POST",
       headers: {
@@ -91,7 +78,7 @@ export default function Navbar() {
       body: JSON.stringify(formData)
     })
     const data = await response.json();
-    console.log(data);
+    // console.log(data);
     if (response.ok) {
       setIsOpen(false)
       setFormData()
@@ -134,11 +121,12 @@ export default function Navbar() {
       setLoading(true);
       const location = await getUserLocation();
 
-      const res = await fetch(`${BaseUrl}clock-in/${UserId}`, {
+      const res = await fetch(`${BaseUrl}clock-in`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
+        credentials: "include",
         body: JSON.stringify({
           latitude: location.latitude,
           longitude: location.longitude,
@@ -170,9 +158,7 @@ export default function Navbar() {
   const handleClockOut = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`${BaseUrl}clock-out/${UserId}`,
-        { method: "POST", }
-      );
+      const res = await fetch(`${BaseUrl}clock-out`, { method: "POST", credentials: "include", });
       const data = await res.json();
 
       if (!res.ok) return toast.error(data.message);
@@ -198,7 +184,7 @@ export default function Navbar() {
   const fetchTodayAttendance = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`${BaseUrl}attendance/today/${UserId}`);
+      const res = await fetch(`${BaseUrl}attendance/today`, { credentials: "include", });
       const data = await res.json();
       if (res.ok && data.attendance) {
         setIsClockedIn(true);
@@ -215,19 +201,19 @@ export default function Navbar() {
   return (<>
     <nav className="bg-white shadow-md px-4 py-2 flex items-center justify-between sticky top-0 z-50">
       <div className="flex items-center gap-3">
-        {UserId &&
+        {isAuthenticated &&
           <button
             className="mdhidden text-indigo-600"
             onClick={() => setIsSidebarOpen(true)}
           >
             <Menu size={26} />
           </button>}
-        <Link to="/" className="text-xl font-bold text-indigo-600">
+        <Link to="/" className="text-xl font-bold text-indigo-600 md:block hidden">
           Promozione
         </Link>
       </div>
 
-      {UserId &&
+      {isAuthenticated &&
         <div className="hidden md:flex gap-6 font-medium">
           <Link className="hover:text-indigo-600" to="/myProfile">My Profile</Link>
           <Link className="hover:text-indigo-600" to="/dashboard">Dashboard</Link>
@@ -245,7 +231,7 @@ export default function Navbar() {
         <button className="p-2 rounded-full hover:bg-gray-100 transition">
           <Sun size="22" />
         </button>
-        {UserId ? (<>
+        {isAuthenticated ? (<>
           <div className="relative" ref={bellRef}>
             <button
               onClick={() => setNotificationOpen(!isNotificationOpen)}
@@ -291,9 +277,9 @@ export default function Navbar() {
               onClick={() => setUserOpen(!isUserOpen)}
               className="flex items-center gap-2 p-2 rounded-full hover:bg-gray-100 transition"
             >
-              {userData?.profileImage ?
+              {user?.profileImage ?
                 <img
-                  src={userData?.profileImage}
+                  src={user?.profileImage}
                   alt="Add Profile"
                   className="w-8 h-8 rounded-full object-cover border"
                 /> :
@@ -301,20 +287,20 @@ export default function Navbar() {
             </button>
 
             {isUserOpen && (
-              <div className="absolute right-0 mt-2 w-56 bg-white shadow-lg rounded-lg border z-50">
+              <div className="absolute right-0 w-80 bg-white shadow-lg rounded-lg border z-50">
                 <div className="px-4 py-3 border-b text-center">
                   <p className="text-base font-semibold text-gray-800">
-                    {userData?.username || "User"}
+                    {user?.username || "User"}
                   </p>
                   <p className="text-sm text-gray-500">
-                    {userData?.email || "Email.com"}
+                    {user?.email || "Email.com"}
                   </p>
                 </div>
 
                 <div className="py-1">
                   <Link
                     to="/myProfile"
-                    className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    className="flex items-center gap-2 px-4 py-2 text-base text-gray-700 hover:bg-gray-100"
                     onClick={() => setUserOpen(false)}
                   >
                     <User size={16} /> My Profile
@@ -322,7 +308,7 @@ export default function Navbar() {
 
                   <button
                     onClick={handleLogout}
-                    className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                    className="w-full flex items-center gap-2 px-4 py-2 text-base text-red-600 hover:bg-red-50"
                   >
                     <LogOut size={16} /> Logout
                   </button>
@@ -346,7 +332,6 @@ export default function Navbar() {
               </Link> */}
           </>
         )}
-
       </div>
     </nav>
 
@@ -356,7 +341,7 @@ export default function Navbar() {
         }`}
     />
 
-    {userData?.role == "Admin" && <>
+    {user?.role == "Admin" && <>
       <div className="fixed bottom-6 right-6 z-50">
         <button className="flex items-center justify-center h-14 w-14 rounded-full bg-indigo-600 text-white
              shadow-lg hover:bg-indigo-700 hover:shadow-xl active:scale-95 transition duration-200"
@@ -379,19 +364,19 @@ export default function Navbar() {
               className="w-full mb-3 p-2 border rounded"
             />
 
-            <select value={formData?.designation} onChange={handleChange} name="designation"
+            {/* <select value={formData?.designation} onChange={handleChange} name="designation"
               className="w-full mb-3 p-2 border rounded">
-              <option value="">Designation</option>
+              <option value="" disabled>Designation</option>
               <option value="Web Developer">Web Developer</option>
               <option value="SEO">SEO</option>
               <option value="Social Media">Social Media</option>
               <option value="ADS Manger">ADS Manger</option>
               <option value="Marketing">Marketing</option>
-            </select>
+            </select> */}
 
             <select value={formData?.role} onChange={handleChange} name="role"
               className="w-full mb-3 p-2 border rounded">
-              <option value="">Role</option>
+              <option value="" disabled>Role</option>
               <option value="Admin">Admin</option>
               <option value="Sub Admin">Sub Admin</option>
               <option value="Employee">Employee</option>

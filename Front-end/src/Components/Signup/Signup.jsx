@@ -34,7 +34,7 @@ function Signup() {
     if (response.ok) {
       localStorage.setItem("token", data.token);
       localStorage.setItem("userId", data?.result?._id);
-      toast.success('Login Sucessfully!')
+      toast.success(data?.message);
       navigate("/");
     } else {
       toast.error(data.message || "Login failed");

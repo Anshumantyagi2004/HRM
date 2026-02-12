@@ -182,10 +182,6 @@ export default function Attendance() {
         }
     };
 
-    useEffect(() => {
-        fetchMonthlyAttendance(year, month);
-    }, [year, month]);
-
     const getMonthDays = (year, month) => {
         const daysInMonth = new Date(year, month + 1, 0).getDate();
 
@@ -427,7 +423,7 @@ export default function Attendance() {
                                 Daily Log
                             </button>
                             <button className="bg-indigo-500 hover:bg-indigo-600 text-white py-2 px-2 rounded-md"
-                                onClick={() => setText("Monthly")}>
+                                onClick={() => { setText("Monthly"); fetchMonthlyAttendance(year, month) }}>
                                 Monthly Log
                             </button>
                         </div>
@@ -501,7 +497,7 @@ export default function Attendance() {
                                                 <button title={`${i?.attendance == null ? "Absent" : i?.attendance?.status == "ANOMALIES" ? "Late Arrive" : "Present"}`}
                                                     className={`h-8 w-8 rounded-full text-white text-sm font-bold flex items-center justify-center shadow-md
                                                             ${i?.attendance?.status == "PRESENT" ? "bg-emerald-500 hover:bg-emerald-600" : i?.attendance?.status == "ANOMALIES" ? "bg-yellow-400 hover:bg-yellow-500" : "bg-rose-500 hover:bg-rose-600"}`}>
-                                                    {i?.attendance ? (i?.attendance?.status == "PRESENT" ? "P" : "AB") : "A"}
+                                                    {i?.attendance ? (i?.attendance?.status == "PRESENT" ? "P" : "AN") : "A"}
                                                 </button>
                                             </td>
                                             <td className="px-4 py-3">{formatDateTime(i?.attendance?.clockInTime)}</td>
@@ -549,31 +545,29 @@ export default function Attendance() {
                                     </thead>
 
                                     <tbody>
-                                        {attendanceList.map((u) => (
-                                            <tr key={u.user._id} className="border-b hover:bg-indigo-50">
-
-                                                {/* Sticky Employee Cell */}
+                                        {attendanceList.map((u, idx) => (
+                                            <tr key={idx} className="border-b hover:bg-indigo-50">
                                                 <td className="px-4 py-2 sticky left-0 bg-white z-10 border-r font-medium whitespace-nowrap">
                                                     {u.user.username}
                                                 </td>
 
                                                 {/* Attendance Cells */}
-                                                {monthDays.map((d) => {
-                                                    const record = u.monthlyAttendance.find(
-                                                        (a) => a.date === d.key
-                                                    );
+                                                {u.monthlyAttendance.map((d) => {
+                                                    // const record = u.monthlyAttendance.find(
+                                                    //     (a) => a.date === d.key
+                                                    // );
 
                                                     return (
                                                         <td
-                                                            key={d.key}
+                                                            // key={d.key}
                                                             className="px-2 py-2 text-center border-r"
                                                         >
                                                             <span
-                                                                title={record?.status || "ABSENT"}
+                                                                title={d?.status || "ABSENT"}
                                                                 className={`h-7 w-7 rounded-full text-white text-xs font-bold
                                                                 flex items-center justify-center shadow-sm
-                                                                ${styles[record?.status || "ABSENT"] || "bg-gray-400"}`}>
-                                                                {record?.status?.[0]}
+                                                                ${styles[d?.status || "ABSENT"] || "bg-gray-400"}`}>
+                                                                {d?.status?.[0]}
                                                             </span>
                                                             {/* <StatusBadge status={record?.status || "ABSENT"} /> */}
                                                         </td>

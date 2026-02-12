@@ -1,25 +1,28 @@
 import jwt from 'jsonwebtoken';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_here';
-console.log("data");
 
 export const authenticateJWT = (req, res, next) => {
-  const authHeader = req.headers.authorization;
+  let token = null;
+  // console.log(req.cookies.token, req.headers, req.user);
 
-  // Check if Authorization header exists
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ message: 'Unauthorized: No token provided' });
+  if (req.cookies && req.cookies.token) {
+    token = req.cookies.token;
   }
 
-  const token = authHeader.split(' ')[1];
+  if (!token && req.headers.authorization?.startsWith("Bearer ")) {
+    token = req.headers.authorization.split(" ")[1];
+  }
+
+  if (!token) {
+    return res.status(401).json({ message: "Unauthorized: No token" });
+  }
 
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
-    req.user = decoded; // now req.user contains { id, role }
-    next(); // move to the next middleware or controller
+    req.user = decoded;
+    next();
   } catch (error) {
-    return res.status(403).json({ message: 'Forbidden: Invalid token' });
+    return res.status(403).json({ message: "Invalid token" });
   }
 };
-
-

@@ -3,9 +3,10 @@ import { useEffect, useState } from "react";
 import { BaseUrl } from "../../BaseApi/Api";
 import Modal from "../../Components/Modal/Modal";
 import { Link } from "react-router-dom";
+import { useSelector, useDispatch } from "react-redux";
 
 export default function Employees() {
-  const [userRole, setUserRole] = useState(localStorage.getItem("userRole"))
+  const { isAuthenticated, user } = useSelector((state) => state.auth);
   const [allUsers, setAllUsers] = useState([])
 
   useEffect(() => {
@@ -211,7 +212,7 @@ export default function Employees() {
             >
               Close
             </button>
-            {userRole === "Admin" &&
+            {user?.role === "Admin" &&
               <Link to={`/userProfile/${selectedEmp?._id}`}>
                 <button className="px-4 py-2 border rounded-lg text-white hover:bg-indigo-700 bg-indigo-600">
                   View Profile

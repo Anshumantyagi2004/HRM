@@ -18,9 +18,6 @@ const userSchema = new mongoose.Schema(
 
     officialEmail: {
       type: String, // company email
-      unique: true,
-      lowercase: true,
-      trim: true,
     },
 
     password: {
@@ -37,31 +34,10 @@ const userSchema = new mongoose.Schema(
       type: String,
     },
 
-    department: {
-      type: String,
-      enum: [
-        "HR",
-        "Engineering",
-        "Marketing",
-        "Sales",
-        "Finance",
-        "Operations",
-      ],
-    },
-
-    designation: {
-      type: String,
-    },
-
     role: {
       type: String,
       enum: ["Admin", "Sub Admin", "Employee"],
       default: "Employee",
-    },
-
-    isActive: {
-      type: Boolean,
-      default: true,
     },
 
     dob: {
@@ -93,18 +69,6 @@ const userSchema = new mongoose.Schema(
       trim: true,
     },
 
-    documents: [
-      {
-        type: {
-          type: String, // "aadhaar", "degree", "certificate"
-        },
-        url: String,
-        uploadedAt: {
-          type: Date,
-          default: Date.now,
-        },
-      },
-    ],
     profileImage: {
       type: String,
     },

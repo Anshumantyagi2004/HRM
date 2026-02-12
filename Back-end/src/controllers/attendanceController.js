@@ -53,7 +53,7 @@ const isAnomaly = (clockInTime) => {
 //Clock in
 export const clockIn = async (req, res) => {
   try {
-    const { userId } = req.params;
+    const userId = req.user.id;
     const { latitude, longitude } = req.body;
 
     if (!latitude || !longitude) {
@@ -114,7 +114,7 @@ export const clockIn = async (req, res) => {
 //find today's attendance
 export const getTodayAttendance = async (req, res) => {
   try {
-    const { userId } = req.params;
+    const userId = req.user.id;
 
     const now = new Date();
     const istNow = new Date(
@@ -146,7 +146,7 @@ export const getTodayAttendance = async (req, res) => {
 //Clock out
 export const clockOut = async (req, res) => {
   try {
-    const { userId } = req.params;
+    const  userId  = req.user.id;
 
     const now = new Date();
     const istNow = new Date(
@@ -306,35 +306,30 @@ export const getAdminAttendanceByDate = async (req, res) => {
 export const getMonthlyAttendanceAdmin = async (req, res) => {
   try {
     const { month, year } = req.query;
-
     if (!month || !year) {
       return res.status(400).json({
         message: "Month and year are required",
       });
     }
 
-    // Month: 1–12 (from frontend)
-    const startOfMonth = new Date(year, month - 1, 1);
-    const endOfMonth = new Date(year, month, 0, 23, 59, 59, 999);
+    const m = Number(month);
+    const y = Number(year);
 
-    // 1️⃣ Get all users
+    const startOfMonth = new Date(Date.UTC(y, m - 1, 1, 0, 0, 0, 0));
+    const endOfMonth = new Date(Date.UTC(y, m, 0, 23, 59, 59, 999));
+
     const users = await User.find({}, "username email employeeId");
-
-    // 2️⃣ Get all attendance for that month
     const attendanceRecords = await Attendance.find({
-      // date: { $gte: startOfMonth, $lte: endOfMonth },
+      date: { $gte: startOfMonth, $lte: endOfMonth },
     });
 
-    // 3️⃣ Create date list of month
-    const daysInMonth = new Date(year, month, 0).getDate();
-    const dates = Array.from({ length: daysInMonth }, (_, i) => {
-      const d = new Date(year, month - 1, i + 1);
-      d.setHours(0, 0, 0, 0);
-      return d.toISOString().split("T")[0];
-    });
+    const daysInMonth = new Date(Date.UTC(y, m, 0)).getUTCDate();
+    const dates = [];
+    for (let day = 1; day <= daysInMonth; day++) {
+      const d = new Date(Date.UTC(y, m - 1, day, 0, 0, 0, 0));
+      dates.push(d.toISOString().split("T")[0]);
+    }
 
-    // console.log(attendanceRecords, "llll");
-    // 4️⃣ Map attendance user-wise
     const result = users.map((user) => {
       const userAttendance = attendanceRecords.filter(
         (a) => a.userId.toString() === user._id.toString()
@@ -343,13 +338,13 @@ export const getMonthlyAttendanceAdmin = async (req, res) => {
       const attendanceMap = {};
 
       userAttendance.forEach((a) => {
-        const key = a.date.toISOString().split("T")[0];
+        const key = new Date(a.date).toISOString().split("T")[0];
         attendanceMap[key] = a;
       });
 
       const monthlyAttendance = dates.map((date) => {
         const record = attendanceMap[date];
-        // console.log(date, record);
+
         if (!record) {
           return {
             date,
@@ -360,13 +355,13 @@ export const getMonthlyAttendanceAdmin = async (req, res) => {
         return {
           date,
           status: record.status,
-          clockInTime: record.clockInTime,
-          clockOutTime: record.clockOutTime,
-          workDuration: record.workDuration,
-          lateBy: record.lateBy,
+          // clockInTime: record.clockInTime,
+          // clockOutTime: record.clockOutTime,
+          // workDuration: record.workDuration,
+          // lateBy: record.lateBy,
         };
       });
-      // console.log(user);
+
       return {
         user,
         monthlyAttendance,
@@ -374,9 +369,10 @@ export const getMonthlyAttendanceAdmin = async (req, res) => {
     });
 
     res.status(200).json({
-      month,
-      year,
+      month: m,
+      year: y,
       users: result,
+      attendanceRecords
     });
 
   } catch (error) {

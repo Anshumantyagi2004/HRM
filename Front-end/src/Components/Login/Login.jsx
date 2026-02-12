@@ -2,7 +2,11 @@ import { useState } from "react";
 import { BaseUrl } from "./../../BaseApi/Api";
 import toast, { Toaster } from 'react-hot-toast';
 import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { loginSuccess } from "../../Redux/authSlice";
+
 function Login() {
+  const dispatch = useDispatch();
   const navigate = useNavigate()
   const [formData, setFormData] = useState({
     email: "",
@@ -21,6 +25,7 @@ function Login() {
     if (formData?.email == "" && formData?.password == "") return toast.error('Enter Email and Password!');
     const response = await fetch(BaseUrl + "login", {
       method: "POST",
+      credentials: "include",
       headers: {
         "Content-Type": "application/json"
       },
@@ -30,13 +35,12 @@ function Login() {
     const data = await response.json();
     console.log(data);
     if (response.ok) {
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("userId", data?.result?._id);
-      localStorage.setItem("userRole", data?.result?.role);
+      dispatch(loginSuccess({ user: data.user }));
       toast.success('Login Sucessfully!')
       navigate("/");
+
     } else {
-      alert(data.message || "Login failed");
+      toast.error(data.message || "Login failed");
     }
 
   };
