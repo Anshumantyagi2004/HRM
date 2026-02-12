@@ -12,7 +12,10 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT;
 
-app.use(cors({ origin: process.env.CLIENT_URL, credentials: true, }));
+// const CLIENT_URL="http://localhost:5173"
+const CLIENT_URL = "https://hrm-eight-vert.vercel.app"
+
+app.use(cors({ origin: CLIENT_URL, credentials: true, }));
 app.use(express.json());
 app.use(cookieParser());
 
