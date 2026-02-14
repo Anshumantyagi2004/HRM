@@ -144,14 +144,36 @@ export const getUserByAdmin = async (req, res) => {
 //find All user
 export const getAllUsers = async (req, res) => {
   try {
-    const users = await User.find()
-      .select("-password")
-      .sort({ createdAt: -1 });
+    const users = await User.aggregate([
+      {
+        $lookup: {
+          from: "userworks",
+          localField: "_id",
+          foreignField: "userWorkId",
+          as: "userWork"
+        }
+      },
+      {
+        $project: {
+          password: 0
+        }
+      },
+      {
+        $sort: { createdAt: -1 }
+      }
+    ]);
 
-    res.status(200).json(users);
+    res.status(200).json({
+      success: true,
+      count: users.length,
+      data: users
+    });
   } catch (error) {
     console.error("Get users error:", error);
-    res.status(500).json({ message: "Failed to fetch users" });
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch users"
+    });
   }
 };
 

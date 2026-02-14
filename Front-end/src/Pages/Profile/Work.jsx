@@ -104,13 +104,13 @@ export default function Work(props) {
                 <div className="flex flex-col gap-1">
                     <label className="font-medium text-gray-500 flex items-center gap-1">
                         <Briefcase size={18} className="text-indigo-600" />
-                        Designation
+                         Department
                     </label>
                     {editText === "workInfo" ? (
                         <select className="input"
-                            name="designation"
+                            name="department"
                             onChange={handleChangeWorkInfo}
-                            value={workInfoForm?.designation || workInfo?.designation || ""}
+                            value={workInfoForm?.department || workInfo?.department || ""}
                         >
                             <option value="" disabled>Select</option>
                             <option value="Web Solutions">Web Solutions</option>
@@ -122,20 +122,20 @@ export default function Work(props) {
                             <option value="Other">Other</option>
                         </select>
                     ) : (
-                        <p className="value">{workInfo?.designation || "-"}</p>
+                        <p className="value">{workInfo?.department || "-"}</p>
                     )}
                 </div>
 
                 <div className="flex flex-col gap-1">
                     <label className="font-medium text-gray-500 flex items-center gap-1">
                         <Briefcase size={18} className="text-indigo-600" />
-                        Department
+                        Designation
                     </label>
                     {editText === "workInfo" ? (
                         <select className="input"
-                            name="department"
+                            name="designation"
                             onChange={handleChangeWorkInfo}
-                            value={workInfoForm?.department || workInfo?.department || ""}
+                            value={workInfoForm?.designation || workInfo?.designation || ""}
                         >
                             <option value="" disabled>Select</option>
                             <option value="Full Stack Developer">Full Stack Developer</option>
@@ -148,7 +148,7 @@ export default function Work(props) {
                             <option value="Other">Other</option>
                         </select>
                     ) : (
-                        <p className="value">{workInfo?.department || "-"}</p>
+                        <p className="value">{workInfo?.designation || "-"}</p>
                     )}
                 </div>
 

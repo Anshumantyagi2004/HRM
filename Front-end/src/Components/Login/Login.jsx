@@ -4,8 +4,9 @@ import toast, { Toaster } from 'react-hot-toast';
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { loginSuccess } from "../../Redux/authSlice";
-
+import { Eye, EyeOff } from "lucide-react";
 function Login() {
+  const [showPassword, setShowPassword] = useState(false);
   const dispatch = useDispatch();
   const navigate = useNavigate()
   const [formData, setFormData] = useState({
@@ -35,10 +36,10 @@ function Login() {
     const data = await response.json();
     console.log(data);
     if (response.ok) {
-      dispatch(loginSuccess({ user: data.user }));
       toast.success('Login Sucessfully!')
-      navigate("/");
-
+      dispatch(loginSuccess({ user: data.user }));
+      navigate("/", { replace: true });
+      window.location.href = "/";
     } else {
       toast.error(data.message || "Login failed");
     }
@@ -61,14 +62,24 @@ function Login() {
         />
 
         {/* Password */}
-        <input
-          type="password"
-          name="password"
-          placeholder="Password"
-          value={formData.password}
-          onChange={handleChange}
-          className="w-full mb-4 p-2 border rounded"
-        />
+        <div className="relative">
+          <input
+            type={showPassword ? "text" : "password"}
+            name="password"
+            placeholder="Password"
+            value={formData.password}
+            onChange={handleChange}
+            className="w-full mb-4 p-2 border rounded pr-10"
+          />
+
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-3 top-5 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+          >
+            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+          </button>
+        </div>
 
         <button onClick={handleSubmit}
           type="submit"

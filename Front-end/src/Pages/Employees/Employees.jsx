@@ -12,16 +12,16 @@ export default function Employees() {
   useEffect(() => {
     async function fetchMyProfile() {
       try {
-        // const token = localStorage.getItem("token");
         const res = await fetch(BaseUrl + "users", {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
-            // Authorization: `Bearer ${token}`,
           },
         });
         const data = await res.json();
-        setAllUsers(data);
+        console.log(data.data);
+
+        setAllUsers(data.data);
       } catch (error) {
         console.error("Fetch profile error:", error);
         throw error;
@@ -59,15 +59,18 @@ export default function Employees() {
             <thead>
               <tr className="bg-indigo-600 text-white text-left">
                 <th className="px-4 py-3" style={{ width: "200px" }}>Name</th>
+                <th className="px-4 py-3">Emp Id</th>
+                <th className="px-4 py-3">Department</th>
                 <th className="px-4 py-3">Designation</th>
                 <th className="px-4 py-3">Email</th>
+                <th className="px-4 py-3">Offical Mail</th>
                 <th className="px-4 py-3">Contact</th>
                 <th className="px-4 py-3 text-center">Action</th>
               </tr>
             </thead>
 
             <tbody>
-              {allUsers.map((emp, idx) => (
+              {allUsers?.map((emp, idx) => (
                 <tr key={idx} className="border-b hover:bg-gray-50">
                   <td className="px-4 py-3 font-medium">
                     <div className="flex items-center justify-start">
@@ -79,8 +82,11 @@ export default function Employees() {
                       {emp?.username}
                     </div>
                   </td>
-                  <td className="px-4 py-3">{emp?.designation || "-"}</td>
+                  <td className="px-4 py-3">{emp?.userWork[0]?.empId || "-"}</td>
+                  <td className="px-4 py-3">{emp?.userWork[0]?.department || "-"}</td>
+                  <td className="px-4 py-3">{emp?.userWork[0]?.designation || "-"}</td>
                   <td className="px-4 py-3">{emp?.email}</td>
+                  <td className="px-4 py-3">{emp?.officialEmail || "-"}</td>
                   <td className="px-4 py-3">{emp?.contact}</td>
                   <td className="px-4 py-3 text-center">
                     <button
@@ -170,7 +176,7 @@ export default function Employees() {
                 <div>
                   <p className="text-gray-500">Designation</p>
                   <p className="font-medium text-gray-800">
-                    {selectedEmp?.designation || "-"}
+                    {selectedEmp?.userWork[0]?.designation || "-"}
                   </p>
                 </div>
               </div>
