@@ -58,10 +58,11 @@ export default function Employees() {
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-indigo-600 text-white text-left">
-                <th className="px-4 py-3" style={{ width: "200px" }}>Name</th>
+                <th className="px-4 py-3" style={{ width: "200px" }}>Emp Name</th>
                 <th className="px-4 py-3">Emp Id</th>
                 <th className="px-4 py-3">Department</th>
                 <th className="px-4 py-3">Designation</th>
+                <th className="px-4 py-3">Emp Manager</th>
                 <th className="px-4 py-3">Email</th>
                 <th className="px-4 py-3">Offical Mail</th>
                 <th className="px-4 py-3">Contact</th>
@@ -82,9 +83,10 @@ export default function Employees() {
                       {emp?.username}
                     </div>
                   </td>
-                  <td className="px-4 py-3">{emp?.userWork[0]?.empId || "-"}</td>
-                  <td className="px-4 py-3">{emp?.userWork[0]?.department || "-"}</td>
-                  <td className="px-4 py-3">{emp?.userWork[0]?.designation || "-"}</td>
+                  <td className="px-4 py-3">{emp?.userWork?.empId || "-"}</td>
+                  <td className="px-4 py-3">{emp?.userWork?.department || "-"}</td>
+                  <td className="px-4 py-3">{emp?.userWork?.designation || "-"}</td>
+                  <td className="px-4 py-3">{emp?.userWork?.manager?.username || "-"}</td>
                   <td className="px-4 py-3">{emp?.email}</td>
                   <td className="px-4 py-3">{emp?.officialEmail || "-"}</td>
                   <td className="px-4 py-3">{emp?.contact}</td>

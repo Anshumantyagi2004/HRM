@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
-import { Menu, X, Gauge, Users, Calendar, User, Handbag, Bell, Sun, LogOut, UserCircle, UserPlus } from "lucide-react";
+import { Menu, X, Gauge, Users, Calendar, User, Handbag, Bell, Sun, LogOut, UserCircle, UserPlus, IndianRupee } from "lucide-react";
 import { BaseUrl } from "../../BaseApi/Api";
 import Modal from "../Modal/Modal";
 import toast from "react-hot-toast";
@@ -220,6 +220,7 @@ export default function Navbar() {
           <Link className="hover:text-indigo-600" to="/employees">Employees</Link>
           <Link className="hover:text-indigo-600" to="/attendance">Attendance</Link>
           <Link className="hover:text-indigo-600" to="/leave">Leave</Link>
+          <Link className="hover:text-indigo-600" to="/payroll">Payroll</Link>
         </div>}
 
       <div className="flex items-center">
@@ -468,6 +469,12 @@ export default function Navbar() {
           className="flex items-center gap-3 p-2 rounded hover:bg-indigo-50 transition"
         >
           <Handbag size={18} /> Leave
+        </Link>
+        <Link
+          to="/payroll" onClick={() => setIsSidebarOpen(false)}
+          className="flex items-center gap-3 p-2 rounded hover:bg-indigo-50 transition"
+        >
+          <IndianRupee size={18} /> Payroll
         </Link>
       </div>
     </aside>

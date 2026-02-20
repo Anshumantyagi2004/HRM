@@ -165,7 +165,7 @@ export default function Rules(props) {
                             onChange={handleChangeRules}
                             value={rulesForm?.casualLeave || rulesInfo?.casualLeave || ""}
                         >
-                            <option value="" disabled>Select</option>
+                            <option value="0">Select</option>
                             <option value="18">18</option>
                             <option value="30">30</option>
                         </select>
@@ -185,7 +185,7 @@ export default function Rules(props) {
                             onChange={handleChangeRules}
                             value={rulesForm?.sickLeave || rulesInfo?.sickLeave || ""}
                         >
-                            <option value="" disabled>Select</option>
+                            <option value="0">Select</option>
                             <option value="6">6</option>
                             <option value="8">8</option>
                         </select>
@@ -206,8 +206,8 @@ export default function Rules(props) {
                             value={rulesForm?.lossOfPay || rulesInfo?.lossOfPay || ""}
                         >
                             <option value="" disabled>Select</option>
-                            <option value="6">6</option>
-                            <option value="8">8</option>
+                            <option>Yes</option>
+                            <option>No</option>
                         </select>
                     ) : (
                         <p className="value">{rulesInfo?.lossOfPay || "-"}</p>
@@ -225,9 +225,9 @@ export default function Rules(props) {
                             onChange={handleChangeRules}
                             value={rulesForm?.compOff || rulesInfo?.compOff || ""}
                         >
-                            <option value="" disabled>Select</option>
-                            <option value="6">6</option>
-                            <option value="8">8</option>
+                            <option value="0" disabled>Select</option>
+                            <option>Yes</option>
+                            <option>No</option>
                         </select>
                     ) : (
                         <p className="value">{rulesInfo?.compOff || "-"}</p>

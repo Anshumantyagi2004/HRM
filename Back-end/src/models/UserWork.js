@@ -32,8 +32,16 @@ const userWorkSchema = new mongoose.Schema(
             type: String,
         },
 
+        subDepartment: {
+            type: String,
+        },
+
         designation: {
             type: String,
+        },
+        managerId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
         },
 
         workHistory: [

@@ -2,8 +2,10 @@ import { User } from '../models/User.js';
 import { UserEducation } from '../models/UserEdu.js';
 import { UserWork } from '../models/UserWork.js';
 import { UserExtraDetail } from '../models/UserExtraDetails.js';
+import { UserPayroll } from '../models/UserPayroll.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import mongoose from 'mongoose';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_here';
 
@@ -111,7 +113,6 @@ export const logout = (req, res) => {
 export const getUserById = async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select("-password");
-    // console.log(user, "llll", req.user.id);
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
@@ -153,14 +154,35 @@ export const getAllUsers = async (req, res) => {
           as: "userWork"
         }
       },
+      { $unwind: { path: "$userWork", preserveNullAndEmptyArrays: true } },
+
       {
-        $project: {
-          password: 0
+        $lookup: {
+          from: "users",
+          let: { managerId: "$userWork.managerId" },
+          pipeline: [
+            { $match: { $expr: { $eq: ["$_id", "$$managerId"] } } },
+            { $project: { username: 1, email: 1 } }
+          ],
+          as: "manager"
         }
       },
+      { $unwind: { path: "$manager", preserveNullAndEmptyArrays: true } },
+
       {
-        $sort: { createdAt: -1 }
-      }
+        $addFields: {
+          "userWork.manager": "$manager"
+        }
+      },
+
+      {
+        $project: {
+          password: 0,
+          manager: 0
+        }
+      },
+
+      { $sort: { createdAt: -1 } }
     ]);
 
     res.status(200).json({
@@ -445,7 +467,9 @@ export const workUserById = async (req, res) => {
       "workLocation",
       "designation",
       "department",
+      "subDepartment",
       "workExperince",
+      "managerId",
     ];
 
     fields.forEach((field) => {
@@ -498,7 +522,7 @@ export const getWorkByUser = async (req, res) => {
   try {
     const userId = req.user.id;
 
-    const workList = await UserWork.find({ userWorkId: userId });
+    const workList = await UserWork.find({ userWorkId: userId }).populate("managerId", "username email");
 
     res.status(200).json({
       success: true,
@@ -582,7 +606,9 @@ export const workUserByAdmin = async (req, res) => {
       "workLocation",
       "designation",
       "department",
+      "subDepartment",
       "workExperince",
+      "managerId"
     ];
 
     fields.forEach((field) => {
@@ -635,14 +661,14 @@ export const getWorkByAdmin = async (req, res) => {
   try {
     const userId = req.params.id;
 
-    const workList = await UserWork.find({ userWorkId: userId });
+    const workList = await UserWork.find({ userWorkId: userId }).populate("managerId", "username email");;
 
     res.status(200).json({
       success: true,
       data: workList,
     });
   } catch (error) {
-    res.status(500).json({ message: "Failed to fetch education" });
+    res.status(500).json({ message: "Failed to fetch" });
   }
 };
 
@@ -711,7 +737,7 @@ export const rulesById = async (req, res) => {
   try {
     const userId = req.user.id;
     const updateData = {};
-
+    const existing = await UserExtraDetail.findOne({ userId });
     const fields = [
       "shiftStartTime",
       "shiftOutTime",
@@ -743,6 +769,29 @@ export const rulesById = async (req, res) => {
     }
 
     updateData.userId = userId;
+
+    if (req.body.casualLeave !== undefined) {
+      const newTotal = Number(req.body.casualLeave) || 0;
+      const oldTotal = existing?.casualLeave || 0;
+      const oldRemaining = existing?.casualLeaveRemaining || 0;
+
+      const diff = newTotal - oldTotal;
+
+      updateData.casualLeave = newTotal;
+      updateData.casualLeaveRemaining = Math.max(oldRemaining + diff, 0);
+    }
+
+    // Sick Leave
+    if (req.body.sickLeave !== undefined) {
+      const newTotal = Number(req.body.sickLeave) || 0;
+      const oldTotal = existing?.sickLeave || 0;
+      const oldRemaining = existing?.sickLeaveRemaining || 0;
+
+      const diff = newTotal - oldTotal;
+
+      updateData.sickLeave = newTotal;
+      updateData.sickLeaveRemaining = Math.max(oldRemaining + diff, 0);
+    }
 
     const rules = await UserExtraDetail.findOneAndUpdate(
       { userId: userId },
@@ -797,7 +846,7 @@ export const rulesByAdmin = async (req, res) => {
   try {
     const userId = req.params.id;
     const updateData = {};
-
+    const existing = await UserExtraDetail.findOne({ userId });
     const fields = [
       "shiftStartTime",
       "shiftOutTime",
@@ -829,6 +878,29 @@ export const rulesByAdmin = async (req, res) => {
     }
 
     updateData.userId = userId;
+
+    if (req.body.casualLeave !== undefined) {
+      const newTotal = Number(req.body.casualLeave) || 0;
+      const oldTotal = existing?.casualLeave || 0;
+      const oldRemaining = existing?.casualLeaveRemaining || 0;
+
+      const diff = newTotal - oldTotal;
+
+      updateData.casualLeave = newTotal;
+      updateData.casualLeaveRemaining = Math.max(oldRemaining + diff, 0);
+    }
+
+    // Sick Leave
+    if (req.body.sickLeave !== undefined) {
+      const newTotal = Number(req.body.sickLeave) || 0;
+      const oldTotal = existing?.sickLeave || 0;
+      const oldRemaining = existing?.sickLeaveRemaining || 0;
+
+      const diff = newTotal - oldTotal;
+
+      updateData.sickLeave = newTotal;
+      updateData.sickLeaveRemaining = Math.max(oldRemaining + diff, 0);
+    }
 
     const rules = await UserExtraDetail.findOneAndUpdate(
       { userId: userId },
@@ -874,5 +946,352 @@ export const getRuleByAdmin = async (req, res) => {
   } catch (error) {
     console.log("Get user error:", error);
     res.status(500).json({ message: "Server error", error });
+  }
+};
+
+//add payroll
+export const addOrUpdatePayroll = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const updateData = {};
+
+    const fields = [
+      "accountHolderName",
+      "bankName",
+      "accountNumber",
+      "branchName",
+      "city",
+      "ifscCode",
+      "accountType",
+      "pfNumber",
+      "panNumber",
+      "basicPay",
+      "HRA",
+      "bonus",
+      "specialAllowance",
+      "ta",
+      "medicalAllowance",
+      "variable",
+      "EPF",
+      "ctc",
+    ];
+
+    fields.forEach((field) => {
+      if (
+        req.body[field] !== undefined &&
+        req.body[field] !== null &&
+        req.body[field] !== ""
+      ) {
+        updateData[field] = req.body[field];
+      }
+    });
+
+    if (Object.keys(updateData).length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "No valid fields provided",
+      });
+    }
+
+    updateData.user = userId;
+
+    const payroll = await UserPayroll.findOneAndUpdate(
+      { user: userId },
+      { $set: updateData },
+      {
+        new: true,
+        runValidators: true,
+        upsert: true,           // auto create if not exists
+        setDefaultsOnInsert: true,
+      }
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "Payroll details saved successfully",
+      payroll,
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+      error: error.message,
+    });
+  }
+};
+
+//find payroll
+export const getUserPayroll = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const payroll = await UserPayroll.findOne({ user: userId });
+
+    if (!payroll) {
+      return res.status(404).json({
+        success: false,
+        message: "Payroll details not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Payroll fetched successfully",
+      payroll,
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+      error: error.message,
+    });
+  }
+};
+
+//add payroll by admin
+export const addOrUpdatePayrollByAdmin = async (req, res) => {
+  try {
+    const userId = req.params.id;
+    const updateData = {};
+
+    const fields = [
+      "accountHolderName",
+      "bankName",
+      "accountNumber",
+      "branchName",
+      "city",
+      "ifscCode",
+      "accountType",
+      "pfNumber",
+      "panNumber",
+      "basicPay",
+      "HRA",
+      "bonus",
+      "specialAllowance",
+      "ta",
+      "medicalAllowance",
+      "variable",
+      "EPF",
+      "ctc",
+    ];
+
+    fields.forEach((field) => {
+      if (
+        req.body[field] !== undefined &&
+        req.body[field] !== null &&
+        req.body[field] !== ""
+      ) {
+        updateData[field] = req.body[field];
+      }
+    });
+
+    if (Object.keys(updateData).length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "No valid fields provided",
+      });
+    }
+
+    updateData.user = userId;
+
+    const payroll = await UserPayroll.findOneAndUpdate(
+      { user: userId },
+      { $set: updateData },
+      {
+        new: true,
+        runValidators: true,
+        upsert: true,           // auto create if not exists
+        setDefaultsOnInsert: true,
+      }
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "Payroll details saved successfully",
+      payroll,
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+      error: error.message,
+    });
+  }
+};
+
+//find payroll by admin
+export const getUserPayrollByAdmin = async (req, res) => {
+  try {
+    const userId = req.params.id;
+    const payroll = await UserPayroll.findOne({ user: userId });
+
+    if (!payroll) {
+      return res.status(404).json({
+        success: false,
+        message: "Payroll details not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Payroll fetched successfully",
+      payroll,
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+      error: error.message,
+    });
+  }
+};
+
+//findall for payroll
+export const getAllUsersPayroll = async (req, res) => {
+  try {
+    const users = await User.aggregate([
+      {
+        $lookup: {
+          from: "userworks",
+          localField: "_id",
+          foreignField: "userWorkId",
+          as: "userWork"
+        }
+      },
+      {
+        $lookup: {
+          from: "userpayrolls",
+          localField: "_id",
+          foreignField: "user",
+          as: "userPayroll"
+        }
+      },
+      {
+        $project: {
+          password: 0
+        }
+      },
+      {
+        $sort: { createdAt: -1 }
+      }
+    ]);
+
+    res.status(200).json({
+      success: true,
+      count: users.length,
+      data: users
+    });
+  } catch (error) {
+    console.error("Get users error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch users"
+    });
+  }
+};
+
+//findone user for payroll
+export const findUserPayroll = async (req, res) => {
+  try {
+    const id = req.user.id;
+
+    const user = await User.aggregate([
+      {
+        $match: {
+          _id: new mongoose.Types.ObjectId(id)
+        }
+      },
+      {
+        $lookup: {
+          from: "userworks",
+          localField: "_id",
+          foreignField: "userWorkId",
+          as: "userWork"
+        }
+      },
+      {
+        $lookup: {
+          from: "userpayrolls",
+          localField: "_id",
+          foreignField: "user",
+          as: "userPayroll"
+        }
+      },
+      {
+        $project: {
+          password: 0
+        }
+      }
+    ]);
+
+    if (!user || user.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found"
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: user[0]   // return single user object
+    });
+
+  } catch (error) {
+    console.error("Get user payroll error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch user payroll"
+    });
+  }
+};
+
+//findall for leave
+export const getAllUsersLeave = async (req, res) => {
+  try {
+    const users = await User.aggregate([
+      {
+        $lookup: {
+          from: "userworks",
+          localField: "_id",
+          foreignField: "userWorkId",
+          as: "userWork"
+        }
+      },
+      {
+        $lookup: {
+          from: "userextradetails",
+          localField: "_id",
+          foreignField: "userId",
+          as: "userExtraDetail"
+        }
+      },
+      {
+        $project: {
+          password: 0
+        }
+      },
+      {
+        $sort: { createdAt: -1 }
+      }
+    ]);
+
+    res.status(200).json({
+      success: true,
+      count: users.length,
+      data: users
+    });
+  } catch (error) {
+    console.error("Get users error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch users"
+    });
   }
 };

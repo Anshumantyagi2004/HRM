@@ -10,6 +10,7 @@ import Attendance from '../Pages/Attendance/Attendance.jsx';
 import ProtectedRoute from './RoutesValidation.jsx';
 import MainLayout from '../MainLayout.jsx';
 import UserProfile from '../Pages/Profile/UserProile.jsx';
+import Payroll from '../Pages/Payroll/Payroll.jsx';
 
 function AllRoute() {
   return (
@@ -27,6 +28,7 @@ function AllRoute() {
             <Route path="/employees" element={<Employees />} />
             <Route path="/leave" element={<Leave />} />
             <Route path="/attendance" element={<Attendance />} />
+            <Route path="/payroll" element={<Payroll />} />
           </Route>
         </Route>
       </Routes>

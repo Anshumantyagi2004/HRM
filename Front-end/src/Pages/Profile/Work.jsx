@@ -1,5 +1,6 @@
-import React from 'react'
-import { Pencil, X, CalendarDays, Trash2, Building2, Edit, Calendar1, LocationEdit, BriefcaseBusiness, IdCardLanyard, MonitorCog, Briefcase, CalendarClock, Computer, } from "lucide-react";
+import React, { useEffect, useState } from 'react'
+import { Pencil, X, CalendarDays, Trash2, Building2, Edit, Calendar1, LocationEdit, BriefcaseBusiness, IdCardLanyard, MonitorCog, Briefcase, CalendarClock, Computer, User, } from "lucide-react";
+import { BaseUrl } from '../../BaseApi/Api';
 
 export default function Work(props) {
     const {
@@ -13,6 +14,81 @@ export default function Work(props) {
         setWorkHistoryForm,
         setWorkEdit
     } = props
+
+    const [allUsers, setAllUsers] = useState([])
+    useEffect(() => {
+        async function fetchMyProfile() {
+            try {
+                const res = await fetch(BaseUrl + "users", {
+                    method: "GET",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                });
+                const data = await res.json();
+                setAllUsers(data.data);
+            } catch (error) {
+                console.error("Fetch profile error:", error);
+                throw error;
+            }
+        };
+        fetchMyProfile()
+    }, [])
+
+    const departmentMap = {
+        "Web Solutions": [
+            "WordPress Developer",
+            "Full Stack Developer",
+            "UI/UX Designer",
+            "Frontend Developer",
+            "Backend Developer",
+        ],
+
+        "SEO Department": [
+            "Backlinks",
+            "ON/OFF Page SEO",
+            "Technical SEO",
+            "Content SEO",
+            "Local SEO",
+        ],
+
+        "Ads Department": [
+            "GMB Ads",
+            "Google Ads",
+            "Meta Ads",
+            "YouTube Ads",
+            "Display Ads",
+        ],
+
+        "Social Media": [
+            "Design",
+            "Facebook",
+            "Instagram",
+            "Linkedin",
+            "Youtube",
+        ],
+
+        "Sales": [
+            "Sales",
+        ],
+
+        "Marketing": [
+            "Digital Marketing",
+            "Brand Marketing",
+            "Growth Marketing",
+        ],
+
+        "Other": [
+            "HR",
+            "Admin",
+            "Support",
+            "Operations",
+            "Accounts",
+            "Other",
+        ],
+    };
+
+    const selectedDepartment = workInfoForm?.department || workInfo?.department;
 
     return (<>
         <div className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition p-4">
@@ -58,7 +134,7 @@ export default function Work(props) {
                             className="input"
                         />
                     ) : (
-                        <p className="value">{workInfo?.joiningDate || "-"}</p>
+                        <p className="value">{new Date(workInfo?.joiningDate).toLocaleDateString("en-IN") || "-"}</p>
                     )}
                 </div>
 
@@ -76,7 +152,7 @@ export default function Work(props) {
                             <option value="" disabled>Select</option>
                             <option>Full Time</option>
                             <option>Part Time</option>
-                            <option>Intern</option>
+                            <option>Contract</option>
                         </select>
                     ) : (
                         <p className="value">{workInfo?.empType || "-"}</p>
@@ -104,7 +180,7 @@ export default function Work(props) {
                 <div className="flex flex-col gap-1">
                     <label className="font-medium text-gray-500 flex items-center gap-1">
                         <Briefcase size={18} className="text-indigo-600" />
-                         Department
+                        Department
                     </label>
                     {editText === "workInfo" ? (
                         <select className="input"
@@ -114,8 +190,8 @@ export default function Work(props) {
                         >
                             <option value="" disabled>Select</option>
                             <option value="Web Solutions">Web Solutions</option>
-                            <option value="SEO">SEO</option>
-                            <option value="Ads Manger">Ads Manger</option>
+                            <option value="SEO Department">SEO Department</option>
+                            <option value="Ads Department">Ads Department</option>
                             <option value="Social Media">Social Media</option>
                             <option value="Marketing">Marketing</option>
                             <option value="Sales">Sales</option>
@@ -123,6 +199,30 @@ export default function Work(props) {
                         </select>
                     ) : (
                         <p className="value">{workInfo?.department || "-"}</p>
+                    )}
+                </div>
+
+                <div className="flex flex-col gap-1">
+                    <label className="font-medium text-gray-500 flex items-center gap-1">
+                        <Briefcase size={18} className="text-indigo-600" />
+                        Sub Department
+                    </label>
+                    {editText === "workInfo" ? (
+                        <select className="input"
+                            name="subDepartment"
+                            onChange={handleChangeWorkInfo}
+                            value={workInfoForm?.subDepartment || workInfo?.subDepartment || ""}
+                        >
+                            <option value="">Select</option>
+                            {selectedDepartment &&
+                                departmentMap[selectedDepartment]?.map((sub, index) => (
+                                    <option key={index} value={sub}>
+                                        {sub}
+                                    </option>
+                                ))}
+                        </select>
+                    ) : (
+                        <p className="value">{workInfo?.subDepartment || "-"}</p>
                     )}
                 </div>
 
@@ -138,17 +238,37 @@ export default function Work(props) {
                             value={workInfoForm?.designation || workInfo?.designation || ""}
                         >
                             <option value="" disabled>Select</option>
-                            <option value="Full Stack Developer">Full Stack Developer</option>
-                            <option value="Wordpress Developer">Wordpress Developer</option>
-                            <option value="SEO">SEO</option>
-                            <option value="Ads Manger">Ads Manger</option>
-                            <option value="Social Media">Social Media</option>
-                            <option value="Marketing">Marketing</option>
-                            <option value="Sales">Sales</option>
+                            <option value="Intern">Intern</option>
+                            <option value="Executive">Executive</option>
+                            <option value="Sr. Executive">Sr. Executive</option>
+                            <option value="Assistance Manager">Assistance Manager</option>
+                            <option value="Manager">Manager</option>
+                            <option value="Sr. Manager">Sr. Manager</option>
                             <option value="Other">Other</option>
                         </select>
                     ) : (
                         <p className="value">{workInfo?.designation || "-"}</p>
+                    )}
+                </div>
+
+                <div className="flex flex-col gap-1">
+                    <label className="font-medium text-gray-500 flex items-center gap-1">
+                        <User size={18} className="text-indigo-600" />
+                        Manager
+                    </label>
+                    {editText === "workInfo" ? (
+                        <select className="input"
+                            name="managerId"
+                            onChange={handleChangeWorkInfo}
+                            value={workInfoForm?.managerId || workInfo?.managerId || ""}
+                        >
+                            <option value="">Select</option>
+                            {allUsers.map((i, idx) => (
+                                <option value={i?._id}>{i?.username}</option>
+                            ))}
+                        </select>
+                    ) : (
+                        <p className="value">{workInfo?.managerId?.username || "-"}</p>
                     )}
                 </div>
 

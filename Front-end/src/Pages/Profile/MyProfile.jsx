@@ -11,6 +11,7 @@ import Education from "./Education";
 import Documents from "./Documents";
 import Work from "./Work";
 import Rules from "./Rules";
+import Payroll from "./Payroll";
 
 export default function MyProfile() {
     const dispatch = useDispatch();
@@ -295,6 +296,8 @@ export default function MyProfile() {
         workLocation: "",
         designation: "",
         department: "",
+        subDepartment: "",
+        managerId: "",
         workExperince: "",
     });
     const [workInfo, setWorkInfo] = useState();
@@ -462,16 +465,101 @@ export default function MyProfile() {
         try {
             const response = await fetch(`${BaseUrl}userRules`, { credentials: "include", });
             if (!response.ok) {
-                toast.error("Failed");
+                console.log("No data found");
             } else {
                 const data = await response.json();
-                console.log(data);
                 setRulesInfo(data)
             }
         } catch (error) {
             toast.error("Add Education Error:", error.message);
             console.log(error);
+        }
+    };
 
+    //payroll
+    const [payrollForm, setPayrollForm] = useState({
+        accountHolderName: "",
+        bankName: "",
+        accountNumber: "",
+        branchName: "",
+        city: "",
+        ifscCode: "",
+        accountType: "",
+        pfNumber: "",
+        panNumber: "",
+        basicPay: "",
+        HRA: "",
+        bonus: "",
+        specialAllowance: "",
+        ta: "",
+        medicalAllowance: "",
+        variable: "",
+        EPF: "",
+        ctc: "",
+    });
+    const [payrollInfo, setPayrollInfo] = useState();
+
+    const handleChangePayroll = (e) => {
+        const { name, value } = e.target;
+        setPayrollForm(prev => ({
+            ...prev,
+            [name]: value,
+        }));
+    };
+
+    const addPayroll = async () => {
+        try {
+            const payload = Object.fromEntries(
+                Object.entries(payrollForm).filter(
+                    ([_, value]) => value !== "" && value !== null && value !== undefined
+                )
+            );
+
+            if (Object.keys(payload).length === 0) {
+                toast.error("No fields to update");
+                return;
+            }
+
+            const response = await fetch(`${BaseUrl}userPayroll`, {
+                credentials: "include",
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                toast.error(data.message || "Failed to save payroll info");
+            } else {
+                toast.success("Payroll details saved successfully");
+                setEditText("");
+                fetchPayroll();
+            }
+
+        } catch (error) {
+            toast.error("Something went wrong");
+        }
+    };
+
+    const fetchPayroll = async () => {
+        try {
+            const response = await fetch(`${BaseUrl}userPayroll`, {
+                credentials: "include",
+                method: "GET",
+                headers: { "Content-Type": "application/json" },
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                console.info(data.message || "no info");
+            } else {
+                setPayrollInfo(data.payroll);
+            }
+
+        } catch (error) {
+            toast.error("Something went wrong");
         }
     };
 
@@ -517,6 +605,7 @@ export default function MyProfile() {
                         <button onClick={() => { setText("Work"); fetchWork() }} className="bg-indigo-600 text-white hover:bg-indigo-700 px-2 py-1 rounded-md">Work</button>
                         <button onClick={() => { setText("Documents"); fetchDocs() }} className="bg-indigo-600 text-white hover:bg-indigo-700 px-2 py-1 rounded-md">Documents</button>
                         <button onClick={() => { setText("Rules"); fetchRules() }} className="bg-indigo-600 text-white hover:bg-indigo-700 px-2 py-1 rounded-md">Rules</button>
+                        <button onClick={() => { setText("Payroll"); fetchPayroll() }} className="bg-indigo-600 text-white hover:bg-indigo-700 px-2 py-1 rounded-md">Payroll</button>
                     </div>
 
                     {text == "PersonalInfo" &&
@@ -569,6 +658,17 @@ export default function MyProfile() {
                             handleChangeRules={handleChangeRules}
                             rulesInfo={rulesInfo}
                             addRules={addRules}
+                        />}
+
+                    {text == "Payroll" &&
+                        <Payroll
+                            user={user}
+                            editText={editText}
+                            setEditText={setEditText}
+                            payrollForm={payrollForm}
+                            payrollInfo={payrollInfo}
+                            handleChangePayroll={handleChangePayroll}
+                            addPayroll={addPayroll}
                         />}
                 </div>
 

@@ -4,9 +4,28 @@ import Modal from "../../Components/Modal/Modal";
 import { BaseUrl } from "../../BaseApi/Api";
 import toast from "react-hot-toast";
 import { Link } from "react-router-dom";
+import { useSelector, } from "react-redux";
 
 export default function Leave() {
+    const { isAuthenticated, user } = useSelector((state) => state.auth);
+    const role = user.role
+    const years = [2022, 2023, 2024, 2025, 2026];
+    const months = [
+        { name: "Jan", id: 0 },
+        { name: "Feb", id: 1 },
+        { name: "March", id: 2 },
+        { name: "April", id: 3 },
+        { name: "May", id: 4 },
+        { name: "June", id: 5 },
+        { name: "July", id: 6 },
+        { name: "August", id: 7 },
+        { name: "Sept", id: 8 },
+        { name: "Oct", id: 9 },
+        { name: "Nov", id: 10 },
+        { name: "Dec", id: 11 },
+    ];
     const [open, setOpen] = useState(false);
+    const [text, setText] = useState(role == "Employee" ? "Balance" : "Logs");
     const [detailModal, setDetailModal] = useState(false);
     const [leaveDetailModal, setLeaveDetailModal] = useState();
     const [editModal, setEditModal] = useState(false);
@@ -14,13 +33,12 @@ export default function Leave() {
     const [leaveDetails, setLeaveDetails] = useState();
     const [allLeave, setAllLeave] = useState([]);
     const [userLeave, setUserLeave] = useState([]);
-    const role = localStorage.getItem("userRole")
+    const [allUsers, setAllUsers] = useState([])
     const [formData, setFormData] = useState({
         leaveType: "",
         startDate: "",
         endDate: "",
         reason: "",
-        userId: localStorage.getItem("userId"),
     });
 
     const handleChange = (e) => {
@@ -44,9 +62,9 @@ export default function Leave() {
         try {
             const res = await fetch(`${BaseUrl}applyLeave`, {
                 method: "POST",
+                credentials: "include",
                 headers: {
                     "Content-Type": "application/json",
-                    // Authorization: `Bearer ${token}`,
                 },
                 body: JSON.stringify(formData),
             });
@@ -57,6 +75,7 @@ export default function Leave() {
             setFormData()
             setOpen(false)
             fetchUserLeave()
+            fetchRules()
         } catch (error) {
             toast.error(error)
         }
@@ -64,17 +83,11 @@ export default function Leave() {
 
     const fetchAllLeave = async () => {
         try {
-            // const token = localStorage.getItem("token");
             const res = await fetch(BaseUrl + "allLeave", {
-                method: "GET",
-                headers: {
-                    "Content-Type": "application/json",
-                    // Authorization: `Bearer ${token}`,
-                },
+                method: "GET", headers: { "Content-Type": "application/json", },
             });
             const data = await res.json();
             setAllLeave(data);
-            console.log(data);
         } catch (error) {
             console.error("Fetch leave error:", error);
             throw error;
@@ -82,19 +95,36 @@ export default function Leave() {
     };
 
     useEffect(() => {
-        fetchAllLeave()
-        fetchUserLeave()
+        if (role == "Admin") {
+            fetchAllLeave()
+            async function fetchMyProfile() {
+                try {
+                    const res = await fetch(BaseUrl + "allUserLeaveInfo", {
+                        credentials: "include",
+                        method: "GET",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                    });
+                    const data = await res.json();
+                    setAllUsers(data.data);
+                } catch (error) {
+                    console.error("Fetch profile error:", error);
+                    throw error;
+                }
+            };
+            fetchMyProfile()
+        }
+        if (role == "Employee") {
+            fetchRules()
+            fetchUserLeave()
+        }
     }, [])
 
     const fetchUserLeave = async () => {
         try {
-            const userId = localStorage.getItem("userId");
-            // const token = localStorage.getItem("token");
-
-            const res = await fetch(`${BaseUrl}userLeave/${userId}`, {
-                headers: {
-                    // Authorization: `Bearer ${token}`,
-                },
+            const res = await fetch(`${BaseUrl}userLeave`, {
+                credentials: "include",
             });
             const data = await res.json();
             if (res.ok) {
@@ -122,18 +152,11 @@ export default function Leave() {
 
     const handleLeaveAction = async (leaveId, status) => {
         try {
-            const userId = localStorage.getItem("userId"); // or from Redux
-            // const token = localStorage.getItem("token");
-
             await fetch(`${BaseUrl}leaveStatus/${leaveId}`, {
-                method: "PATCH",
-                headers: {
-                    "Content-Type": "application/json",
-                    // Authorization: `Bearer ${token}`,
-                },
+                method: "PATCH", headers: { "Content-Type": "application/json", },
                 body: JSON.stringify({
                     status,
-                    actionBy: userId,
+                    actionBy: user?._id,
                     actionDate: new Date(),
                 }),
             });
@@ -174,6 +197,23 @@ export default function Leave() {
         }
     };
 
+    const [rulesInfo, setRulesInfo] = useState();
+    const fetchRules = async () => {
+        try {
+            const response = await fetch(`${BaseUrl}userRules`, { credentials: "include", });
+            if (!response.ok) {
+                console.info("no data found");
+            } else {
+                const data = await response.json();
+                setRulesInfo(data)
+            }
+        } catch (error) {
+            toast.error("Add Error:", error.message);
+            console.log(error);
+
+        }
+    };
+
     return (<>{role == "Employee" ?
         <div className="w-full px-3">
             <div className="bg-white shadow-md rounded-xl hover:shadow-lg transition p-5">
@@ -187,15 +227,219 @@ export default function Leave() {
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {userLeave?.map((leave, idx) => {
-                        const startDate = new Date(leave?.startDate);
-                        const endDate = new Date(leave?.endDate);
-                        const totalDays =
-                            Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
-                        return (
-                            <div key={idx}
-                                className={`bg-white rounded-xl shadow-md hover:shadow-lg transition p-5 border-l-4
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+                    <div className="flex gap-2 items-center">
+                        <button className="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-md"
+                            onClick={() => setText("Balance")}>
+                            Balance
+                        </button>
+                        <button className="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-md"
+                            onClick={() => setText("Logs")}>
+                            Logs
+                        </button>
+                    </div>
+                    <div className="">
+                        {text == "Logs" &&
+                            <div className="flex gap-2">
+                                <select
+                                    className="input"
+                                // value={year}
+                                // onChange={(e) => setYear(Number(e.target.value))}
+                                >
+                                    {years.map((y) => (
+                                        <option key={y} value={y}>
+                                            {y}
+                                        </option>
+                                    ))}
+                                </select>
+
+                            </div>}
+                    </div>
+                </div>
+
+                {text == "Balance" &&
+                    <div className="grid grid-cols-12 gap-4">
+                        <div className="col-span-12 md:col-span-3">
+                            {rulesInfo?.casualLeaveRemaining &&
+                                <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition p-4 border-l-4 border-green-500">
+                                    <div className="flex justify-between items-center mb-1">
+                                        <h3 className="text-lg font-semibold text-gray-800">
+                                            Casual Leaves
+                                        </h3>
+                                    </div>
+
+                                    <div className="flex justify-between items-center gap-2">
+                                        <div className="text-sm text-gray-800 space-y-2 w-[60%]">
+                                            <p className="flex justify-between">
+                                                <span className="font-medium">Total Leaves:</span>
+                                                <span className="font-semibold">
+                                                    {rulesInfo?.casualLeave ?? 0}
+                                                </span>
+                                            </p>
+
+                                            <p className="flex justify-between">
+                                                <span className="font-medium">Remaining Leave:</span>
+                                                <span className="text-green-600 font-bold">
+                                                    {rulesInfo?.casualLeaveRemaining ?? 0}
+                                                </span>
+                                            </p>
+
+                                            <p className="flex justify-between">
+                                                <span className="font-medium">Applied Leave:</span>
+                                                <span className="text-red-600 font-semibold">
+                                                    {(rulesInfo?.casualLeave ?? 0) - (rulesInfo?.casualLeaveRemaining ?? 0)}
+                                                </span>
+                                            </p>
+                                        </div>
+
+                                        <div className="w-[40%] flex justify-center">
+                                            <div className="bg-green-50 border border-green-200 rounded-lg px-4 py-3 text-center shadow-sm">
+                                                <h1 className="text-3xl font-bold text-green-700 leading-none">
+                                                    {rulesInfo?.casualLeaveRemaining ?? 0}
+                                                </h1>
+                                                <p className="text-xs font-medium text-green-700 mt-1">
+                                                    Leave Balance
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>}
+
+                            {rulesInfo?.sickLeaveRemaining &&
+                                <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition p-4 border-l-4 mt-4 border-red-500">
+                                    <div className="flex justify-between items-center mb-1">
+                                        <h3 className="text-lg font-semibold text-gray-800">
+                                            Sick Leaves
+                                        </h3>
+                                    </div>
+
+                                    <div className="flex justify-between items-center gap-2">
+                                        <div className="text-sm text-gray-800 space-y-2 w-[60%]">
+                                            <p className="flex justify-between">
+                                                <span className="font-medium">Total Leaves:</span>
+                                                <span className="font-semibold">
+                                                    {rulesInfo?.sickLeave ?? 0}
+                                                </span>
+                                            </p>
+
+                                            <p className="flex justify-between">
+                                                <span className="font-medium">Remaining Leave:</span>
+                                                <span className="text-green-600 font-bold">
+                                                    {rulesInfo?.sickLeaveRemaining ?? 0}
+                                                </span>
+                                            </p>
+
+                                            <p className="flex justify-between">
+                                                <span className="font-medium">Applied Leave:</span>
+                                                <span className="text-red-600 font-semibold">
+                                                    {(rulesInfo?.sickLeave ?? 0) - (rulesInfo?.sickLeaveRemaining ?? 0)}
+                                                </span>
+                                            </p>
+                                        </div>
+
+                                        <div className="w-[40%] flex justify-center">
+                                            <div className="bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-center shadow-sm">
+                                                <h1 className="text-3xl font-bold text-red-700 leading-none">
+                                                    {rulesInfo?.sickLeaveRemaining ?? 0}
+                                                </h1>
+                                                <p className="text-xs font-medium text-red-700 mt-1">
+                                                    Leave Balance
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>}
+
+                            <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition p-4 border-l-4 mt-4 border-yellow-500">
+                                <div className="flex justify-between items-center mb-1">
+                                    <h3 className="text-lg font-semibold text-gray-800">
+                                        Comp Off
+                                    </h3>
+                                </div>
+
+                                <div className="flex justify-between items-center gap-2">
+                                    <div className="text-sm text-gray-800 space-y-2 w-[60%]">
+                                        <p className="flex justify-between">
+                                            <span className="font-medium">Credited Leaves:</span>
+                                            <span className="font-semibold">
+                                                {0}
+                                            </span>
+                                        </p>
+                                        <p className="flex justify-between">
+                                            <span className="font-medium">Total Leaves:</span>
+                                            <span className="font-semibold">
+                                                {0}
+                                            </span>
+                                        </p>
+
+                                        <p className="flex justify-between">
+                                            <span className="font-medium">Remaining Leave:</span>
+                                            <span className="text-yellow-600 font-bold">
+                                                {0}
+                                            </span>
+                                        </p>
+
+                                        <p className="flex justify-between">
+                                            <span className="font-medium">Applied Leave:</span>
+                                            <span className="text-red-600 font-semibold">
+                                                {0}
+                                            </span>
+                                        </p>
+                                    </div>
+
+                                    <div className="w-[40%] flex justify-center">
+                                        <div className="bg-yellow-50 border border-yellow-200 rounded-lg px-4 py-3 text-center shadow-sm">
+                                            <h1 className="text-3xl font-bold text-yellow-700 leading-none">
+                                                {0}
+                                            </h1>
+                                            <p className="text-xs font-medium text-yellow-700 mt-1">
+                                                Leave Balance
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="col-span-12 md:col-span-9 overflow-x-auto">
+                            <table className="w-full text-sm rounded-md">
+                                <thead>
+                                    <tr className="bg-indigo-600 text-white text-left">
+                                        <th className="px-4 py-3">Deatils</th>
+                                        {months.map((i, idx) => (
+                                            <th className="px-4 py-3">{i?.name}</th>
+                                        ))}
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+                                    <tr className="border-b hover:bg-gray-50">
+                                        <td className="px-4 py-3">Applied Leaves</td>
+                                        <td className="px-4 py-3">0</td>
+                                        <td className="px-4 py-3">0</td>
+                                        <td className="px-4 py-3">0</td>
+                                        <td className="px-4 py-3">0</td>
+                                        <td className="px-4 py-3">0</td>
+                                        <td className="px-4 py-3">0</td>
+                                        <td className="px-4 py-3">0</td>
+                                        <td className="px-4 py-3">0</td>
+                                        <td className="px-4 py-3">0</td>
+                                        <td className="px-4 py-3">0</td>
+                                        <td className="px-4 py-3">0</td>
+                                        <td className="px-4 py-3">0</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>}
+
+                {text == "Logs" &&
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {userLeave?.map((leave, idx) => {
+                            const startDate = new Date(leave?.startDate);
+                            const endDate = new Date(leave?.endDate);
+                            const totalDays = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
+                            return (<div key={idx} className={`bg-white rounded-xl shadow-md hover:shadow-lg transition p-5 border-l-4
                                     ${leave.status === "Approved" ? "border-green-500" : leave.status === "Rejected" ? "border-red-500" : "border-yellow-500"}`}>
                                 <div className="flex justify-between items-center mb-3">
                                     <h3 className="text-lg font-semibold text-gray-800">
@@ -254,10 +498,9 @@ export default function Leave() {
                                             <Eye size={18} />
                                         </button>
                                     </div>}
-                            </div>
-                        );
-                    })}
-                </div>
+                            </div>);
+                        })}
+                    </div>}
 
                 <Modal open={open} onClose={() => setOpen(false)}>
                     <Modal.Header title="Apply for Leave" />
@@ -267,39 +510,65 @@ export default function Leave() {
                                 <label className="text-sm font-medium text-gray-700 mb-1">
                                     Leave Type
                                 </label>
-                                <select value={formData?.leaveType} onChange={handleChange} name="leaveType"
-                                    className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                <select value={formData?.leaveType} onChange={handleChange} name="leaveType" className="input">
                                     <option value="">Select</option>
-                                    <option value="Sick Leave">Sick Leave</option>
-                                    <option value="Tarvel Leave">Tarvel Leave</option>
-                                    <option value="Personal Leave">Personal Leave</option>
+                                    {rulesInfo?.casualLeaveRemaining &&
+                                        <option value="Causal Leave">Causal Leave</option>}
+                                    {rulesInfo?.sickLeaveRemaining &&
+                                        <option value="Sick Leave">Sick Leave</option>}
+                                    {rulesInfo?.compOffRemaining &&
+                                        <option value="Comp Off">Comp Off</option>}
+                                    {rulesInfo?.lossOfPay &&
+                                        <option value="Loss of Pay">Loss of Pay</option>}
                                 </select>
                             </div>
-                            <div className="flex flex-col">
-                                <label className="text-sm font-medium text-gray-700 mb-1">
-                                    Start Date
-                                </label>
-                                <input
-                                    value={formData?.startDate}
-                                    onChange={handleChange}
-                                    name="startDate"
-                                    type="date"
-                                    className="border border-gray-300 rounded-lg px-3 py-2 text-sm
-                                    focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                />
+                            <div className="flex gap-2 w-full">
+                                <div className="flex flex-col w-full">
+                                    <label className="text-sm font-medium text-gray-700 mb-1">
+                                        Start Date
+                                    </label>
+                                    <input
+                                        value={formData?.startDate}
+                                        onChange={handleChange}
+                                        name="startDate"
+                                        type="date"
+                                        className="input py-[7px]"
+                                    />
+                                </div>
+                                <div className="flex flex-col w-full">
+                                    <label className="text-sm font-medium text-gray-700 mb-1">
+                                        Select Half
+                                    </label>
+                                    <select name="" className="input">
+                                        <option>Select</option>
+                                        <option value="First Half">First Half</option>
+                                        <option value="Second Half">Second Half</option>
+                                    </select>
+                                </div>
                             </div>
-                            <div className="flex flex-col">
-                                <label className="text-sm font-medium text-gray-700 mb-1">
-                                    End Date
-                                </label>
-                                <input
-                                    value={formData?.endDate}
-                                    onChange={handleChange}
-                                    name="endDate"
-                                    type="date"
-                                    className="border border-gray-300 rounded-lg px-3 py-2 text-sm
-                                    focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                />
+                            <div className="flex gap-2 w-full">
+                                <div className="flex flex-col w-full">
+                                    <label className="text-sm font-medium text-gray-700 mb-1">
+                                        End Date
+                                    </label>
+                                    <input
+                                        value={formData?.endDate}
+                                        onChange={handleChange}
+                                        name="endDate"
+                                        type="date"
+                                        className="input py-[7px]"
+                                    />
+                                </div>
+                                <div className="flex flex-col w-full">
+                                    <label className="text-sm font-medium text-gray-700 mb-1">
+                                        Select Half
+                                    </label>
+                                    <select name="" className="input">
+                                        <option>Select</option>
+                                        <option value="First Half">First Half</option>
+                                        <option value="Second Half">Second Half</option>
+                                    </select>
+                                </div>
                             </div>
                             <div className="flex flex-col">
                                 <label className="text-sm font-medium text-gray-700 mb-1">
@@ -311,8 +580,7 @@ export default function Leave() {
                                     name="reason"
                                     rows="3"
                                     placeholder="Enter reason..."
-                                    className="border border-gray-300 rounded-lg px-3 py-2 text-sm resize-none
-                                    focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                    className="input"
                                 />
                             </div>
                         </div>
@@ -344,8 +612,9 @@ export default function Leave() {
                                     className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
                                     <option value="">Select</option>
                                     <option value="Sick Leave">Sick Leave</option>
-                                    <option value="Tarvel Leave">Tarvel Leave</option>
-                                    <option value="Personal Leave">Personal Leave</option>
+                                    <option value="Causal Leave">Causal Leave</option>
+                                    <option value="Comp Off">Comp Off</option>
+                                    <option value="Loss of Pay">Loss of Pay</option>
                                 </select>
                             </div>
                             <div className="flex flex-col">
@@ -507,32 +776,61 @@ export default function Leave() {
                         </div>
                     </div>
                 </div>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+                    <div className="flex gap-2 items-center">
+                        <button className="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-md"
+                            onClick={() => setText("Logs")}>
+                            Logs
+                        </button>
+                        <button className="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-md"
+                            onClick={() => setText("Balance")}>
+                            Balance
+                        </button>
+                    </div>
+                    <div className="">
+                        {text == "Balance" &&
+                            <div className="flex gap-2">
+                                <select
+                                    className="input"
+                                // value={year}
+                                // onChange={(e) => setYear(Number(e.target.value))}
+                                >
+                                    {years.map((y) => (
+                                        <option key={y} value={y}>
+                                            {y}
+                                        </option>
+                                    ))}
+                                </select>
 
-                <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                        <thead>
-                            <tr className="bg-indigo-600 text-white text-left">
-                                <th className="px-4 py-3">Emp Name</th>
-                                <th className="px-4 py-3">Designation</th>
-                                <th className="px-4 py-3">Leave Type</th>
-                                <th className="px-4 py-3">Reason</th>
-                                <th className="px-4 py-3">Start Date</th>
-                                <th className="px-4 py-3">End Date</th>
-                                <th className="px-4 py-3">Days</th>
-                                <th className="px-4 py-3">Status</th>
-                                <th className="px-4 py-3 text-center">Action</th>
-                            </tr>
-                        </thead>
+                            </div>}
+                    </div>
+                </div>
 
-                        <tbody>
-                            {allLeave?.map((emp, idx) => {
-                                const start = new Date(emp?.startDate);
-                                const end = new Date(emp?.endDate);
-                                const totalDays = Math.floor((end - start) / (1000 * 60 * 60 * 24)) + 1;
-                                return (
-                                    <tr key={idx} className="border-b hover:bg-gray-50">
-                                        <td className="px-4 py-3 font-medium">
-                                            {/* {emp?.user?.username} */}
+                {text == "Logs" &&
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                            <thead>
+                                <tr className="bg-indigo-600 text-white text-left">
+                                    <th className="p-3">Emp Name</th>
+                                    <th className="p-3">Department</th>
+                                    <th className="p-3">Designation</th>
+                                    <th className="p-3">Leave Type</th>
+                                    <th className="p-3">Reason</th>
+                                    <th className="p-3">Start Date</th>
+                                    <th className="p-3">End Date</th>
+                                    <th className="p-3">Days</th>
+                                    <th className="p-3">Status</th>
+                                    <th className="p-3 text-center">Action</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                {allLeave?.map((emp, idx) => {
+                                    const start = new Date(emp?.startDate);
+                                    const end = new Date(emp?.endDate);
+                                    const totalDays = Math.floor((end - start) / (1000 * 60 * 60 * 24)) + 1;
+                                    return (<tr key={idx} className="border-b hover:bg-gray-50">
+                                        <td className="p-3 font-medium">
                                             <Link to={`/userProfile/${emp?.user?._id}`} className="flex items-center justify-start">
                                                 {emp?.user?.profileImage ?
                                                     <img src={emp?.user?.profileImage} alt={emp?.user?.username.slice(0, 1).toUpperCase()} className="w-8 h-8 rounded-full mr-2" />
@@ -542,14 +840,15 @@ export default function Leave() {
                                                 {emp?.user?.username}
                                             </Link>
                                         </td>
-                                        <td className="px-4 py-3">{emp?.user?.designation || "-"}</td>
-                                        <td className="px-4 py-3">{emp?.leaveType}</td>
-                                        <td className="px-4 py-3">{emp?.reason}</td>
-                                        <td className="px-4 py-3">{emp?.startDate.toString()?.split("T")[0]}</td>
-                                        <td className="px-4 py-3">{emp?.endDate.toString()?.split("T")[0]}</td>
-                                        <td className="px-4 py-3">{totalDays}</td>
-                                        <td className="px-4 py-3">{emp?.status}</td>
-                                        <td className="px-4 py-3 text-center">
+                                        <td className="p-3">{emp?.user?.designation || "-"}</td>
+                                        <td className="p-3">{emp?.user?.designation || "-"}</td>
+                                        <td className="p-3">{emp?.leaveType}</td>
+                                        <td className="p-3">{emp?.reason}</td>
+                                        <td className="p-3">{emp?.startDate.toString()?.split("T")[0]}</td>
+                                        <td className="p-3">{emp?.endDate.toString()?.split("T")[0]}</td>
+                                        <td className="p-3">{totalDays}</td>
+                                        <td className="p-3">{emp?.status}</td>
+                                        <td className="p-3 text-center">
                                             <button
                                                 onClick={() => handleOpen(emp)}
                                                 className="inline-flex items-center justify-center w-9 h-9 rounded-full 
@@ -558,12 +857,63 @@ export default function Leave() {
                                                 <Eye size={18} />
                                             </button>
                                         </td>
-                                    </tr>
-                                )
-                            })}
-                        </tbody>
-                    </table>
-                </div>
+                                    </tr>)
+                                })}
+                            </tbody>
+                        </table>
+                    </div>}
+
+                {text == "Balance" &&
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                            <thead>
+                                <tr className="bg-indigo-600 text-white text-left">
+                                    <th className="p-3">Emp Name</th>
+                                    <th className="p-3">Designation</th>
+                                    <th className="p-3">Department</th>
+                                    <th className="p-3">Casual Leave</th>
+                                    <th className="p-3">Remain Casual Leave</th>
+                                    <th className="p-3">Comp off</th>
+                                    <th className="p-3">Sick Leave</th>
+                                    <th className="p-3">Remain Sick Leave</th>
+                                    <th className="p-3 text-center">Action</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                {allUsers?.map((emp, idx) => {
+                                    return (<tr key={idx} className="border-b hover:bg-gray-50">
+                                        <td className="p-3 font-medium">
+                                            <Link to={`/userProfile/${emp?._id}`} className="flex items-center justify-start">
+                                                {emp?.profileImage ?
+                                                    <img src={emp?.profileImage} alt={emp?.username.slice(0, 1).toUpperCase()} className="w-8 h-8 rounded-full mr-2" />
+                                                    : <div className="w-8 h-8 rounded-full bg-indigo-500 text-white flex items-center justify-center mr-2">
+                                                        {emp?.username.slice(0, 1).toUpperCase()}
+                                                    </div>}
+                                                {emp?.username}
+                                            </Link>
+                                        </td>
+                                        <td className="p-3">{emp?.userWork[0]?.designation || "-"}</td>
+                                        <td className="p-3">{emp?.userWork[0]?.department || "-"}</td>
+                                        <td className="p-3">{emp?.userExtraDetail[0]?.casualLeave || "-"}</td>
+                                        <td className="p-3">{emp?.userExtraDetail[0]?.casualLeaveRemaining || "-"}</td>
+                                        <td className="p-3">{emp?.userExtraDetail[0]?.compOffRemaining || "-"}</td>
+                                        <td className="p-3">{emp?.userExtraDetail[0]?.sickLeave || "-"}</td>
+                                        <td className="p-3">{emp?.userExtraDetail[0]?.sickLeaveRemaining || "-"}</td>
+                                        <td className="px-4 py-3 text-center">
+                                            <button
+                                                // onClick={() => handleOpen(emp)}
+                                                className="inline-flex items-center justify-center w-9 h-9 rounded-full 
+                                                 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition"
+                                            >
+                                                <Eye size={18} />
+                                            </button>
+                                        </td>
+                                    </tr>)
+                                })}
+                            </tbody>
+                        </table>
+                    </div>}
 
                 <Modal open={open} onClose={() => setOpen(false)}>
                     <Modal.Header title="Employee Leave Details" />
@@ -643,14 +993,12 @@ export default function Leave() {
 
                     <Modal.Footer>
                         <div className="flex justify-between w-full">
-
                             <button
                                 onClick={() => setOpen(false)}
                                 className="px-4 py-2 border rounded-lg text-gray-700 hover:bg-gray-100"
                             >
                                 Close
                             </button>
-
                             {leaveDetails?.status === "Pending" && (
                                 <div className="flex gap-3">
                                     <button
@@ -702,7 +1050,6 @@ export default function Leave() {
                                     </button>
                                 </div>
                             )}
-
                         </div>
                     </Modal.Footer>
                 </Modal>

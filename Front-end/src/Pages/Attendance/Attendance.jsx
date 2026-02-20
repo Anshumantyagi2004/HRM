@@ -418,11 +418,11 @@ export default function Attendance() {
                 <div className="flex flex-col">
                     <div className="flex items-center gap-2 justify-between">
                         <div className="flex items-center gap-2">
-                            <button className="bg-indigo-500 hover:bg-indigo-600 text-white py-2 px-2 rounded-md"
+                            <button className="bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-2 rounded-md"
                                 onClick={() => setText("Daily")}>
                                 Daily Log
                             </button>
-                            <button className="bg-indigo-500 hover:bg-indigo-600 text-white py-2 px-2 rounded-md"
+                            <button className="bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-2 rounded-md"
                                 onClick={() => { setText("Monthly"); fetchMonthlyAttendance(year, month) }}>
                                 Monthly Log
                             </button>

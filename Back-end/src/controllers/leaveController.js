@@ -1,11 +1,47 @@
 import mongoose from "mongoose";
 import Leave from "../models/Leave.js";
+import { UserExtraDetail } from "../models/UserExtraDetails.js";
 import { getUserSocketId } from "../socket/socket.js";
+
+const calculateDays = (startDate, endDate) => {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const diffTime = end - start;
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+};
+
+const deductLeave = (userExtra, leaveType, days, leave) => {
+    if (leaveType === "Causal Leave") {
+        if (userExtra.casualLeaveRemaining < days) {
+            leave.leaveType = "Loss of Pay";
+            return;
+        }
+        userExtra.casualLeaveRemaining -= days;
+    }
+
+    if (leaveType === "Sick Leave") {
+        if (userExtra.sickLeaveRemaining < days) {
+            leave.leaveType = "Loss of Pay";
+            return;
+        }
+        userExtra.sickLeaveRemaining -= days;
+    }
+};
+
+const restoreLeave = (userExtra, leaveType, days) => {
+    if (leaveType === "Causal Leave") {
+        userExtra.casualLeaveRemaining += days;
+    }
+
+    if (leaveType === "Sick Leave") {
+        userExtra.sickLeaveRemaining += days;
+    }
+};
 
 export const applyLeave = async (req, res) => {
     try {
-        // const userId = req.user.id; // from auth middleware
-        const { leaveType, startDate, endDate, reason, userId } = req.body;
+        const userId = req.user.id;
+        const { leaveType, startDate, endDate, reason } = req.body;
 
         if (new Date(startDate) > new Date(endDate)) {
             return res.status(400).json({
@@ -37,8 +73,8 @@ export const applyLeave = async (req, res) => {
 export const getAllLeave = async (req, res) => {
     try {
         const leave = await Leave.find()
-            .populate("user", "username email designation profileImage")
-            .populate("actionBy", "username email designation profileImage")
+            .populate("user", "username email profileImage")
+            .populate("actionBy", "username email profileImage")
             .sort({ createdAt: -1 });
 
         res.status(200).json(leave);
@@ -51,10 +87,10 @@ export const getAllLeave = async (req, res) => {
 //find by userid
 export const getLeaveByUser = async (req, res) => {
     try {
-        const { user } = req.params;
+        const userId = req.user.id;
 
         const leaves = await Leave.find({
-            user: new mongoose.Types.ObjectId(user),
+            user: new mongoose.Types.ObjectId(userId),
         })
             .populate("user", "username email designation")
             .populate("actionBy", "username email designation")
@@ -72,10 +108,12 @@ export const getLeaveByUser = async (req, res) => {
 };
 
 //leave status update
-export const updateLeaveStatus = async (req, res) => {
+export const updateLeaveStatus1 = async (req, res) => {
     try {
         const { status, actionBy } = req.body;
         const { id } = req.params;
+
+
 
         const leave = await Leave.findByIdAndUpdate(
             id,
@@ -85,22 +123,7 @@ export const updateLeaveStatus = async (req, res) => {
                 actionDate: new Date(),
             },
             { new: true }
-        ).populate("user"); // IMPORTANT
-
-        // // 🔔 SOCKET NOTIFICATION
-        // const employeeId = leave.user._id?.toString();
-        // const socketId = getUserSocketId(employeeId);
-
-        // if (socketId) {
-        //     req.io.to(socketId).emit("leave-status", {
-        //         status: leave.status,
-        //         leaveId: leave._id,
-        //     });
-
-        //     console.log("Leave status sent via socket to:", employeeId);
-        // } else {
-        //     console.log("Employee not connected to socket");
-        // }
+        ).populate("user");
 
         res.status(200).json({
             message: `Leave ${status} successfully`,
@@ -112,6 +135,67 @@ export const updateLeaveStatus = async (req, res) => {
     }
 };
 
+export const updateLeaveStatus = async (req, res) => {
+    try {
+        const { status, actionBy } = req.body;
+        const { id } = req.params;
+
+        const leave = await Leave.findById(id).populate("user");
+        if (!leave) return res.status(404).json({ message: "Leave not found" });
+
+        const userExtra = await UserExtraDetail.findOne({ userId: leave.user._id });
+        if (!userExtra) return res.status(404).json({ message: "User extra details not found" });
+        
+        const days = calculateDays(leave.startDate, leave.endDate);
+        const oldStatus = leave.status;
+        const leaveType = leave.leaveType;
+
+        // Pending → Approved
+        if (oldStatus === "Pending" && status === "Approved") {
+            deductLeave(userExtra, leaveType, days, leave);
+        }
+
+        // Pending → Rejected
+        if (oldStatus === "Pending" && status === "Rejected") {
+            leave.leaveType = "Loss of Pay";
+        }
+
+        // Approved → Rejected
+        if (oldStatus === "Approved" && status === "Rejected") {
+            restoreLeave(userExtra, leaveType, days);
+            leave.leaveType = "Loss of Pay";
+        }
+
+        // Approved → Pending (Cancel)
+        if (oldStatus === "Approved" && status === "Pending") {
+            restoreLeave(userExtra, leaveType, days);
+        }
+
+        // Rejected → Approved
+        if (oldStatus === "Rejected" && status === "Approved") {
+            deductLeave(userExtra, leaveType, days, leave);
+        }
+        if (oldStatus === "Rejected" && status === "Pending") {
+            // nothing
+        }
+
+        leave.status = status;
+        leave.actionBy = actionBy;
+        leave.actionDate = new Date();
+
+        await userExtra.save();
+        await leave.save();
+
+        res.status(200).json({
+            message: `Leave ${oldStatus} → ${status} successfully`,
+            leave,
+            days
+        });
+    } catch (error) {
+        console.error("Leave action error:", error);
+        res.status(500).json({ message: "Failed to update leave" });
+    }
+};
 
 //pending leave edit by user
 export const updateUserLeave = async (req, res) => {

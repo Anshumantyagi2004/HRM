@@ -1,6 +1,6 @@
 import express from 'express';
 import { authenticateJWT } from '../middleware/authMiddleware.js';
-import { signup, login, logout, getUserById, getAllUsers, addNewUser, updateUserById, educationUserById, getEducationByUser, workUserById, getWorkByUser, workHistoryUserById, updateUserByAdmin, getUserByAdmin, educationUserByAdmin, getEducationByAdmin, workUserByAdmin, getWorkByAdmin, workHistoryUserByAdmin, rulesById, getRuleById, rulesByAdmin, getRuleByAdmin } from '../controllers/authController.js';
+import { signup, login, logout, getUserById, getAllUsers, addNewUser, updateUserById, educationUserById, getEducationByUser, workUserById, getWorkByUser, workHistoryUserById, updateUserByAdmin, getUserByAdmin, educationUserByAdmin, getEducationByAdmin, workUserByAdmin, getWorkByAdmin, workHistoryUserByAdmin, rulesById, getRuleById, rulesByAdmin, getRuleByAdmin, addOrUpdatePayroll, getUserPayroll, addOrUpdatePayrollByAdmin, getUserPayrollByAdmin, getAllUsersPayroll, findUserPayroll, getAllUsersLeave } from '../controllers/authController.js';
 import { applyLeave, getAllLeave, getLeaveByUser, updateLeaveStatus, updateUserLeave } from '../controllers/leaveController.js';
 import documentRoutes from "./documentRoutes.js";
 import { clockIn, clockOut, getAdminAttendanceByDate, getAttendanceByDate, getMonthlyAttendanceAdmin, getTodayAttendance } from '../controllers/attendanceController.js';
@@ -29,9 +29,12 @@ router.post("/userWorkHistory", authenticateJWT, workHistoryUserById);
 router.patch("/userWorkByAdmin/:id", workUserByAdmin); //for admin
 router.get("/userWorkByAdmin/:id", getWorkByAdmin);//for admin
 router.post("/userWorkHistoryByAdmin/:id", workHistoryUserByAdmin);//for admin
-router.post("/applyLeave", applyLeave);
+
+// LEAVE
+router.post("/applyLeave", authenticateJWT, applyLeave);
 router.get("/allLeave", getAllLeave);
-router.get("/userLeave/:user", getLeaveByUser);
+router.get("/allUserLeaveInfo", getAllUsersLeave);
+router.get("/userLeave", authenticateJWT, getLeaveByUser);
 router.patch("/leaveStatus/:id", updateLeaveStatus);
 router.patch("/editLeave/:id", updateUserLeave);
 router.use("/api", authenticateJWT, documentRoutes);
@@ -41,4 +44,12 @@ router.get("/attendanceByDate/:userId", getAttendanceByDate);
 router.post("/clock-out", authenticateJWT, clockOut);
 router.get("/allUserAttendance/byDate", getAdminAttendanceByDate);
 router.get("/admin/attendance/month", getMonthlyAttendanceAdmin);
+
+// PAYROLL
+router.patch("/userPayroll", authenticateJWT, addOrUpdatePayroll);
+router.get("/userPayroll", authenticateJWT, getUserPayroll);
+router.patch("/userPayroll/:id", authenticateJWT, addOrUpdatePayrollByAdmin);
+router.get("/userPayroll/:id", authenticateJWT, getUserPayrollByAdmin);
+router.get("/allUserPayroll", authenticateJWT, getAllUsersPayroll);
+router.get("/UserPayDetail", authenticateJWT, findUserPayroll);
 export default router;
