@@ -1,5 +1,6 @@
 import { Attendance } from '../models/Attendance.js';
 import { User } from '../models/User.js';
+import { UserExtraDetail } from "../models/UserExtraDetails.js";
 
 const OFFICE_LOCATION = {
   latitude: 28.69865783085182,
@@ -24,30 +25,63 @@ const getDistanceInMeters = (lat1, lon1, lat2, lon2) => {
   return R * c;
 };
 
-const OFFICE_START_TIME = { h: 9, m: 30 };
-const ANOMALY_TIME = { h: 10, m: 0 };
-
-const calculateLateMinutes = (clockInTime) => {
-  const istOffset = 5.5 * 60; // minutes
-  const istHours = clockInTime.getUTCHours() + Math.floor(istOffset / 60);
-  const istMinutes = clockInTime.getUTCMinutes() + (istOffset % 60);
-
-  const officeStartMinutes = OFFICE_START_TIME.h * 60 + OFFICE_START_TIME.m;
-  const clockInMinutes = istHours * 60 + istMinutes;
-
-  const diff = clockInMinutes - officeStartMinutes;
-  return diff > 0 ? diff : 0;
+const convertToMinutes = (timeStr) => {
+  const [h, m] = timeStr.split(":").map(Number);
+  return h * 60 + m;
 };
 
-const isAnomaly = (clockInTime) => {
+const getISTMinutes = (date) => {
   const istOffset = 5.5 * 60; // minutes
-  const istHours = clockInTime.getUTCHours() + Math.floor(istOffset / 60);
-  const istMinutes = clockInTime.getUTCMinutes() + (istOffset % 60);
+  const utcMinutes = date.getUTCHours() * 60 + date.getUTCMinutes();
+  return utcMinutes + istOffset;
+};
 
-  const anomalyMinutes = ANOMALY_TIME.h * 60 + ANOMALY_TIME.m;
-  const clockInMinutes = istHours * 60 + istMinutes;
+const calculateLateAndStatus = (clockInUTC, userShift) => {
+  const clockInMinutes = getISTMinutes(clockInUTC);
 
-  return clockInMinutes > anomalyMinutes;
+  const shiftStart = convertToMinutes(userShift.shiftStartTime); // "09:30"
+  const graceMinutes = convertToMinutes(userShift.inTimeGrace); // "00:15" → 15
+
+  const graceLimit = shiftStart + graceMinutes; // 09:45
+
+  let lateBy = 0;
+  let status = "PRESENT";
+
+  // ❌ Beyond grace → ANOMALIES + lateBy starts after grace
+  if (clockInMinutes > graceLimit) {
+    status = "ANOMALIES";
+    lateBy = clockInMinutes - graceLimit; // 🔥 smart late count
+  } else {
+    // ✅ Within grace → PRESENT + no late
+    status = "PRESENT";
+    lateBy = 0;
+  }
+
+  return { lateBy, status };
+};
+
+const calculateClockOutStatus = (clockOutUTC, workDuration, userShift) => {
+  const clockOutMinutes = getISTMinutes(clockOutUTC);
+
+  const shiftOut = convertToMinutes(userShift.shiftOutTime);   // "18:30"
+  const outGrace = convertToMinutes(userShift.outTimeGrace);  // "00:15"
+  const graceLimit = shiftOut + outGrace;                      // 18:45
+
+  const halfDayMinutes = convertToMinutes(userShift.halfDay); // "04:30" → 270
+
+  let status = "PRESENT";
+
+  // 🌓 Half Day Rule
+  if (workDuration < halfDayMinutes) {
+    return "HALF_DAY";
+  }
+
+  // ❌ Early out OR late out beyond grace
+  if (clockOutMinutes < shiftOut || clockOutMinutes > graceLimit) {
+    return "ANOMALIES";
+  }
+
+  return status;
 };
 
 //Clock in
@@ -71,6 +105,12 @@ export const clockIn = async (req, res) => {
       return res.status(403).json({ message: "You are not inside the office" });
     }
 
+    const userShift = await UserExtraDetail.findOne({ userId });
+
+    if (!userShift) {
+      return res.status(400).json({ message: "Shift config not set for user" });
+    }
+
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
 
@@ -83,14 +123,13 @@ export const clockIn = async (req, res) => {
       return res.status(400).json({ message: "Already clocked in today" });
     }
 
-    const clockInTimeUTC = new Date(); // ✅ save UTC
-    const lateBy = calculateLateMinutes(clockInTimeUTC);
-    const status = isAnomaly(clockInTimeUTC) ? "ANOMALIES" : "PRESENT";
+    const clockInTimeUTC = new Date();
+    const { lateBy, status } = calculateLateAndStatus(clockInTimeUTC, userShift);
 
     const attendance = await Attendance.create({
       userId,
       date: todayStart,
-      clockInTime: clockInTimeUTC, // ✅ store UTC only
+      clockInTime: clockInTimeUTC,
       lateBy,
       status,
       clockStatus: "CLOCKED_IN",
@@ -144,9 +183,9 @@ export const getTodayAttendance = async (req, res) => {
 };
 
 //Clock out
-export const clockOut = async (req, res) => {
+export const clockOut1 = async (req, res) => {
   try {
-    const  userId  = req.user.id;
+    const userId = req.user.id;
 
     const now = new Date();
     const istNow = new Date(
@@ -188,6 +227,70 @@ export const clockOut = async (req, res) => {
 
   } catch (error) {
     console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+export const clockOut = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const nowUTC = new Date();
+
+    const istNow = new Date(
+      nowUTC.toLocaleString("en-US", { timeZone: "Asia/Kolkata" })
+    );
+
+    const startOfDay = new Date(istNow);
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const endOfDay = new Date(istNow);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    const attendance = await Attendance.findOne({
+      userId,
+      clockStatus: "CLOCKED_IN",
+      clockInTime: { $gte: startOfDay, $lte: endOfDay },
+    });
+
+    if (!attendance) {
+      return res.status(400).json({
+        message: "No active clock-in found",
+      });
+    }
+
+    // 🔥 Fetch shift config
+    const userShift = await UserExtraDetail.findOne({ userId });
+
+    if (!userShift) {
+      return res.status(400).json({
+        message: "Shift config not found for user",
+      });
+    }
+
+    // ⏱ Work duration
+    const workDuration = Math.floor(
+      (istNow - attendance.clockInTime) / (1000 * 60)
+    );
+
+    // ✅ Status calculation
+    const status = calculateClockOutStatus(nowUTC, workDuration, userShift);
+
+    attendance.clockOutTime = istNow;
+    attendance.workDuration = workDuration;
+    attendance.clockStatus = "CLOCKED_OUT";
+    attendance.status = status;
+
+    await attendance.save();
+
+    res.status(200).json({
+      message: "Clock out successful",
+      workDuration,
+      status,
+    });
+
+  } catch (error) {
+    console.error("Clock Out Error:", error);
     res.status(500).json({ message: "Server error" });
   }
 };

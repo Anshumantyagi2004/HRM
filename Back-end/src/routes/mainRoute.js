@@ -4,6 +4,7 @@ import { signup, login, logout, getUserById, getAllUsers, addNewUser, updateUser
 import { applyLeave, getAllLeave, getLeaveByUser, updateLeaveStatus, updateUserLeave } from '../controllers/leaveController.js';
 import documentRoutes from "./documentRoutes.js";
 import { clockIn, clockOut, getAdminAttendanceByDate, getAttendanceByDate, getMonthlyAttendanceAdmin, getTodayAttendance } from '../controllers/attendanceController.js';
+import { addRules, getAllInfo } from '../controllers/CompanyController.js';
 const router = express.Router();
 
 router.post('/signup', signup);
@@ -21,6 +22,8 @@ router.post("/userEducationAdd/:id", educationUserByAdmin); //for admin
 router.get("/userEducationGet/:id", getEducationByAdmin); //for Admin
 router.patch("/userWork", authenticateJWT, workUserById);
 router.get("/userWork", authenticateJWT, getWorkByUser);
+router.post("/addRules", authenticateJWT, addRules);
+router.get("/getRules", authenticateJWT, getAllInfo);
 router.patch("/userRules", authenticateJWT, rulesById);
 router.get("/userRules", authenticateJWT, getRuleById);
 router.patch("/userRules/:id", authenticateJWT, rulesByAdmin); //for Admin

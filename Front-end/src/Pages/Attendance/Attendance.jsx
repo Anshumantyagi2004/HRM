@@ -3,14 +3,14 @@ import React, { useEffect, useState } from "react";
 import Calendar from "../../Components/Calendar/Calendar";
 import { BaseUrl } from "../../BaseApi/Api";
 import { Link } from "react-router-dom";
+import { useSelector } from "react-redux";
 
 export default function Attendance() {
-    const UserId = localStorage.getItem("userId")
+    const { user } = useSelector((state) => state.auth);
     const [text, setText] = useState("Daily")
     const [todayAttendance, setTodayAttendance] = useState()
     const [allTodayAttendance, setAllTodayAttendance] = useState([])
     const [date, setdate] = useState(new Date().toISOString().split('T')[0]);
-    const role = localStorage.getItem("userRole")
 
     const months = [
         { name: "January", id: 0 },
@@ -39,7 +39,7 @@ export default function Attendance() {
 
     const fetchAttendanceByDate = async (getDate = date) => {
         try {
-            const res = await fetch(`${BaseUrl}attendanceByDate/${UserId}?date=${getDate}`);
+            const res = await fetch(`${BaseUrl}attendanceByDate/${user?._id}?date=${getDate}`);
             const data = await res.json();
 
             if (res.ok && data.attendance) {
@@ -54,7 +54,7 @@ export default function Attendance() {
     };
 
     useEffect(() => {
-        if (role == "Employee") {
+        if (user?.role == "Employee") {
             fetchAttendanceByDate();
         } else {
             fetchAdminAllAttendance()
@@ -206,7 +206,7 @@ export default function Attendance() {
         WORK_FROM_HOME: "bg-indigo-500",
     };
 
-    return (<>{role == "Employee" ?
+    return (<>{user?.role == "Employee" ?
         <div className="w-full px-1 md:px-3">
             <div className="bg-white shadow-md rounded-xl hover:shadow-lg transition md:p-5 p-2">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
@@ -269,66 +269,6 @@ export default function Attendance() {
                         </div>
                     </div>
                     {text == "Daily" && (<>
-                        {/* // <div className="w-full bg-white p-6 rounded-lg shadow"> */}
-                        {/* <div className="relative border rounded-lg p-6">
-                                <div className="absolute inset-0 grid grid-cols-12 gap-0">
-                                    {Array.from({ length: 12 }).map((_, i) => (
-                                        <div key={i} className="border-r border-dashed border-gray-200" />
-                                    ))}
-                                </div>
-
-                                <div className="relative z-10 flex justify-between">
-
-                                    <div>
-                                        <p className="italic text-sm mb-2">Anomalies</p>
-                                        <div className="w-64 h-10 bg-blue-100 rounded"></div>
-                                    </div>
-
-                                    <div>
-                                        <p className="italic text-sm mb-2 text-right">Summary</p>
-                                        <div className="bg-blue-100 p-4 rounded flex gap-8 text-sm">
-                                            <div>
-                                                <p className="font-medium">Work Duration</p>
-                                                <p className="text-center">-</p>
-                                            </div>
-                                            <div>
-                                                <p className="font-medium">Break Duration</p>
-                                                <p className="text-center">-</p>
-                                            </div>
-                                            <div>
-                                                <p className="font-medium">Overtime Duration</p>
-                                                <p className="text-center">-</p>
-                                            </div>
-                                        </div>
-                                        <div className="mt-4 space-y-2 text-sm">
-                                            <div className="flex items-center gap-2">
-                                                <span className="w-3 h-3 bg-blue-600 inline-block"></span>
-                                                No Anomalies
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <span className="w-3 h-3 bg-pink-500 inline-block"></span>
-                                                Clockin-Clockout IP Mismatch
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <span className="w-3 h-3 bg-orange-400 inline-block"></span>
-                                                Auto Logged Out
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="relative mt-12">
-                                    <div className="h-2 bg-gray-200 rounded"></div>
-                                    <div className="absolute top-0 left-[5%] w-[70%] h-2 bg-blue-600 rounded"></div>
-                                </div>
-
-                                <div className="flex justify-between text-xs mt-3 text-gray-600">
-                                    {hours.map((h) => (
-                                        <span key={h}>{h}</span>
-                                    ))}
-                                </div>
-                            </div> */}
-
                         <div className="mt-4 border rounded-lg overflow-x-auto">
                             <table className="w-full text-sm">
                                 <thead>
@@ -494,10 +434,20 @@ export default function Attendance() {
                                                 </Link>
                                             </td>
                                             <td className="px-4 py-3">
-                                                <button title={`${i?.attendance == null ? "Absent" : i?.attendance?.status == "ANOMALIES" ? "Late Arrive" : "Present"}`}
+                                                <button title={!i?.attendance ? "Absent" : i?.attendance?.status === "PRESENT" ? "Present"
+                                                    : i?.attendance?.status === "ANOMALIES" ? "Anomalies (Late Arrive/Early Leave)"
+                                                        : i?.attendance?.status === "HALF_DAY" ? "Half Day" : "Absent"}
                                                     className={`h-8 w-8 rounded-full text-white text-sm font-bold flex items-center justify-center shadow-md
-                                                            ${i?.attendance?.status == "PRESENT" ? "bg-emerald-500 hover:bg-emerald-600" : i?.attendance?.status == "ANOMALIES" ? "bg-yellow-400 hover:bg-yellow-500" : "bg-rose-500 hover:bg-rose-600"}`}>
-                                                    {i?.attendance ? (i?.attendance?.status == "PRESENT" ? "P" : "AN") : "A"}
+                                                        ${!i?.attendance ? "bg-rose-500 hover:bg-rose-600"
+                                                            : i?.attendance?.status === "PRESENT" ? "bg-emerald-500 hover:bg-emerald-600"
+                                                                : i?.attendance?.status === "ANOMALIES" ? "bg-yellow-400 hover:bg-yellow-500"
+                                                                    : i?.attendance?.status === "HALF_DAY" ? "bg-blue-500 hover:bg-blue-600"
+                                                                        : "bg-rose-500 hover:bg-rose-600"}`}>
+                                                    {!i?.attendance
+                                                        ? "A" : i?.attendance?.status === "PRESENT"
+                                                            ? "P" : i?.attendance?.status === "ANOMALIES"
+                                                                ? "AN" : i?.attendance?.status === "HALF_DAY"
+                                                                    ? "HD" : "A"}
                                                 </button>
                                             </td>
                                             <td className="px-4 py-3">{formatDateTime(i?.attendance?.clockInTime)}</td>
@@ -551,17 +501,9 @@ export default function Attendance() {
                                                     {u.user.username}
                                                 </td>
 
-                                                {/* Attendance Cells */}
                                                 {u.monthlyAttendance.map((d) => {
-                                                    // const record = u.monthlyAttendance.find(
-                                                    //     (a) => a.date === d.key
-                                                    // );
-
                                                     return (
-                                                        <td
-                                                            // key={d.key}
-                                                            className="px-2 py-2 text-center border-r"
-                                                        >
+                                                        <td className="px-2 py-2 text-center border-r">
                                                             <span
                                                                 title={d?.status || "ABSENT"}
                                                                 className={`h-7 w-7 rounded-full text-white text-xs font-bold
@@ -569,7 +511,6 @@ export default function Attendance() {
                                                                 ${styles[d?.status || "ABSENT"] || "bg-gray-400"}`}>
                                                                 {d?.status?.[0]}
                                                             </span>
-                                                            {/* <StatusBadge status={record?.status || "ABSENT"} /> */}
                                                         </td>
                                                     );
                                                 })}

@@ -13,6 +13,7 @@ import Documents from "./Documents";
 import Work from "./Work";
 import Rules from "./Rules";
 import Payroll from "./Payroll";
+import Policy from "./Policy";
 
 export default function MyProfile() {
     const { userId } = useParams();
@@ -595,6 +596,7 @@ export default function MyProfile() {
                         <button onClick={() => { setText("Documents"); fetchDocs() }} className="bg-indigo-600 text-white hover:bg-indigo-700 px-2 py-1 rounded-md">Documents</button>
                         <button onClick={() => { setText("Rules"); fetchRules() }} className="bg-indigo-600 text-white hover:bg-indigo-700 px-2 py-1 rounded-md">Rules</button>
                         <button onClick={() => { setText("Payroll"); fetchPayroll() }} className="bg-indigo-600 text-white hover:bg-indigo-700 px-2 py-1 rounded-md">Payroll</button>
+                        <button onClick={() => { setText("Policy"); }} className="bg-indigo-600 text-white hover:bg-indigo-700 px-2 py-1 rounded-md">Policy</button>
                     </div>
 
                     {text == "PersonalInfo" &&
@@ -651,6 +653,17 @@ export default function MyProfile() {
 
                     {text == "Payroll" &&
                         <Payroll
+                            user={user}
+                            editText={editText}
+                            setEditText={setEditText}
+                            payrollForm={payrollForm}
+                            payrollInfo={payrollInfo}
+                            handleChangePayroll={handleChangePayroll}
+                            addPayroll={addPayroll}
+                        />}
+
+                    {text == "Policy" &&
+                        <Policy
                             user={user}
                             editText={editText}
                             setEditText={setEditText}

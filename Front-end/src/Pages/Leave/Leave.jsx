@@ -917,7 +917,6 @@ export default function Leave() {
 
                 <Modal open={open} onClose={() => setOpen(false)}>
                     <Modal.Header title="Employee Leave Details" />
-
                     <Modal.Body>
                         {leaveDetails &&
                             <div className="space-y-3 text-sm text-gray-700">
@@ -990,7 +989,6 @@ export default function Leave() {
 
                             </div>}
                     </Modal.Body>
-
                     <Modal.Footer>
                         <div className="flex justify-between w-full">
                             <button

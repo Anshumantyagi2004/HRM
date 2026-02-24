@@ -52,7 +52,7 @@ Modal.Header = function ModalHeader({ title }) {
 };
 
 Modal.Body = function ModalBody({ children }) {
-  return <div className="p-6">{children}</div>;
+  return <div className="p-4">{children}</div>;
 };
 
 Modal.Footer = function ModalFooter({ children }) {

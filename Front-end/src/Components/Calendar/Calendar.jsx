@@ -6,13 +6,15 @@ const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 // 🔥 DEMO ATTENDANCE DATA
 // key = YYYY-MM-DD
 const attendanceData = {
-    "2026-01-02": "present",
-    "2026-01-03": "absent",
-    "2026-01-05": "leave",
-    "2026-01-08": "present",
-    "2026-01-10": "leave",
-    "2026-01-12": "absent",
-    "2026-01-15": "present",
+    "2026-02-02": "present",
+    "2026-02-03": "absent",
+    "2026-02-05": "leave",
+    "2026-02-09": "present",
+    "2026-02-10": "leave",
+    "2026-02-11": "present",
+    "2026-02-12": "absent",
+    "2026-02-13": "absent",
+    "2026-02-14": "present",
 };
 
 export default function AttendanceCalendar() {

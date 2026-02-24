@@ -7,6 +7,11 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
+    "@mui/material": "^7.3.8",
+    "@mui/x-data-grid": "^8.27.1",
+    "@mui/x-date-pickers": "^8.27.2",
     "@reduxjs/toolkit": "^2.11.2",
     "axios": "^1.11.0",
     "lucide-react": "^0.562.0",

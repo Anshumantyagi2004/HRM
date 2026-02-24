@@ -69,7 +69,7 @@ export default function Navbar() {
   };
 
   const handleSubmit = async (e) => {
-    if (formData?.username == "" || formData?.password == "" || formData?.role == "" ||  formData?.email == "" || formData?.contact == "") return toast.error('Enter User Credentials First!');
+    if (formData?.username == "" || formData?.password == "" || formData?.role == "" || formData?.email == "" || formData?.contact == "") return toast.error('Enter User Credentials First!');
     const response = await fetch(BaseUrl + "newUser", {
       method: "POST",
       headers: {
@@ -336,10 +336,8 @@ export default function Navbar() {
       </div>
     </nav>
 
-    <div
+    <div className={`fixed inset-0 bg-black/40 z-40 transition-opacity duration-300 ${isSidebarOpen ? "opacity-100 visible" : "opacity-0 invisible"}`}
       onClick={() => setIsSidebarOpen(false)}
-      className={`fixed inset-0 bg-black/40 z-40 transition-opacity duration-300 ${isSidebarOpen ? "opacity-100 visible" : "opacity-0 invisible"
-        }`}
     />
 
     {user?.role == "Admin" && <>
