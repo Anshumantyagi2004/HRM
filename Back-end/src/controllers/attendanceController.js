@@ -406,16 +406,32 @@ export const getAdminAttendanceByDate = async (req, res) => {
 };
 
 //find all attendance of user by month
-const getISTRangeForMonth = (year, month) => {
-  // month = 1-12
+const IST_OFFSET_MIN = 330; // 5h 30m
 
-  // IST start (00:00 IST of 1st day)
-  const start = new Date(year, month - 1, 1, 0, 0, 0, 0);
+export const createISTDate = (y, m, d, h = 0, min = 0, sec = 0, ms = 0) => {
+  // Build UTC then shift to IST
+  const utc = Date.UTC(y, m, d, h, min, sec, ms);
+  return new Date(utc - IST_OFFSET_MIN * 60 * 1000);
+};
 
-  // IST end (23:59:59 IST of last day)
-  const end = new Date(year, month, 0, 23, 59, 59, 999);
+export const getISTRangeForMonth = (year, month) => {
+  // month = 1–12
+
+  // 1st day 00:00 IST
+  const start = createISTDate(year, month - 1, 1, 0, 0, 0, 0);
+
+  // Last day 23:59:59 IST
+  const lastDay = new Date(year, month, 0).getDate();
+  const end = createISTDate(year, month - 1, lastDay, 23, 59, 59, 999);
 
   return { start, end };
+};
+
+export const toISTKey = (date) => {
+  // Convert UTC date → IST date key
+  const ist = new Date(date.getTime() + IST_OFFSET_MIN * 60 * 1000);
+
+  return `${ist.getFullYear()}-${String(ist.getMonth() + 1).padStart(2, "0")}-${String(ist.getDate()).padStart(2, "0")}`;
 };
 
 export const getMonthlyAttendanceAdmin = async (req, res) => {
@@ -429,7 +445,7 @@ export const getMonthlyAttendanceAdmin = async (req, res) => {
     const m = Number(month); // 1-12
     const y = Number(year);
 
-    // IST calendar range
+    // 🔒 Timezone-locked IST range
     const { start, end } = getISTRangeForMonth(y, m);
 
     const users = await User.find({}, "username email employeeId");
@@ -442,8 +458,7 @@ export const getMonthlyAttendanceAdmin = async (req, res) => {
 
     const dates = [];
     for (let day = 1; day <= daysInMonth; day++) {
-      const d = new Date(y, m - 1, day);
-      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+      const key = `${y}-${String(m).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
       dates.push(key);
     }
 
@@ -455,25 +470,17 @@ export const getMonthlyAttendanceAdmin = async (req, res) => {
       const attendanceMap = {};
 
       userAttendance.forEach((a) => {
-        const d = new Date(a.date);
-        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+        const key = toISTKey(new Date(a.date));
         attendanceMap[key] = a;
       });
 
       const monthlyAttendance = dates.map((date) => {
         const record = attendanceMap[date];
-
-        if (!record) {
-          return { date, status: "ABSENT" };
-        }
-
+        if (!record) return { date, status: "ABSENT" };
         return { date, status: record.status };
       });
 
-      return {
-        user,
-        monthlyAttendance,
-      };
+      return { user, monthlyAttendance };
     });
 
     res.status(200).json({
