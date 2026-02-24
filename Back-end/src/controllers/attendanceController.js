@@ -495,3 +495,74 @@ export const getMonthlyAttendanceAdmin = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+//for user monthly att
+export const getMonthlyAttendanceUser = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { month, year } = req.query;
+
+    if (!month || !year) {
+      return res.status(400).json({ message: "Month and year are required" });
+    }
+
+    const m = Number(month); // 1-12
+    const y = Number(year);
+
+    // 🔒 IST-locked range
+    const { start, end } = getISTRangeForMonth(y, m);
+
+    const records = await Attendance.find({
+      userId,
+      date: { $gte: start, $lte: end },
+    }).sort({ date: 1 });
+
+    const daysInMonth = new Date(y, m, 0).getDate();
+
+    // Generate IST calendar days
+    const dates = [];
+    for (let day = 1; day <= daysInMonth; day++) {
+      const key = `${y}-${String(m).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+      dates.push(key);
+    }
+
+    const attendanceMap = {};
+    records.forEach((r) => {
+      const key = toISTKey(new Date(r.date));
+      attendanceMap[key] = r;
+    });
+
+    const monthlyAttendance = dates.map((date) => {
+      const record = attendanceMap[date];
+
+      if (!record) {
+        return {
+          date,
+          status: "ABSENT",
+          clockInTime: null,
+          clockOutTime: null,
+          workDuration: 0,
+        };
+      }
+
+      return {
+        date,
+        status: record.status,
+        clockInTime: record.clockInTime,
+        clockOutTime: record.clockOutTime,
+        workDuration: record.workDuration,
+      };
+    });
+
+    res.status(200).json({
+      month: m,
+      year: y,
+      range: { start, end },
+      monthlyAttendance,
+    });
+
+  } catch (error) {
+    console.error("User Monthly Attendance Error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};

@@ -10,6 +10,7 @@ export default function Attendance() {
     const [text, setText] = useState("Daily")
     const [todayAttendance, setTodayAttendance] = useState()
     const [allTodayAttendance, setAllTodayAttendance] = useState([])
+    const [userAttendance, setUserAttendance] = useState([])
     const [date, setdate] = useState(new Date().toISOString().split('T')[0]);
 
     const months = [
@@ -31,11 +32,6 @@ export default function Attendance() {
     const currentDate = new Date();
     const [year, setYear] = useState(currentDate.getFullYear());
     const [month, setMonth] = useState(currentDate.getMonth());
-
-    const hours = [
-        "9 AM", "10 AM", "11 AM", "12 PM", "1 PM", "2 PM",
-        "3 PM", "4 PM", "5 PM", "6 PM", "7 PM", "8 PM", "9 PM"
-    ];
 
     const fetchAttendanceByDate = async (getDate = date) => {
         try {
@@ -60,6 +56,14 @@ export default function Attendance() {
             fetchAdminAllAttendance()
         }
     }, [date])
+
+    useEffect(() => {
+        if (user?.role == "Employee") {
+            fetchUserMonthlyAttendance(year, month)
+        } else {
+            fetchMonthlyAttendance(year, month)
+        }
+    }, [year, month])
 
     const formatDateTime = (date) => {
         if (!date) return "--";
@@ -210,6 +214,33 @@ export default function Attendance() {
         WORK_FROM_HOME: "bg-indigo-500",
     };
 
+    const fetchUserMonthlyAttendance = async (year, month) => {
+        try {
+            const res = await fetch(
+                `${BaseUrl}attendance/monthly?year=${year}&month=${month + 1}`,
+                {
+                    method: "GET",
+                    credentials: "include",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                }
+            );
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                console.log(data.message || "Failed to fetch attendance");
+            } else {
+                setUserAttendance(data.monthlyAttendance);
+            }
+
+        } catch (err) {
+            console.error(err);
+            console.log("Monthly attendance fetch failed");
+        }
+    };
+
     return (<>{user?.role == "Employee" ?
         <div className="w-full px-1 md:px-3">
             <div className="bg-white shadow-md rounded-xl hover:shadow-lg transition md:p-5 p-2">
@@ -234,7 +265,7 @@ export default function Attendance() {
                                 Daily Log
                             </button>
                             <button className="bg-indigo-500 hover:bg-indigo-600 text-white py-2 px-2 rounded-md"
-                                onClick={() => setText("Monthly")}>
+                                onClick={() => { setText("Monthly"), fetchUserMonthlyAttendance(year, month) }}>
                                 Monthly Log
                             </button>
                         </div>
@@ -332,9 +363,55 @@ export default function Attendance() {
                                 </thead>
 
                                 <tbody>
-                                    {monthDays.map((i, idx) => (
-                                        <tr className="border-b hover:bg-gray-50">
-                                            <td className="px-4 py-3 font-medium">{i?.dayNumber} {i?.dayName}</td>
+                                    {userAttendance.map((item, i) => (
+                                        <tr key={i} className="border-b hover:bg-gray-50">
+
+                                            {/* Date */}
+                                            <td className="px-4 py-2 border-r">
+                                                {item.date}
+                                            </td>
+
+                                            {/* Status */}
+                                            <td className="px-4 py-2 border-r font-semibold">
+                                                <span className={`px-2 py-1 rounded text-xs text-white
+                                            ${item.status === "PRESENT" ? "bg-emerald-500" :
+                                                        item.status === "ANOMALIES" ? "bg-yellow-500" :
+                                                            item.status === "HALF_DAY" ? "bg-indigo-500" :
+                                                                "bg-rose-500"}`}>
+                                                    {item.status}
+                                                </span>
+                                            </td>
+
+                                            {/* In Time */}
+                                            <td className="px-4 py-2 border-r">
+                                                {formatDateTime(item.clockInTime)}
+                                            </td>
+
+                                            {/* Out Time */}
+                                            <td className="px-4 py-2 border-r">
+                                                {formatDateTime(item.clockOutTime)}
+                                            </td>
+
+                                            {/* Work Duration */}
+                                            <td className="px-4 py-2 border-r">
+                                                {formatWorkDuration(item.workDuration)}
+                                            </td>
+
+                                            {/* Action */}
+                                            <td className="px-4 py-2 text-center">
+                                                {item.status === "ANOMALIES" && (
+                                                    <button className="px-2 py-1 text-xs bg-yellow-500 text-white rounded hover:bg-yellow-600">
+                                                        Request Regularization
+                                                    </button>
+                                                )}
+
+                                                {item.status === "ABSENT" && (
+                                                    <button className="px-2 py-1 text-xs bg-rose-500 text-white rounded hover:bg-rose-600">
+                                                        Apply Leave
+                                                    </button>
+                                                )}
+                                            </td>
+
                                         </tr>
                                     ))}
                                 </tbody>
@@ -477,7 +554,7 @@ export default function Attendance() {
                     {text == "Monthly" && (
                         <div className="mt-4">
                             <div className="w-full overflow-x-auto border rounded-lg">
-                                <table className="min-w-max text-sm border-collapse">
+                                <table className="min-w-max text-sm border-collapse w-full">
                                     <thead>
                                         <tr className="bg-indigo-600 text-white">
                                             {/* Sticky Employee Column */}

@@ -3,7 +3,7 @@ import { authenticateJWT } from '../middleware/authMiddleware.js';
 import { signup, login, logout, getUserById, getAllUsers, addNewUser, updateUserById, educationUserById, getEducationByUser, workUserById, getWorkByUser, workHistoryUserById, updateUserByAdmin, getUserByAdmin, educationUserByAdmin, getEducationByAdmin, workUserByAdmin, getWorkByAdmin, workHistoryUserByAdmin, rulesById, getRuleById, rulesByAdmin, getRuleByAdmin, addOrUpdatePayroll, getUserPayroll, addOrUpdatePayrollByAdmin, getUserPayrollByAdmin, getAllUsersPayroll, findUserPayroll, getAllUsersLeave } from '../controllers/authController.js';
 import { applyLeave, getAllLeave, getLeaveByUser, updateLeaveStatus, updateUserLeave } from '../controllers/leaveController.js';
 import documentRoutes from "./documentRoutes.js";
-import { clockIn, clockOut, getAdminAttendanceByDate, getAttendanceByDate, getMonthlyAttendanceAdmin, getTodayAttendance } from '../controllers/attendanceController.js';
+import { clockIn, clockOut, getAdminAttendanceByDate, getAttendanceByDate, getMonthlyAttendanceAdmin, getMonthlyAttendanceUser, getTodayAttendance } from '../controllers/attendanceController.js';
 import { addRules, getAllInfo } from '../controllers/CompanyController.js';
 const router = express.Router();
 
@@ -47,6 +47,7 @@ router.get("/attendanceByDate/:userId", getAttendanceByDate);
 router.post("/clock-out", authenticateJWT, clockOut);
 router.get("/allUserAttendance/byDate", getAdminAttendanceByDate);
 router.get("/admin/attendance/month", getMonthlyAttendanceAdmin);
+router.get("/attendance/monthly", authenticateJWT, getMonthlyAttendanceUser);
 
 // PAYROLL
 router.patch("/userPayroll", authenticateJWT, addOrUpdatePayroll);
