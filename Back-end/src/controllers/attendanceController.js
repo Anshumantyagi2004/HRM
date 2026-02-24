@@ -406,31 +406,45 @@ export const getAdminAttendanceByDate = async (req, res) => {
 };
 
 //find all attendance of user by month
+const getISTRangeForMonth = (year, month) => {
+  // month = 1-12
+
+  // IST start (00:00 IST of 1st day)
+  const start = new Date(year, month - 1, 1, 0, 0, 0, 0);
+
+  // IST end (23:59:59 IST of last day)
+  const end = new Date(year, month, 0, 23, 59, 59, 999);
+
+  return { start, end };
+};
+
 export const getMonthlyAttendanceAdmin = async (req, res) => {
   try {
     const { month, year } = req.query;
+
     if (!month || !year) {
-      return res.status(400).json({
-        message: "Month and year are required",
-      });
+      return res.status(400).json({ message: "Month and year are required" });
     }
 
-    const m = Number(month);
+    const m = Number(month); // 1-12
     const y = Number(year);
 
-    const startOfMonth = new Date(Date.UTC(y, m - 1, 1, 0, 0, 0, 0));
-    const endOfMonth = new Date(Date.UTC(y, m, 0, 23, 59, 59, 999));
+    // IST calendar range
+    const { start, end } = getISTRangeForMonth(y, m);
 
     const users = await User.find({}, "username email employeeId");
+
     const attendanceRecords = await Attendance.find({
-      date: { $gte: startOfMonth, $lte: endOfMonth },
+      date: { $gte: start, $lte: end },
     });
 
-    const daysInMonth = new Date(Date.UTC(y, m, 0)).getUTCDate();
+    const daysInMonth = new Date(y, m, 0).getDate();
+
     const dates = [];
     for (let day = 1; day <= daysInMonth; day++) {
-      const d = new Date(Date.UTC(y, m - 1, day, 0, 0, 0, 0));
-      dates.push(d.toISOString().split("T")[0]);
+      const d = new Date(y, m - 1, day);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+      dates.push(key);
     }
 
     const result = users.map((user) => {
@@ -441,7 +455,8 @@ export const getMonthlyAttendanceAdmin = async (req, res) => {
       const attendanceMap = {};
 
       userAttendance.forEach((a) => {
-        const key = new Date(a.date).toISOString().split("T")[0];
+        const d = new Date(a.date);
+        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
         attendanceMap[key] = a;
       });
 
@@ -449,20 +464,10 @@ export const getMonthlyAttendanceAdmin = async (req, res) => {
         const record = attendanceMap[date];
 
         if (!record) {
-          return {
-            date,
-            status: "ABSENT",
-          };
+          return { date, status: "ABSENT" };
         }
 
-        return {
-          date,
-          status: record.status,
-          // clockInTime: record.clockInTime,
-          // clockOutTime: record.clockOutTime,
-          // workDuration: record.workDuration,
-          // lateBy: record.lateBy,
-        };
+        return { date, status: record.status };
       });
 
       return {
@@ -474,8 +479,8 @@ export const getMonthlyAttendanceAdmin = async (req, res) => {
     res.status(200).json({
       month: m,
       year: y,
+      range: { start, end },
       users: result,
-      attendanceRecords
     });
 
   } catch (error) {

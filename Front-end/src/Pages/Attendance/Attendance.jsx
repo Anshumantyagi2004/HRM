@@ -187,12 +187,16 @@ export default function Attendance() {
 
         return Array.from({ length: daysInMonth }, (_, i) => {
             const date = new Date(year, month, i + 1);
+
+            // IST-safe date key (NO toISOString)
+            const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+
             return {
                 day: i + 1,
                 label: date.toLocaleDateString("en-IN", {
                     weekday: "short",
-                }), // Mon, Tue
-                key: date.toISOString().split("T")[0],
+                }),
+                key,
             };
         });
     };
