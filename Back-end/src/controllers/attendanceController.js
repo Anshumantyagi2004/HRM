@@ -183,64 +183,21 @@ export const getTodayAttendance = async (req, res) => {
 };
 
 //Clock out
-export const clockOut1 = async (req, res) => {
-  try {
-    const userId = req.user.id;
-
-    const now = new Date();
-    const istNow = new Date(
-      // now.toLocaleString("en-US", { timeZone: "Asia/Kolkata" })
-    );
-
-    const startOfDay = new Date(istNow);
-    startOfDay.setHours(0, 0, 0, 0);
-
-    const endOfDay = new Date(istNow);
-    endOfDay.setHours(23, 59, 59, 999);
-
-    const attendance = await Attendance.findOne({
-      userId,
-      clockStatus: "CLOCKED_IN",
-      clockInTime: { $gte: startOfDay, $lte: endOfDay },
-    });
-
-    if (!attendance) {
-      return res.status(400).json({
-        message: "No active clock-in found",
-      });
-    }
-
-    const workDuration = Math.floor(
-      (istNow - attendance.clockInTime) / (1000 * 60)
-    );
-
-    attendance.clockOutTime = istNow;
-    attendance.workDuration = workDuration;
-    attendance.clockStatus = "CLOCKED_OUT";
-
-    await attendance.save();
-
-    res.status(200).json({
-      message: "Clock out successful",
-      workDuration,
-    });
-
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Server error" });
-  }
+export const getISTNow = () => {
+  const IST_OFFSET_MIN = 330;
+  const nowUTC = new Date();
+  return new Date(nowUTC.getTime() + IST_OFFSET_MIN * 60 * 1000);
 };
 
 export const clockOut = async (req, res) => {
   try {
     const userId = req.user.id;
 
-    const nowUTC = new Date();
+    // 🔒 IST locked current time
+    const istNow = getISTNow();   // Date object in IST (manual offset)
+    const nowUTC = new Date();    // pure UTC for storage consistency
 
-    const istNow = new Date(
-      nowUTC.toLocaleString("en-US", { timeZone: "Asia/Kolkata" })
-    );
-
+    // 🔒 IST day range
     const startOfDay = new Date(istNow);
     startOfDay.setHours(0, 0, 0, 0);
 
@@ -268,15 +225,16 @@ export const clockOut = async (req, res) => {
       });
     }
 
-    // ⏱ Work duration
+    // ⏱ Work duration (IST-safe)
     const workDuration = Math.floor(
-      (istNow - attendance.clockInTime) / (1000 * 60)
+      (istNow.getTime() - new Date(attendance.clockInTime).getTime()) / (1000 * 60)
     );
 
     // ✅ Status calculation
-    const status = calculateClockOutStatus(nowUTC, workDuration, userShift);
+    const status = calculateClockOutStatus(istNow, workDuration, userShift);
 
-    attendance.clockOutTime = istNow;
+    // ✅ Save
+    attendance.clockOutTime = istNow;   // IST locked
     attendance.workDuration = workDuration;
     attendance.clockStatus = "CLOCKED_OUT";
     attendance.status = status;
@@ -287,6 +245,7 @@ export const clockOut = async (req, res) => {
       message: "Clock out successful",
       workDuration,
       status,
+      clockOutTime: istNow,
     });
 
   } catch (error) {
