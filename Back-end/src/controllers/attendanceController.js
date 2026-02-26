@@ -193,21 +193,24 @@ export const clockOut = async (req, res) => {
   try {
     const userId = req.user.id;
 
-    // 🔒 IST locked current time
-    const istNow = getISTNow();   // Date object in IST (manual offset)
-    const nowUTC = new Date();    // pure UTC for storage consistency
+    // ✅ Always work in UTC for DB
+    const nowUTC = new Date();
 
-    // 🔒 IST day range
-    const startOfDay = new Date(istNow);
-    startOfDay.setHours(0, 0, 0, 0);
+    // 🔒 IST only for business logic / response
+    const istNow = getISTNow();
 
-    const endOfDay = new Date(istNow);
-    endOfDay.setHours(23, 59, 59, 999);
+    // ✅ UTC day range (not IST range)
+    const startOfDayUTC = new Date(nowUTC);
+    startOfDayUTC.setUTCHours(0, 0, 0, 0);
 
+    const endOfDayUTC = new Date(nowUTC);
+    endOfDayUTC.setUTCHours(23, 59, 59, 999);
+
+    // 🔍 Find active attendance (UTC safe)
     const attendance = await Attendance.findOne({
       userId,
       clockStatus: "CLOCKED_IN",
-      clockInTime: { $gte: startOfDay, $lte: endOfDay },
+      clockInTime: { $gte: startOfDayUTC, $lte: endOfDayUTC },
     });
 
     if (!attendance) {
@@ -225,16 +228,16 @@ export const clockOut = async (req, res) => {
       });
     }
 
-    // ⏱ Work duration (IST-safe)
+    // ⏱ Work duration (UTC based, safe everywhere)
     const workDuration = Math.floor(
-      (istNow.getTime() - new Date(attendance.clockInTime).getTime()) / (1000 * 60)
+      (nowUTC.getTime() - new Date(attendance.clockInTime).getTime()) / (1000 * 60)
     );
 
-    // ✅ Status calculation
+    // ✅ Status calculation (business logic uses IST time meaningfully)
     const status = calculateClockOutStatus(istNow, workDuration, userShift);
 
-    // ✅ Save
-    attendance.clockOutTime = istNow;   // IST locked
+    // ✅ Save (UTC in DB)
+    attendance.clockOutTime = nowUTC;   // store UTC
     attendance.workDuration = workDuration;
     attendance.clockStatus = "CLOCKED_OUT";
     attendance.status = status;
@@ -245,7 +248,7 @@ export const clockOut = async (req, res) => {
       message: "Clock out successful",
       workDuration,
       status,
-      clockOutTime: istNow,
+      clockOutTime: istNow, // return IST for UI
     });
 
   } catch (error) {
