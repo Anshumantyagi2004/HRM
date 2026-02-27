@@ -5,6 +5,7 @@ import { applyLeave, getAllLeave, getLeaveByUser, updateLeaveStatus, updateUserL
 import documentRoutes from "./documentRoutes.js";
 import { clockIn, clockOut, getAdminAttendanceByDate, getAttendanceByDate, getMonthlyAttendanceAdmin, getMonthlyAttendanceUser, getTodayAttendance } from '../controllers/attendanceController.js';
 import { addRules, getAllInfo } from '../controllers/CompanyController.js';
+import { sendPolicyOTP, verifyOtpAndSignPolicy } from '../controllers/policyOtpController.js';
 const router = express.Router();
 
 router.post('/signup', signup);
@@ -56,4 +57,8 @@ router.patch("/userPayroll/:id", authenticateJWT, addOrUpdatePayrollByAdmin);
 router.get("/userPayroll/:id", authenticateJWT, getUserPayrollByAdmin);
 router.get("/allUserPayroll", authenticateJWT, getAllUsersPayroll);
 router.get("/UserPayDetail", authenticateJWT, findUserPayroll);
+
+//policy
+router.post("/send", authenticateJWT, sendPolicyOTP);
+router.post("/verifyOtp", authenticateJWT, verifyOtpAndSignPolicy);
 export default router;

@@ -246,10 +246,10 @@ export const updateUserById = async (req, res) => {
       id,
       { $set: updateData },
       {
-        new: true,        // return updated document
+        new: true,
         runValidators: true,
       }
-    );
+    ).select('-password');
 
     if (!updatedUser) {
       return res.status(404).json({ message: "User not found" });

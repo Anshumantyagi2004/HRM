@@ -365,14 +365,10 @@ export default function Attendance() {
                                 <tbody>
                                     {userAttendance.map((item, i) => (
                                         <tr key={i} className="border-b hover:bg-gray-50">
-
-                                            {/* Date */}
-                                            <td className="px-4 py-2 border-r">
+                                            <td className="p-2 border-r">
                                                 {item.date}
                                             </td>
-
-                                            {/* Status */}
-                                            <td className="px-4 py-2 border-r font-semibold">
+                                            <td className="p-2 border-r font-semibold">
                                                 <span className={`px-2 py-1 rounded text-xs text-white
                                             ${item.status === "PRESENT" ? "bg-emerald-500" :
                                                         item.status === "ANOMALIES" ? "bg-yellow-500" :
@@ -381,37 +377,23 @@ export default function Attendance() {
                                                     {item.status}
                                                 </span>
                                             </td>
-
-                                            {/* In Time */}
-                                            <td className="px-4 py-2 border-r">
+                                            <td className="p-2 border-r">
                                                 {formatDateTime(item.clockInTime)}
                                             </td>
-
-                                            {/* Out Time */}
-                                            <td className="px-4 py-2 border-r">
+                                            <td className="p-2 border-r">
                                                 {formatDateTime(item.clockOutTime)}
                                             </td>
-
-                                            {/* Work Duration */}
-                                            <td className="px-4 py-2 border-r">
+                                            <td className="p-2 border-r">
                                                 {formatWorkDuration(item.workDuration)}
                                             </td>
-
-                                            {/* Action */}
-                                            <td className="px-4 py-2 text-center">
-                                                {item.status === "ANOMALIES" && (
-                                                    <button className="px-2 py-1 text-xs bg-yellow-500 text-white rounded hover:bg-yellow-600">
-                                                        Request Regularization
-                                                    </button>
-                                                )}
-
-                                                {item.status === "ABSENT" && (
-                                                    <button className="px-2 py-1 text-xs bg-rose-500 text-white rounded hover:bg-rose-600">
-                                                        Apply Leave
-                                                    </button>
-                                                )}
+                                            <td className="p-2 text-center">
+                                                <button
+                                                    //   onClick={() => handleOpen(emp)}
+                                                    className="inline-flex items-center justify-center w-9 h-9 rounded-full 
+                                                         bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition">
+                                                    <Eye size={18} />
+                                                </button>
                                             </td>
-
                                         </tr>
                                     ))}
                                 </tbody>

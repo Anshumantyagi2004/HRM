@@ -1,5 +1,7 @@
 import { User } from '../models/User.js';
 import { UserDocuments } from '../models/UserDocs.js';
+import { CompanyPolicy } from '../models/CompanyPolicy.js';
+import { UserPolicy } from '../models/Policy.js';
 
 // Profile image upload controller
 export const uploadProfileImage = async (req, res) => {
@@ -57,7 +59,6 @@ export const uploadUserDocument = async (req, res) => {
 export const getDocsUser = async (req, res) => {
     try {
         const userId = req.user.id;
-        console.log(userId);
 
         const DocsList = await UserDocuments.find({ userDocsId: userId });
 
@@ -129,6 +130,74 @@ export const getDocsUserByAdmin = async (req, res) => {
         console.log(userId);
 
         const DocsList = await UserDocuments.find({ userDocsId: userId });
+
+        res.status(200).json({
+            success: true,
+            data: DocsList,
+        });
+    } catch (error) {
+        res.status(500).json({ message: "Failed to fetch education" });
+    }
+};
+
+//policy
+export const uploadPolicy = async (req, res) => {
+    try {
+        const { documentName } = req.body;
+
+        const docs = new CompanyPolicy({
+            documentName: documentName,
+            url: req.file.path,
+        });
+
+        const UserDocs = await docs.save();
+
+        res.status(200).json({
+            message: "Document uploaded successfully",
+            document: {
+                documentName: documentName,
+                url: req.file.path,
+            },
+        });
+    } catch (error) {
+        console.error("Upload error:", error);
+        res.status(500).json({ message: "Document upload failed" });
+    }
+};
+
+export const getAllPolicy = async (req, res) => {
+    try {
+        const DocsList = await CompanyPolicy.find();
+
+        res.status(200).json({
+            success: true,
+            data: DocsList,
+        });
+    } catch (error) {
+        res.status(500).json({ message: "Failed to fetch education" });
+    }
+};
+
+export const getPolicyUser = async (req, res) => {
+    try {
+        const userId = req.user.id;
+
+        const DocsList = await UserPolicy.find({ userId: userId });
+
+        res.status(200).json({
+            success: true,
+            data: DocsList,
+        });
+    } catch (error) {
+        res.status(500).json({ message: "Failed to fetch education" });
+    }
+};
+
+export const getPolicyAdmin = async (req, res) => {
+    try {
+        const userId = req.params.id;
+
+        const DocsList = await UserPolicy.find({ userId: userId });
 
         res.status(200).json({
             success: true,

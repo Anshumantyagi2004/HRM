@@ -553,6 +553,22 @@ export default function MyProfile() {
         }
     };
 
+    //Policy
+    const [userPolicies, setUserPolicies] = useState([])
+    const fetchPolicy = async () => {
+        try {
+            const response = await fetch(`${BaseUrl}api/get-policy-byAdmin/${userId}`, { credentials: "include", });
+            if (!response.ok) {
+                toast.error("No policy Available");
+            } else {
+                const data = await response.json();
+                setUserPolicies(data?.data)
+            }
+        } catch (error) {
+            toast.error("Add Education Error:", error.message);
+        }
+    };
+
     return (
         <div className="w-full px-3 py-4">
             <div className="grid grid-cols-12 gap-4">
@@ -665,12 +681,9 @@ export default function MyProfile() {
                     {text == "Policy" &&
                         <Policy
                             user={user}
-                            editText={editText}
-                            setEditText={setEditText}
-                            payrollForm={payrollForm}
-                            payrollInfo={payrollInfo}
-                            handleChangePayroll={handleChangePayroll}
-                            addPayroll={addPayroll}
+                            userId={userId}
+                            fetchPolicy={fetchPolicy}
+                            userPolicies={userPolicies}
                         />}
                 </div>
 

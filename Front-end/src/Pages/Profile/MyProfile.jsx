@@ -5,7 +5,7 @@ import "./Profile.css"
 import Modal from "../../Components/Modal/Modal";
 import toast from "react-hot-toast";
 import { useSelector, useDispatch } from "react-redux";
-import { logout } from "../../Redux/authSlice";
+import { loginSuccess, logout } from "../../Redux/authSlice";
 import PersonalInfo from "./PersonalInfo";
 import Education from "./Education";
 import Documents from "./Documents";
@@ -125,7 +125,8 @@ export default function MyProfile() {
                 // throw new Error(data.message);
             }
             toast.success(data?.message)
-            setUserData(data.user);   // update view
+            setUserData(data.user);
+            dispatch(loginSuccess({ user: data.user }));
             setEditText("");
         } catch (err) {
             console.error(err);
@@ -564,6 +565,22 @@ export default function MyProfile() {
         }
     };
 
+    //Policy
+    const [userPolicies, setUserPolicies] = useState([])
+    const fetchPolicy = async () => {
+        try {
+            const response = await fetch(`${BaseUrl}api/get-policy-byUser`, { credentials: "include", });
+            if (!response.ok) {
+                toast.error("No policy Available");
+            } else {
+                const data = await response.json();
+                setUserPolicies(data?.data)
+            }
+        } catch (error) {
+            toast.error("Add Education Error:", error.message);
+        }
+    };
+
     return (
         <div className="w-full px-3 py-4">
             <div className="grid grid-cols-12 gap-4">
@@ -676,15 +693,9 @@ export default function MyProfile() {
                     {text == "Policy" &&
                         <Policy
                             user={user}
-                            editText={editText}
-                            setEditText={setEditText}
-                            payrollForm={payrollForm}
-                            payrollInfo={payrollInfo}
-                            handleChangePayroll={handleChangePayroll}
-                            addPayroll={addPayroll}
+                            fetchPolicy={fetchPolicy}
+                            userPolicies={userPolicies}
                         />}
-
-
                 </div>
 
                 <div className="col-span-12 md:col-span-3 space-y-4">

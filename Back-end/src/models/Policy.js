@@ -7,20 +7,12 @@ const userPolicy = new mongoose.Schema(
             ref: "User",
             required: true,
         },
-
-        documentName: {
-            type: String,
-        },
-
+        documentName: String,
         url: String,
-
-        status: String,
-
-        uploadedAt: {
-            type: Date,
-            default: Date.now,
-        }
-    }
-);
+        status: { type: String, default: "PENDING" },
+        signedAt: Date,
+        signedBy: String,
+        remark: String
+    }, { timestamps: true });
 
 export const UserPolicy = mongoose.model("UserPolicy", userPolicy);
