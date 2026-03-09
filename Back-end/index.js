@@ -28,7 +28,7 @@ app.get("/", (req, res) => {
 });
 
 connectDB();
-await connectRedis();
+// await connectRedis();
 
 const server = http.createServer(app);
 

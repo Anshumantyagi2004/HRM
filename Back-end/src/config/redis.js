@@ -1,8 +1,7 @@
 import { createClient } from "redis";
 
 export const redisClient = createClient({
-  // url: "redis://127.0.0.1:6379"
-  url: "redis://:Tyagi@921375@[2a02:4780:12:4aec::1]:6379"
+  url: "redis://127.0.0.1:6379"
 });
 
 redisClient.on("connect", () => {
