@@ -6,6 +6,8 @@ import { UserPayroll } from '../models/UserPayroll.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import mongoose from 'mongoose';
+import { generateOTP, saveOTP, getOTP, deleteOTP } from "../services/otpService.js";
+import { sendOTPEmail } from "../services/mailService.js";
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_here';
 
@@ -91,6 +93,84 @@ export const login = async (req, res) => {
   } catch (error) {
     console.log("Login error:", error);
     res.status(500).json({ message: "Something went wrong" });
+  }
+};
+
+// SEND OTP
+export const sendLoginOTP = async (req, res) => {
+  try {
+    const { officialEmail } = req.body;
+
+    const user = await User.findOne({ officialEmail });
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    const otp = generateOTP();
+
+    await saveOTP(officialEmail, otp);
+    await sendOTPEmail(officialEmail, otp);
+
+    res.json({ success: true, message: "OTP sent successfully" });
+
+  } catch (err) {
+    console.error("OTP send error:", err);
+    res.status(500).json({ message: "OTP send failed" });
+  }
+};
+
+// VERIFY OTP
+export const verifyLoginOTP = async (req, res) => {
+  try {
+    let { officialEmail, otp } = req.body;
+
+    if (!officialEmail || !otp) {
+      return res.status(400).json({ message: "Email and OTP required" });
+    }
+
+    officialEmail = officialEmail.trim().toLowerCase();
+    otp = otp.toString().trim();
+
+    const savedOTP = await getOTP(officialEmail);
+
+    if (!savedOTP) {
+      return res.status(400).json({ message: "OTP expired or not found" });
+    }
+
+    if (savedOTP.toString().trim() !== otp) {
+      return res.status(400).json({ message: "Invalid OTP" });
+    }
+
+    await deleteOTP(officialEmail);
+    const user = await User.findOne({ officialEmail });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const token = jwt.sign(
+      { id: user._id, role: user.role },
+      JWT_SECRET,
+      { expiresIn: "1d" }
+    );
+
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: true,        // 🔥 REQUIRED
+      sameSite: "none",    // 🔥 REQUIRED
+      path: "/",
+    });
+
+    res.status(200).json({
+      token,
+      user: {
+        id: user._id,
+        username: user.username,
+        role: user.role,
+      },
+    });
+
+  } catch (err) {
+    console.error("OTP verify error:", err);
+    res.status(500).json({ message: "OTP verify failed" });
   }
 };
 

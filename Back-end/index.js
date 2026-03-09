@@ -7,6 +7,8 @@ import connectDB from "./src/config/db.js";
 import mainRoute from "./src/routes/mainRoute.js";
 import { initSocket } from "./src/socket/socket.js";
 import cookieParser from "cookie-parser";
+import { connectRedis } from "./src/config/redis.js";
+
 dotenv.config();
 
 const app = express();
@@ -14,6 +16,8 @@ const PORT = process.env.PORT;
 
 // const CLIENT_URL = "http://localhost:5173"
 const CLIENT_URL = "https://hrm-eight-vert.vercel.app"
+// const CLIENT_URL = "https://hrms.promozione.in"
+
 
 app.use(cors({ origin: CLIENT_URL, credentials: true, }));
 app.use(express.json());
@@ -24,6 +28,7 @@ app.get("/", (req, res) => {
 });
 
 connectDB();
+await connectRedis();
 
 const server = http.createServer(app);
 
@@ -41,7 +46,7 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use("/", mainRoute);
+app.use("/api", mainRoute);
 
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);

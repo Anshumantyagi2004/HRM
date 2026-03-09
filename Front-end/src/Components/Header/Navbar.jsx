@@ -1,34 +1,27 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
-import { Menu, X, Gauge, Users, Calendar, User, Handbag, Bell, Sun, LogOut, UserCircle, UserPlus, IndianRupee } from "lucide-react";
+import { Menu, X, Gauge, Users, Calendar, User, Handbag, Bell, Sun, LogOut, UserCircle, UserPlus, IndianRupee, Search, CalendarHeart } from "lucide-react";
 import { BaseUrl } from "../../BaseApi/Api";
 import Modal from "../Modal/Modal";
 import toast from "react-hot-toast";
 import SignToggle from "./ToggleButton";
+import SearchBar from "./Search";
 import { useSelector, useDispatch } from "react-redux";
 import { logout } from "../../Redux/authSlice";
+import NotificationBell from "./NotificationBell";
 
 export default function Navbar() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { isAuthenticated, user } = useSelector((state) => state.auth);
-
-  // const UserId = localStorage.getItem(user?._id)
-  const [UserId, setUserId] = useState(user?._id)
-  const [notifications, setNotifications] = useState([]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
-  const [isNotificationOpen, setNotificationOpen] = useState(false);
-  const bellRef = useRef(null);
   const [isUserOpen, setUserOpen] = useState(false);
   const userRef = useRef(null);
 
   useEffect(() => {
     fetchTodayAttendance()
     const handleClickOutside = (e) => {
-      if (bellRef.current && !bellRef.current.contains(e.target)) {
-        setNotificationOpen(false);
-      }
       if (userRef.current && !userRef.current.contains(e.target)) {
         setUserOpen(false);
       }
@@ -213,66 +206,18 @@ export default function Navbar() {
         </Link>
       </div>
 
-      {isAuthenticated &&
-        <div className="hidden md:flex gap-6 font-medium">
-          <Link className="hover:text-indigo-600" to="/myProfile">My Profile</Link>
-          <Link className="hover:text-indigo-600" to="/dashboard">Dashboard</Link>
-          <Link className="hover:text-indigo-600" to="/employees">Employees</Link>
-          <Link className="hover:text-indigo-600" to="/attendance">Attendance</Link>
-          <Link className="hover:text-indigo-600" to="/leave">Leave</Link>
-          <Link className="hover:text-indigo-600" to="/payroll">Payroll</Link>
-        </div>}
-
       <div className="flex items-center">
+        {user?.role == "Admin" &&
+          <SearchBar />}
+
         <SignToggle
           onToggle={handleToggleClock}
           isClockedIn={isClockedIn}
           loading={loading}
         />
-        <button className="p-2 rounded-full hover:bg-gray-100 transition">
-          <Sun size="22" />
-        </button>
+
         {isAuthenticated ? (<>
-          <div className="relative" ref={bellRef}>
-            <button
-              onClick={() => setNotificationOpen(!isNotificationOpen)}
-              className="relative p-2 rounded-full hover:bg-gray-100 transition"
-            >
-              <Bell size={22} />
-              {notifications.length > 0 &&
-                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>}
-            </button>
-
-            {isNotificationOpen && (
-              <div className="absolute right-0 mt-2 w-72 bg-white shadow-lg rounded-lg border z-50">
-                <div className="p-3 border-b font-medium text-gray-700">
-                  Notifications
-                </div>
-
-                {notifications.length > 0 ? (
-                  notifications.map((n, index) => (
-                    <div
-                      key={index}
-                      className={`p-3 border-l-4 ${n.status === "Approved"
-                        ? "border-green-500 bg-green-50"
-                        : "border-red-500 bg-red-50"
-                        }`}
-                    >
-                      <p className="text-sm font-medium">{n.message}</p>
-                      <p className="text-xs text-gray-500">
-                        {new Date(n.time).toLocaleTimeString()}
-                      </p>
-                    </div>
-                  ))
-                ) : (
-                  <div className="p-4 text-sm text-gray-500 text-center">
-                    No notifications
-                  </div>
-                )}
-              </div>
-            )}
-
-          </div>
+          <NotificationBell />
           <div className="relative" ref={userRef}>
             <button
               onClick={() => setUserOpen(!isUserOpen)}
@@ -317,22 +262,9 @@ export default function Navbar() {
               </div>
             )}
           </div>
-        </>) : (
-          <>
-            <Link
-              to="/login"
-              className="text-sm text-white ml-2 bg-indigo-600 px-3 py-2 rounded hover:bg-indigo-700 transition"
-            >
-              Login
-            </Link>
-            {/* <Link
-                to="/signup"
-                className="text-sm text-white ml-2 bg-indigo-600 px-3 py-2 rounded hover:bg-indigo-700 transition"
-              >
-                Sign Up
-              </Link> */}
-          </>
-        )}
+        </>) : (<Link to="/login" className="text-sm text-white ml-2 bg-indigo-600 px-3 py-2 rounded hover:bg-indigo-700 transition">
+          Login
+        </Link>)}
       </div>
     </nav>
 
@@ -473,6 +405,18 @@ export default function Navbar() {
           className="flex items-center gap-3 p-2 rounded hover:bg-indigo-50 transition"
         >
           <IndianRupee size={18} /> Payroll
+        </Link>
+        <Link
+          to="/holiday" onClick={() => setIsSidebarOpen(false)}
+          className="flex items-center gap-3 p-2 rounded hover:bg-indigo-50 transition"
+        >
+          <CalendarHeart size={18} /> Holiday
+        </Link>
+        <Link
+          to="/notification" onClick={() => setIsSidebarOpen(false)}
+          className="flex items-center gap-3 p-2 rounded hover:bg-indigo-50 transition"
+        >
+          <Bell size={18} /> Notifications
         </Link>
       </div>
     </aside>

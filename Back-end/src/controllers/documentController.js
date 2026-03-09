@@ -2,6 +2,7 @@ import { User } from '../models/User.js';
 import { UserDocuments } from '../models/UserDocs.js';
 import { CompanyPolicy } from '../models/CompanyPolicy.js';
 import { UserPolicy } from '../models/Policy.js';
+import Notification from "../models/Notification.js";
 
 // Profile image upload controller
 export const uploadProfileImage = async (req, res) => {
@@ -151,6 +152,20 @@ export const uploadPolicy = async (req, res) => {
         });
 
         const UserDocs = await docs.save();
+
+        const users = await User.find({}, "_id");
+
+        // 🔔 CREATE NOTIFICATIONS
+        const notifications = users.map((user) => ({
+            receiver: user._id,
+            title: "New Policy Added",
+            message: `${documentName} has been Added in Policy Section Check it Out`,
+            type: "reminder",
+            link: "/myProfile",
+
+        }));
+
+        await Notification.insertMany(notifications);
 
         res.status(200).json({
             message: "Document uploaded successfully",

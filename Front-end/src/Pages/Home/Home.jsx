@@ -1,6 +1,6 @@
 import React from "react";
 import CompLogo from "./../../Assets/company_logo.png";
-import { Facebook, Instagram, Linkedin, Bell, ClipboardList,User, LayoutDashboard, Users, CalendarCheck, LogOut, IndianRupee } from "lucide-react";
+import { Facebook, Instagram, Linkedin, Bell, ClipboardList, User, LayoutDashboard, Users, CalendarCheck, LogOut, IndianRupee, Heart, CalendarHeart } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export default function Home() {
@@ -114,34 +114,29 @@ export default function Home() {
 
         <div className="col-span-12 md:col-span-3">
           <div className="bg-white shadow-md rounded-xl p-5 transition hover:shadow-lg">
-
-            {/* Header */}
             <h2 className="text-lg font-semibold text-gray-800 mb-4">
-              Tasks & Notifications
+              Information
             </h2>
 
-            {/* Task Section */}
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 mb-3">
-              <div className="w-9 h-9 flex items-center justify-center rounded-full bg-indigo-100 text-indigo-600">
-                <ClipboardList size={18} />
-              </div>
-              <div className="text-left">
-                <p className="font-medium text-gray-700">Pending Tasks</p>
-                <p className="text-sm text-gray-500">You have 5 tasks to complete</p>
-              </div>
-            </div>
-
-            {/* Announcement Section */}
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-gray-50">
+            <Link to={"/notification"} className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 mb-3">
               <div className="w-9 h-9 flex items-center justify-center rounded-full bg-yellow-100 text-yellow-600">
                 <Bell size={18} />
               </div>
               <div className="text-left">
                 <p className="font-medium text-gray-700">Company Announcement</p>
-                <p className="text-sm text-gray-500">New HR policy update available</p>
+                <p className="text-sm text-gray-500">Check new announcements available</p>
               </div>
-            </div>
-
+            </Link>
+            
+            <Link to={"/holiday"} className="flex items-start gap-3 p-3 rounded-lg bg-gray-50">
+              <div className="w-9 h-9 flex items-center justify-center rounded-full bg-indigo-100 text-indigo-600">
+                <CalendarHeart size={18} />
+              </div>
+              <div className="text-left">
+                <p className="font-medium text-gray-700">Holiday Calendar</p>
+                <p className="text-sm text-gray-500">Check new Holiday announcements</p>
+              </div>
+            </Link>
           </div>
         </div>
       </div>

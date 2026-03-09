@@ -57,6 +57,8 @@ export const applyLeave = async (req, res) => {
             reason,
         });
 
+        
+
         return res.status(201).json({
             message: "Leave applied successfully",
             leave,

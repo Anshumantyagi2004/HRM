@@ -11,6 +11,9 @@ import ProtectedRoute from './RoutesValidation.jsx';
 import MainLayout from '../MainLayout.jsx';
 import UserProfile from '../Pages/Profile/UserProile.jsx';
 import Payroll from '../Pages/Payroll/Payroll.jsx';
+import Holiday from '../Pages/Holiday/Holiday.jsx';
+import OtpLogin from '../Components/Login/OtpLogin.jsx';
+import Notification from '../Pages/Notification/Notification.jsx';
 
 function AllRoute() {
   return (
@@ -18,6 +21,7 @@ function AllRoute() {
       <Routes>
         <Route path="/signup" element={<Signup />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/login-otp" element={<OtpLogin />} />
 
         <Route element={<ProtectedRoute />}>
           <Route element={<MainLayout />}>
@@ -29,6 +33,8 @@ function AllRoute() {
             <Route path="/leave" element={<Leave />} />
             <Route path="/attendance" element={<Attendance />} />
             <Route path="/payroll" element={<Payroll />} />
+            <Route path="/holiday" element={<Holiday />} />
+            <Route path="/notification" element={<Notification />} />
           </Route>
         </Route>
       </Routes>

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { BaseUrl } from "./../../BaseApi/Api";
 import toast, { Toaster } from 'react-hot-toast';
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { loginSuccess } from "../../Redux/authSlice";
 import { Eye, EyeOff } from "lucide-react";
@@ -32,9 +32,7 @@ function Login() {
       },
       body: JSON.stringify(formData)
     });
-
     const data = await response.json();
-    console.log(data);
     if (response.ok) {
       toast.success('Login Sucessfully!')
       dispatch(loginSuccess({ user: data.user }));
@@ -81,12 +79,14 @@ function Login() {
           </button>
         </div>
 
-        <button onClick={handleSubmit}
-          type="submit"
-          className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700"
-        >
+        <button onClick={handleSubmit} type="submit"
+          className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700 mb-4">
           Login
         </button>
+
+        <Link to={"/login-otp"} className="flex justify-center text-sm font-semibold text-indigo-600 cursor-pointer">
+          Login with OTP
+        </Link>
       </div>
     </div>
   );

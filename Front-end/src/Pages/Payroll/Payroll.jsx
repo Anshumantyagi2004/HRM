@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react'
 import { useSelector, useDispatch } from "react-redux";
 import { BaseUrl } from "../../BaseApi/Api";
 import Modal from '../../Components/Modal/Modal';
-
+import { months, years } from '../../Data/data'
 export default function Payroll() {
     const { isAuthenticated, user } = useSelector((state) => state.auth);
     const [text, setText] = useState(user.role != "Employee" ? "Employee" : "PaySlip")
@@ -51,28 +51,12 @@ export default function Payroll() {
             fetchMyProfile()
         }
     }, [])
-
-    const months = [
-        { name: "January", id: 0 },
-        { name: "February", id: 1 },
-        { name: "March", id: 2 },
-        { name: "April", id: 3 },
-        { name: "May", id: 4 },
-        { name: "June", id: 5 },
-        { name: "July", id: 6 },
-        { name: "August", id: 7 },
-        { name: "September", id: 8 },
-        { name: "October", id: 9 },
-        { name: "November", id: 10 },
-        { name: "December", id: 11 },
-    ];
-    const years = [2022, 2023, 2024, 2025, 2026];
+    
     const currentDate = new Date();
     const [year, setYear] = useState(currentDate.getFullYear());
     const [month, setMonth] = useState(currentDate.getMonth());
     const [open, setOpen] = useState(false);
     const [selectedDetail, setSelectedDetail] = useState(null);
-    console.log(userPayRoll);
     const payrollMap = [
         { label: "CTC", key: "ctc" },
         { label: "Basic", key: "basicPay" },

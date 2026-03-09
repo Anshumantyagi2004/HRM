@@ -5,25 +5,10 @@ import { BaseUrl } from "../../BaseApi/Api";
 import toast from "react-hot-toast";
 import { Link } from "react-router-dom";
 import { useSelector, } from "react-redux";
-
+import { months, years } from '../../Data/data'
 export default function Leave() {
     const { isAuthenticated, user } = useSelector((state) => state.auth);
     const role = user.role
-    const years = [2022, 2023, 2024, 2025, 2026];
-    const months = [
-        { name: "Jan", id: 0 },
-        { name: "Feb", id: 1 },
-        { name: "March", id: 2 },
-        { name: "April", id: 3 },
-        { name: "May", id: 4 },
-        { name: "June", id: 5 },
-        { name: "July", id: 6 },
-        { name: "August", id: 7 },
-        { name: "Sept", id: 8 },
-        { name: "Oct", id: 9 },
-        { name: "Nov", id: 10 },
-        { name: "Dec", id: 11 },
-    ];
     const [open, setOpen] = useState(false);
     const [text, setText] = useState(role == "Employee" ? "Balance" : "Logs");
     const [detailModal, setDetailModal] = useState(false);
