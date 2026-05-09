@@ -45,5 +45,5 @@ app.use((req, res, next) => {
 app.use("/api", mainRoute);
 
 server.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`Server running on port ${PORT} CLIENT_URL: ${CLIENT_URL}`);
 });
