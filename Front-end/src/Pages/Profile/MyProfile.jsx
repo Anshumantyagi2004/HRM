@@ -13,6 +13,7 @@ import Work from "./Work";
 import Rules from "./Rules";
 import Payroll from "./Payroll";
 import Policy from "./Policy";
+import IdCard from "../../Components/IdCard/IdCard";
 
 export default function MyProfile() {
     const dispatch = useDispatch();
@@ -108,6 +109,7 @@ export default function MyProfile() {
                 throw error;
             }
         };
+        fetchWork()
         fetchMyProfile()
     }, [UserId])
 
@@ -194,6 +196,25 @@ export default function MyProfile() {
             }
         } catch (error) {
             toast.error("Add Education Error:", error.message);
+        }
+    };
+
+    const deleteDocument = async (id) => {
+        try {
+
+            const res = await fetch(`${BaseUrl}api/delete-document/${id}`,
+                { method: "DELETE", credentials: "include", }
+            );
+
+            const data = await res.json();
+            if (!res.ok) {
+                return toast.error(data.message);
+            }
+            toast.success("Document deleted");
+            fetchDocs();
+        } catch (error) {
+            console.log(error);
+            toast.error("Delete failed");
         }
     };
 
@@ -301,6 +322,10 @@ export default function MyProfile() {
         subDepartment: "",
         managerId: "",
         workExperince: "",
+        probationPeriod: "",
+        empStatus: "",
+        lastWorkingDay: "",
+        reason: "",
     });
     const [workInfo, setWorkInfo] = useState();
     const [workHistoryForm, setWorkHistoryForm] = useState({
@@ -617,7 +642,7 @@ export default function MyProfile() {
                 </div>
 
                 <div className="col-span-12 md:col-span-6 space-y-2">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                         <button onClick={() => setText("PersonalInfo")} className="bg-indigo-600 text-white hover:bg-indigo-700 px-2 py-1 rounded-md">Personal</button>
                         <button onClick={() => { setText("Education"); fetchEducation() }} className="bg-indigo-600 text-white hover:bg-indigo-700 px-2 py-1 rounded-md">Education</button>
                         <button onClick={() => { setText("Work"); fetchWork() }} className="bg-indigo-600 text-white hover:bg-indigo-700 px-2 py-1 rounded-md">Work</button>
@@ -648,6 +673,7 @@ export default function MyProfile() {
 
                     {text == "Documents" &&
                         <Documents
+                            deleteDocument={deleteDocument}
                             handleDocuments={handleDocuments}
                             allDocs={allDocs}
                             handleFileChange={handleFileChange}
@@ -656,6 +682,7 @@ export default function MyProfile() {
 
                     {text == "Work" &&
                         <Work
+                            user={user}
                             editText={editText}
                             setEditText={setEditText}
                             workInfo={workInfo}
@@ -699,44 +726,7 @@ export default function MyProfile() {
                 </div>
 
                 <div className="col-span-12 md:col-span-3 space-y-4">
-                    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition p-4">
-                        <div className="flex justify-between items-center mb-4">
-                            <h2 className="text-lg font-semibold text-gray-800">
-                                Id Card
-                            </h2>
-                            <button className="p-2 rounded-full text-indigo-600 bg-indigo-50 hover:bg-indigo-100 transition">
-                                <Download size={18} />
-                            </button>
-                        </div>
-
-                        <div className="flex justify-center">
-                            <div className="w-full max-w-sm bg-white rounded-2xl border shadow-lg p-6 flex flex-col items-center text-center">
-                                <div className="w-28 h-28 rounded-full overflow-hidden border-4 border-blue-500 shadow-md">
-                                    <img
-                                        src={user?.profileImage}
-                                        alt="profile"
-                                        className="w-full h-full object-cover"
-                                    />
-                                </div>
-
-                                <h2 className="mt-4 text-xl font-semibold text-gray-800">
-                                    {user?.username}
-                                </h2>
-
-                                <p className="text-sm text-blue-600 font-medium">
-                                    Software Engineer
-                                </p>
-
-                                <p className="text-sm text-gray-600">
-                                    Web Solution
-                                </p>
-
-                                <p className="mt-2 text-xs text-gray-500 text-center">
-                                    {userData?.address}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
+                    <IdCard employee={user} workInfo={workInfo} />
 
                     <div className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition p-4">
                         <div className="flex justify-between items-center mb-4">
@@ -772,11 +762,13 @@ export default function MyProfile() {
                                 className="input w-full mb-3"
                             >
                                 <option value="">Select Document Type</option>
-                                <option value="aadhaar">Aadhaar</option>
-                                <option value="marksheet_10">Marksheet 10</option>
-                                <option value="marksheet_12">Marksheet 12</option>
-                                <option value="degree">Degree</option>
-                                <option value="certificate">Certificate</option>
+                                <option value="Aadhaar Card">Aadhaar</option>
+                                <option value="Pan Card">PAN Card</option>
+                                <option value="Bank Statement">Bank Statement</option>
+                                <option value="Marksheet 10">Marksheet 10</option>
+                                <option value="Marksheet 12">Marksheet 12</option>
+                                <option value="Degree">Degree</option>
+                                <option value="Certificate">Certificate</option>
                             </select>
 
                             <input
@@ -1060,6 +1052,6 @@ export default function MyProfile() {
                     </Modal.Footer>
                 </Modal>
             </div>
-        </div >
+        </div>
     );
 }

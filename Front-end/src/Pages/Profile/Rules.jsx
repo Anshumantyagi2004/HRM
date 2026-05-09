@@ -128,6 +128,7 @@ export default function Rules(props) {
                             onChange={handleChangeRules}
                             value={rulesForm?.shiftStartTime || rulesInfo?.shiftStartTime || ""}
                         >
+                            <option>Select</option>
                             {rules.map((i, idx) => (
                                 <option>{i?.shiftStartTime}</option>
                             ))}
@@ -148,6 +149,7 @@ export default function Rules(props) {
                             onChange={handleChangeRules}
                             value={rulesForm?.shiftOutTime || rulesInfo?.shiftOutTime || ""}
                         >
+                            <option>Select</option>
                             {rules.map((i, idx) => (
                                 <option>{i?.shiftOutTime}</option>
                             ))}
@@ -168,6 +170,7 @@ export default function Rules(props) {
                             onChange={handleChangeRules}
                             value={rulesForm?.inTimeGrace || rulesInfo?.inTimeGrace || ""}
                         >
+                            <option>Select</option>
                             {rules.map((i, idx) => (
                                 <option>{i?.inTimeGrace}</option>
                             ))}
@@ -188,6 +191,7 @@ export default function Rules(props) {
                             onChange={handleChangeRules}
                             value={rulesForm?.outTimeGrace || rulesInfo?.outTimeGrace || ""}
                         >
+                            <option>Select</option>
                             {rules.map((i, idx) => (
                                 <option>{i?.outTimeGrace}</option>
                             ))}
@@ -208,6 +212,7 @@ export default function Rules(props) {
                             onChange={handleChangeRules}
                             value={rulesForm?.fullDay || rulesInfo?.fullDay || ""}
                         >
+                            <option>Select</option>
                             {rules.map((i, idx) => (
                                 <option>{i?.fullDay}</option>
                             ))}
@@ -228,6 +233,7 @@ export default function Rules(props) {
                             onChange={handleChangeRules}
                             value={rulesForm?.halfDay || rulesInfo?.halfDay || ""}
                         >
+                            <option>Select</option>
                             {rules.map((i, idx) => (
                                 <option>{i?.halfDay}</option>
                             ))}
@@ -318,6 +324,7 @@ export default function Rules(props) {
                         <p className="value">{rulesInfo?.compOff || "-"}</p>
                     )}
                 </div>
+                
                 <div></div>
                 <div className={`flex justify-end gap-3 items-end transition-all duration-300
                                 ${editText === "Rules"

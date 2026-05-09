@@ -1,12 +1,15 @@
-import { Eye, Search } from "lucide-react";
+import { Edit, Eye, Search } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import Calendar from "../../Components/Calendar/Calendar";
 import { BaseUrl } from "../../BaseApi/Api";
 import { Link } from "react-router-dom";
 import { useSelector } from "react-redux";
+import Modal from "../../Components/Modal/Modal";
+import toast from "react-hot-toast";
 
 export default function Attendance() {
     const { user } = useSelector((state) => state.auth);
+    const [open, setOpen] = useState(false)
     const [text, setText] = useState("Daily")
     const [todayAttendance, setTodayAttendance] = useState()
     const [allTodayAttendance, setAllTodayAttendance] = useState([])
@@ -238,6 +241,54 @@ export default function Attendance() {
         } catch (err) {
             console.error(err);
             console.log("Monthly attendance fetch failed");
+        }
+    };
+
+    const [formData, setFormData] = useState({
+        status: "",
+        clockInTime: "",
+        clockOutTime: "",
+        lateBy: 0,
+    });
+
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({
+            ...prev,
+            [name]: value,
+        }));
+    };
+
+    const handleUpdate = async () => {
+        try {
+            const payload = {
+                id: formData._id,
+                userId: formData.userId,
+                status: formData.status,
+                clockInTime: formData.clockInTime
+                    ? new Date(`${date}T${formData.clockInTime}`).toISOString()
+                    : null,
+                clockOutTime: formData.clockOutTime
+                    ? new Date(`${date}T${formData.clockOutTime}`).toISOString()
+                    : null,
+            };
+            const response = await fetch(`${BaseUrl}attendanceStatus`, {
+                method: "PATCH",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(payload),
+            });
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data.message);
+            }
+
+            toast.success("Attendance updated");
+            fetchAdminAllAttendance();
+            setOpen(false);
+        } catch (error) {
+            toast.error("Update failed");
         }
     };
 
@@ -478,7 +529,7 @@ export default function Attendance() {
                                         <th className="px-4 py-3">Out Time</th>
                                         <th className="px-4 py-3">Work Duration</th>
                                         <th className="px-4 py-3">Location</th>
-                                        <th className="px-4 py-3">Designation</th>
+                                        {/* <th className="px-4 py-3">Designation</th> */}
                                         <th className="px-4 py-3">Action</th>
                                     </tr>
                                 </thead>
@@ -518,13 +569,35 @@ export default function Attendance() {
                                             <td className="px-4 py-3">{formatDateTime(i?.attendance?.clockOutTime)}</td>
                                             <td className="px-4 py-3 text-green-600">{formatWorkDuration(i?.attendance?.workDuration)}</td>
                                             <td className="px-4 py-3">{formatLocation(i?.attendance?.userLocation)}</td>
-                                            <td className="px-4 py-3">{i?.designation || "-"}</td>
+                                            {/* <td className="px-4 py-3">{i?.designation || "-"}</td> */}
                                             <td className="px-4 py-3">
-                                                <button
-                                                    //   onClick={() => handleOpen(emp)}
+                                                <button onClick={() => {
+                                                    setOpen(true);
+                                                    setFormData({
+                                                        _id: i?.attendance?._id,
+                                                        userId: i?._id,
+                                                        status: i?.attendance?.status || "PRESENT",
+                                                        clockInTime: i?.attendance?.clockInTime
+                                                            ? new Date(i.attendance.clockInTime).toLocaleTimeString("en-GB", {
+                                                                timeZone: "Asia/Kolkata",
+                                                                hour: "2-digit",
+                                                                minute: "2-digit",
+                                                                hour12: false,
+                                                            })
+                                                            : "",
+                                                        clockOutTime: i?.attendance?.clockOutTime
+                                                            ? new Date(i.attendance.clockOutTime).toLocaleTimeString("en-GB", {
+                                                                timeZone: "Asia/Kolkata",
+                                                                hour: "2-digit",
+                                                                minute: "2-digit",
+                                                                hour12: false,
+                                                            })
+                                                            : "",
+                                                    });
+                                                }}
                                                     className="inline-flex items-center justify-center w-9 h-9 rounded-full 
                                                          bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition">
-                                                    <Eye size={18} />
+                                                    <Edit size={18} />
                                                 </button>
                                             </td>
                                         </tr>
@@ -583,6 +656,62 @@ export default function Attendance() {
                                 </table>
                             </div>
                         </div>)}
+
+                    <Modal open={open} onClose={() => { setOpen(false); }}>
+                        <Modal.Header title="Edit Attendance" />
+                        <Modal.Body>
+                            <div className="space-y-2">
+                                <div className='flex flex-col'>
+                                    <label className='ml-1 font-semibold'>Status</label>
+                                    <select
+                                        name="status"
+                                        value={formData?.status}
+                                        onChange={handleChange}
+                                        className={`input w-full`}
+                                    >
+                                        <option>PRESENT</option>
+                                        <option>ABSENT</option>
+                                        <option>ANOMALIES</option>
+                                        <option>HALF_DAY</option>
+                                    </select>
+                                </div>
+                                <div className='flex flex-col'>
+                                    <label className='ml-1 font-semibold'>In Time</label>
+                                    <input
+                                        type="time"
+                                        name="clockInTime"
+                                        value={formData?.clockInTime}
+                                        onChange={handleChange}
+                                        className='input'
+                                    />
+                                </div>
+                                <div className='flex flex-col'>
+                                    <label className='ml-1 font-semibold'>Out Time</label>
+                                    <input
+                                        type="time"
+                                        name="clockOutTime"
+                                        value={formData?.clockOutTime}
+                                        onChange={handleChange}
+                                        className='input'
+                                    />
+                                </div>
+                            </div>
+                        </Modal.Body>
+                        <Modal.Footer>
+                            <div className="flex justify-end w-full gap-2">
+                                <button
+                                    onClick={() => { setOpen(false); }}
+                                    className="px-4 py-2 border rounded-lg text-gray-700 hover:bg-gray-100"
+                                >
+                                    Close
+                                </button>
+                                <button onClick={handleUpdate}
+                                    className="px-4 py-2 border rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white">
+                                    Edit
+                                </button>
+                            </div>
+                        </Modal.Footer>
+                    </Modal>
                 </div>
             </div>
         </div>

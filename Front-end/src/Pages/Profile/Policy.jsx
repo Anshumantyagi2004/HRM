@@ -1,4 +1,4 @@
-import { Check, ClipboardList, Eye, Trash2, X } from 'lucide-react'
+import { Check, ClipboardList, Eye, Pencil, Trash2, X } from 'lucide-react'
 import React, { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import { BaseUrl } from '../../BaseApi/Api'
@@ -64,6 +64,25 @@ export default function Policy(props) {
             }
         } catch (error) {
             toast.error("Add Education Error:", error.message);
+        }
+    };
+
+    const deletePolicy = async (id) => {
+        try {
+            const res = await fetch(`${BaseUrl}api/delete-policy/${id}`,
+                { method: "DELETE", credentials: "include", }
+            );
+
+            const data = await res.json();
+            if (!res.ok) {
+                return toast.error(data.message || "Delete failed");
+            }
+
+            toast.success("Policy deleted successfully");
+            fetchDocs();
+        } catch (error) {
+            console.log(error);
+            toast.error("Delete failed");
         }
     };
 
@@ -199,9 +218,14 @@ export default function Policy(props) {
         <div className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition p-4">
             <div className="flex justify-between items-center">
                 <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-1">
-                    <ClipboardList onClick={() => user.role == "Admin" && setDocumentModal(true)} size={18} className="text-indigo-600 bg-indigo-50 hover:bg-indigo-100 h-8 w-8 p-1 rounded-full" />
+                    <ClipboardList size={18} className="text-indigo-600 bg-indigo-50 hover:bg-indigo-100 h-8 w-8 p-1 rounded-full" />
                     Policy
                 </h2>
+
+                {user?.role == "Admin" &&
+                    <button className="p-2 rounded-full hover:bg-gray-100 transition" onClick={() => setDocumentModal(true)}>
+                        <Pencil size={18} />
+                    </button>}
             </div>
 
             <div className="mt-4">
@@ -217,46 +241,51 @@ export default function Policy(props) {
                     </thead>
 
                     <tbody>
-                        {allDocs.map((i, idx) => (
-                            <tr className="border-b hover:bg-gray-50">
-                                <td className="p-2 font-semibold w-56" title={i?.documentName}>
-                                    {i?.documentName?.toString().length > 24 ? i?.documentName?.slice(0, 24) + "..." : i?.documentName}
-                                </td>
-                                <td className="p-2">
-                                    {i?.createdAt?.toString()?.split("T")[0]}
-                                </td>
-                                <td className="p-2">
-                                    {i?.signedAt?.toString()?.split("T")[0] || "-"}
-                                </td>
-                                <td className={`p-2 ${i?.status == "VERIFIED" ? "text-green-600" : "text-red-600"} font-semibold`}>
-                                    {i?.status}
-                                </td>
-                                <td className="p-2">
-                                    <div className='flex items-center gap-2 justify-center'>
-                                        {(!userId && i?.status != "VERIFIED") &&
-                                            <button onClick={() => handleVerifyPDF(i)}
-                                                className="inline-flex items-center justify-center w-9 h-9 rounded-full 
+                        {allDocs.length > 0 ? (
+                            allDocs.map((i, idx) => (
+                                <tr className="border-b hover:bg-gray-50">
+                                    <td className="p-2 font-semibold w-56" title={i?.documentName}>
+                                        {i?.documentName?.toString().length > 24 ? i?.documentName?.slice(0, 24) + "..." : i?.documentName}
+                                    </td>
+                                    <td className="p-2">
+                                        {i?.createdAt?.toString()?.split("T")[0]}
+                                    </td>
+                                    <td className="p-2">
+                                        {i?.signedAt?.toString()?.split("T")[0] || "-"}
+                                    </td>
+                                    <td className={`p-2 ${i?.status == "VERIFIED" ? "text-green-600" : "text-red-600"} font-semibold`}>
+                                        {i?.status}
+                                    </td>
+                                    <td className="p-2">
+                                        <div className='flex items-center gap-2 justify-center'>
+                                            {(!userId && i?.status != "VERIFIED") &&
+                                                <button onClick={() => handleVerifyPDF(i)}
+                                                    className="inline-flex items-center justify-center w-9 h-9 rounded-full 
                                         bg-green-50 text-green-600 hover:bg-green-100 transition border border-green-400"
-                                            >
-                                                <Check size={18} />
-                                            </button>}
-                                        <button onClick={() => handleViewPDF(i)}
-                                            className="inline-flex items-center justify-center w-9 h-9 rounded-full 
-                                        bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition border border-indigo-400"
-                                        >
-                                            <Eye size={18} />
-                                        </button>
-                                        {user.role == "Admin" &&
-                                            <button onClick={() => ""}
+                                                >
+                                                    <Check size={18} />
+                                                </button>}
+                                            <button onClick={() => handleViewPDF(i)}
                                                 className="inline-flex items-center justify-center w-9 h-9 rounded-full 
-                                        bg-red-50 text-red-600 hover:bg-red-100 transition border border-red-400"
+                                        bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition border border-indigo-400"
                                             >
-                                                <Trash2 size={18} />
-                                            </button>}
-                                    </div>
+                                                <Eye size={18} />
+                                            </button>
+                                            {user.role == "Admin" &&
+                                                <button onClick={() => deletePolicy(i._id)}
+                                                    className="inline-flex items-center justify-center w-9 h-9 rounded-full 
+                                        bg-red-50 text-red-600 hover:bg-red-100 transition border border-red-400"
+                                                >
+                                                    <Trash2 size={18} />
+                                                </button>}
+                                        </div>
+                                    </td>
+                                </tr>)))
+                            : (<tr>
+                                <td colSpan={5} className="text-center p-3 text-gray-800">
+                                    No documents found.
                                 </td>
-                            </tr>)
-                        )}
+                            </tr>)}
                     </tbody>
                 </table>
             </div>

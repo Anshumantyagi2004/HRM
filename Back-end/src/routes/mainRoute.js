@@ -3,7 +3,7 @@ import { authenticateJWT } from '../middleware/authMiddleware.js';
 import { sendLoginOTP, verifyLoginOTP, signup, login, logout, getUserById, getAllUsers, addNewUser, updateUserById, educationUserById, getEducationByUser, workUserById, getWorkByUser, workHistoryUserById, updateUserByAdmin, getUserByAdmin, educationUserByAdmin, getEducationByAdmin, workUserByAdmin, getWorkByAdmin, workHistoryUserByAdmin, rulesById, getRuleById, rulesByAdmin, getRuleByAdmin, addOrUpdatePayroll, getUserPayroll, addOrUpdatePayrollByAdmin, getUserPayrollByAdmin, getAllUsersPayroll, findUserPayroll, getAllUsersLeave } from '../controllers/authController.js';
 import { applyLeave, getAllLeave, getLeaveByUser, updateLeaveStatus, updateUserLeave } from '../controllers/leaveController.js';
 import documentRoutes from "./documentRoutes.js";
-import { clockIn, clockOut, getAdminAttendanceByDate, getAttendanceByDate, getMonthlyAttendanceAdmin, getMonthlyAttendanceUser, getTodayAttendance } from '../controllers/attendanceController.js';
+import { clockIn, clockOut, getAdminAttendanceByDate, getAttendanceByDate, getMonthlyAttendanceAdmin, getMonthlyAttendanceUser, getTodayAttendance, updateAttendanceStatus } from '../controllers/attendanceController.js';
 import { addRules, getAllInfo } from '../controllers/CompanyController.js';
 import { sendPolicyOTP, verifyOtpAndSignPolicy } from '../controllers/policyOtpController.js';
 import { addHoliday, getHolidays, updateHoliday, deleteHoliday, } from "../controllers/holidayController.js";
@@ -68,6 +68,7 @@ router.post("/clock-out", authenticateJWT, clockOut);
 router.get("/allUserAttendance/byDate", getAdminAttendanceByDate);
 router.get("/admin/attendance/month", getMonthlyAttendanceAdmin);
 router.get("/attendance/monthly", authenticateJWT, getMonthlyAttendanceUser);
+router.patch("/attendanceStatus", updateAttendanceStatus);
 
 // PAYROLL
 router.patch("/userPayroll", authenticateJWT, addOrUpdatePayroll);
@@ -91,8 +92,8 @@ router.delete("/holidays/:id", authenticateJWT, deleteHoliday);
 router.get("/calendar", authenticateJWT, getDashboardCalendar);
 
 //Notification
-router.get("/notifications", authenticateJWT,getUserNotifications);
-router.get("/notifications/unread-count",authenticateJWT, getUnreadCount);
+router.get("/notifications", authenticateJWT, getUserNotifications);
+router.get("/notifications/unread-count", authenticateJWT, getUnreadCount);
 router.patch("/notifications/read/:id", markAsRead);
 router.patch("/notifications/read-all", markAllAsRead);
 router.delete("/notifications/:id", deleteNotification);

@@ -39,6 +39,24 @@ const userWorkSchema = new mongoose.Schema(
         designation: {
             type: String,
         },
+
+        probationPeriod: {
+            type: String,
+        },
+
+        empStatus: {
+            type: String,
+            default: "Active",
+        },
+
+        lastWorkingDay: {
+            type: Date,
+        },
+
+        reason: {
+            type: String,
+        },
+
         managerId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",

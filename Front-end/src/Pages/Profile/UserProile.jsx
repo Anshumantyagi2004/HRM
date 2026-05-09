@@ -14,6 +14,7 @@ import Work from "./Work";
 import Rules from "./Rules";
 import Payroll from "./Payroll";
 import Policy from "./Policy";
+import IdCard from "../../Components/IdCard/IdCard";
 
 export default function MyProfile() {
     const { userId } = useParams();
@@ -101,7 +102,7 @@ export default function MyProfile() {
 
     useEffect(() => {
         // console.log(userId);
-
+        fetchWork()
         async function fetchMyProfile() {
             try {
                 const res = await fetch(BaseUrl + "userById/" + userId,);
@@ -137,51 +138,7 @@ export default function MyProfile() {
     //Documents
     const [allDocs, setAllDocs] = useState([]);
     const [preview, setPreview] = useState("");
-    const [documentModal, setDocumentModal] = useState(false);
-    const [documentType, setDocumentType] = useState("");
     const [file, setFile] = useState(null);
-    const [previewDoc, setPreviewDoc] = useState(null);
-    const handleDocuments = () => {
-        setDocumentModal(true)
-    }
-
-    const handleFileChange = (e) => {
-        const selectedFile = e.target.files[0];
-        if (!selectedFile) return;
-
-        setFile(selectedFile);
-
-        // Preview for images only
-        if (selectedFile.type.startsWith("image/")) {
-            setPreviewDoc(URL.createObjectURL(selectedFile));
-        } else {
-            setPreviewDoc(null);
-        }
-    };
-
-    const uploadDocument = async () => {
-        if (!file || !documentType) {
-            toast.error("Select document type and file");
-            return;
-        }
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("documentType", documentType);
-        try {
-            const res = await fetch(`${BaseUrl}api/upload-document-ByAdmin/${userId}`, { method: "POST", body: formData, credentials: "include" });
-            const data = await res.json();
-            if (!res.ok) return toast.error(data.message || "Error uploading document");
-            setDocumentModal(false)
-            setDocumentType("")
-            setFile(null);
-            setPreviewDoc(null);
-            fetchDocs()
-            toast.success("Document uploaded successfully");
-        } catch (err) {
-            console.error(err);
-            toast.error("Upload failed");
-        }
-    };
 
     const fetchDocs = async () => {
         try {
@@ -301,6 +258,10 @@ export default function MyProfile() {
         subDepartment: "",
         managerId: "",
         workExperince: "",
+        probationPeriod: "",
+        empStatus: "",
+        lastWorkingDay: "",
+        reason: "",
     });
     const [workInfo, setWorkInfo] = useState();
     const [workHistoryForm, setWorkHistoryForm] = useState({
@@ -605,7 +566,7 @@ export default function MyProfile() {
                 </div>
 
                 <div className="col-span-12 md:col-span-6 space-y-2">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                         <button onClick={() => setText("PersonalInfo")} className="bg-indigo-600 text-white hover:bg-indigo-700 px-2 py-1 rounded-md">Personal</button>
                         <button onClick={() => { setText("Education"); fetchEducation() }} className="bg-indigo-600 text-white hover:bg-indigo-700 px-2 py-1 rounded-md">Education</button>
                         <button onClick={() => { setText("Work"); fetchWork() }} className="bg-indigo-600 text-white hover:bg-indigo-700 px-2 py-1 rounded-md">Work</button>
@@ -636,14 +597,13 @@ export default function MyProfile() {
 
                     {text == "Documents" &&
                         <Documents
-                            handleDocuments={handleDocuments}
+                            userId={userId}
                             allDocs={allDocs}
-                            handleFileChange={handleFileChange}
-                            uploadDocument={uploadDocument}
                         />}
 
                     {text == "Work" &&
                         <Work
+                            user={user}
                             editText={editText}
                             setEditText={setEditText}
                             workInfo={workInfo}
@@ -688,44 +648,7 @@ export default function MyProfile() {
                 </div>
 
                 <div className="col-span-12 md:col-span-3 space-y-4">
-                    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition p-4">
-                        <div className="flex justify-between items-center mb-4">
-                            <h2 className="text-lg font-semibold text-gray-800">
-                                Id Card
-                            </h2>
-                            <button className="p-2 rounded-full text-indigo-600 bg-indigo-50 hover:bg-indigo-100 transition">
-                                <Download size={18} />
-                            </button>
-                        </div>
-
-                        <div className="flex justify-center">
-                            <div className="w-full max-w-sm bg-white rounded-2xl border shadow-lg p-6 flex flex-col items-center text-center">
-                                <div className="w-28 h-28 rounded-full overflow-hidden border-4 border-blue-500 shadow-md">
-                                    <img
-                                        src={userData?.profileImage}
-                                        alt="profile"
-                                        className="w-full h-full object-cover"
-                                    />
-                                </div>
-
-                                <h2 className="mt-4 text-xl font-semibold text-gray-800">
-                                    {userData?.username}
-                                </h2>
-
-                                <p className="text-sm text-blue-600 font-medium">
-                                    Software Engineer
-                                </p>
-
-                                <p className="text-sm text-gray-600">
-                                    Web Solution
-                                </p>
-
-                                <p className="mt-2 text-xs text-gray-500 text-center">
-                                    {userData?.address}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
+                    <IdCard employee={userData} workInfo={workInfo} />
 
                     <div className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition p-4">
                         <div className="flex justify-between items-center mb-4">
@@ -750,74 +673,6 @@ export default function MyProfile() {
                         </div>
                     </div>
                 </div>
-
-                <Modal open={documentModal} onClose={() => setDocumentModal(false)}>
-                    <Modal.Header title="Add Documents Here" />
-                    <Modal.Body>
-                        <div className="bg-white w-full max-w-md">
-                            <select
-                                value={documentType}
-                                onChange={(e) => setDocumentType(e.target.value)}
-                                className="input w-full mb-3"
-                            >
-                                <option value="">Select Document Type</option>
-                                <option value="aadhaar">Aadhaar</option>
-                                <option value="marksheet_10">Marksheet 10</option>
-                                <option value="marksheet_12">Marksheet 12</option>
-                                <option value="degree">Degree</option>
-                                <option value="certificate">Certificate</option>
-                            </select>
-
-                            <input
-                                type="file"
-                                accept="image/*,.pdf"
-                                onChange={handleFileChange}
-                                className="block w-full text-sm text-gray-600
-                                file:mr-3 file:py-2 file:px-4
-                                file:rounded-lg file:border-0
-                                file:text-sm file:font-medium
-                               file:bg-indigo-600 file:text-white
-                                hover:file:bg-indigo-700 cursor-pointer"
-                            />
-
-                            {file && (
-                                <div className="mt-4 border rounded-lg p-3">
-                                    <p className="text-sm text-gray-600 mb-2">
-                                        <span className="font-medium">Selected:</span> {file.name}
-                                    </p>
-
-                                    {previewDoc ? (
-                                        <img
-                                            src={previewDoc}
-                                            alt="Preview"
-                                            className="w-full h-40 object-contain rounded"
-                                        />
-                                    ) : (
-                                        <p className="text-sm text-gray-500">PDF preview not available</p>
-                                    )}
-                                </div>
-                            )}
-                        </div>
-                    </Modal.Body>
-                    <Modal.Footer>
-                        <div className="flex justify-end gap-2 w-full">
-                            <button
-                                onClick={() => setDocumentModal(false)}
-                                className="px-4 py-2 border rounded-lg text-gray-700 hover:bg-gray-100"
-                            >
-                                Close
-                            </button>
-
-                            <button
-                                onClick={() => uploadDocument()}
-                                className="px-4 py-2 border rounded-lg text-white hover:bg-indigo-700 bg-indigo-600"
-                            >
-                                Add
-                            </button>
-
-                        </div>
-                    </Modal.Footer>
-                </Modal>
 
                 <Modal open={qualificationModal} onClose={() => setQualificationModal(false)}>
                     <Modal.Header title="Add Qualification Here" />
@@ -1049,6 +904,6 @@ export default function MyProfile() {
                     </Modal.Footer>
                 </Modal>
             </div>
-        </div >
+        </div>
     );
 }

@@ -4,6 +4,7 @@ import { BaseUrl } from '../../BaseApi/Api';
 
 export default function Work(props) {
     const {
+        user,
         setEditText,
         editText,
         workInfo,
@@ -97,9 +98,10 @@ export default function Work(props) {
                     <BriefcaseBusiness size={18} className="text-indigo-600 bg-indigo-50 hover:bg-indigo-100 h-8 w-8 p-1.5 rounded-full" />
                     Work Info
                 </h2>
-                <button className="p-2 rounded-full hover:bg-gray-100 transition" onClick={() => setEditText("workInfo")}>
-                    <Pencil size={18} />
-                </button>
+                {user?.role == "Admin" &&
+                    <button className="p-2 rounded-full hover:bg-gray-100 transition" onClick={() => setEditText("workInfo")}>
+                        <Pencil size={18} />
+                    </button>}
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 text-sm p-2">
@@ -290,7 +292,25 @@ export default function Work(props) {
                     )}
                 </div>
 
-                <div className={`flex justify-end gap-3 items-end transition-all duration-300
+                <div className="flex flex-col gap-1">
+                    <label className="font-medium text-gray-500 flex items-center gap-1">
+                        <CalendarClock size={18} className="text-indigo-600" />
+                        Probation Period
+                    </label>
+                    {editText === "workInfo" ? (
+                        <input
+                            type="input"
+                            name="probationPeriod"
+                            onChange={handleChangeWorkInfo}
+                            value={workInfoForm?.probationPeriod || workInfo?.probationPeriod || ""}
+                            className="input"
+                        />
+                    ) : (
+                        <p className="value">{workInfo?.probationPeriod || "-"}</p>
+                    )}
+                </div>
+
+                <div className={`flex justify-end gap-3 items-end transition-all duration-300 sm:col-span-2
                                 ${editText === "workInfo"
                         ? "opacity-100 pointer-events-auto"
                         : "opacity-0 pointer-events-none"
@@ -389,28 +409,82 @@ export default function Work(props) {
                 <h2 className="text-lg font-semibold text-gray-800">
                     Resignation Info
                 </h2>
-                <button className="p-2 rounded-full hover:bg-gray-100 transition" onClick={() => ""}>
-                    <Pencil size={18} />
-                </button>
+                {user?.role == "Admin" &&
+                    <button className="p-2 rounded-full hover:bg-gray-100 transition" onClick={() => setEditText("resignationInfo")}>
+                        <Pencil size={18} />
+                    </button>}
             </div>
 
-            <div className="mt-2 space-y-2">
-                <div className="flex items-center justify-between rounded-lg border border-gray-100 p-3 hover:bg-gray-50 transition">
-                    <div className="flex items-center gap-3">
-                        <div className="h-9 w-9 rounded-md bg-blue-50 text-blue-600 flex items-center justify-center">
-                            <X />
-                        </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 text-sm p-2">
+                <div className="flex flex-col gap-1">
+                    <label className="font-medium text-gray-500 flex items-center gap-1">
+                        <IdCardLanyard size={18} className="text-indigo-600" />
+                        Employee Status
+                    </label>
+                    {editText === "resignationInfo" ? (
+                        <select className="input"
+                            name="empStatus"
+                            defaultValue={""}
+                            onChange={handleChangeWorkInfo}
+                            value={workInfoForm?.empStatus || workInfo?.empStatus || ""}
+                        >
+                            <option value="">Select</option>
+                            <option>Active</option>
+                            <option>Inactive</option>
+                        </select>
+                    ) : (
+                        <p className="value">{workInfo?.empStatus || "-"}</p>
+                    )}
+                </div>
 
-                        <span className="font-medium text-gray-800 text-sm">
-                            No resignation info added yet.
-                        </span>
-                    </div>
+                <div className="flex flex-col gap-1">
+                    <label className="font-medium text-gray-500 flex items-center gap-1">
+                        <Calendar1 size={18} className="text-indigo-600" />
+                        Last Working Day
+                    </label>
+                    {editText === "resignationInfo" ? (
+                        <input
+                            type="date"
+                            name="lastWorkingDay"
+                            onChange={handleChangeWorkInfo}
+                            value={workInfoForm?.lastWorkingDay || workInfo?.lastWorkingDay || ""}
+                            className="input"
+                        />
+                    ) : (
+                        <p className="value">{workInfo?.lastWorkingDay ? new Date(workInfo?.lastWorkingDay).toLocaleDateString("en-IN") : "-"}</p>
+                    )}
+                </div>
 
-                    <button
-                        // onClick={() => setQualificationModal(true)}
-                        className="text-sm font-medium text-blue-600 hover:underline"
-                    >
-                        Add
+                <div className="flex flex-col gap-1">
+                    <label className="font-medium text-gray-500 flex items-center gap-1">
+                        <CalendarClock size={18} className="text-indigo-600" />
+                        Reason
+                    </label>
+                    {editText === "resignationInfo" ? (
+                        <input
+                            type="input"
+                            name="reason"
+                            onChange={handleChangeWorkInfo}
+                            value={workInfoForm?.reason || workInfo?.reason || ""}
+                            className="input"
+                        />
+                    ) : (
+                        <p className="value">{workInfo?.reason || "-"}</p>
+                    )}
+                </div>
+
+                <div className={`flex justify-end gap-3 items-end transition-all duration-300 sm:col-span-2
+                                ${editText === "resignationInfo"
+                        ? "opacity-100 pointer-events-auto"
+                        : "opacity-0 pointer-events-none"
+                    }`}>
+                    <button onClick={() => setEditText("")}
+                        className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100">
+                        Cancel
+                    </button>
+
+                    <button className="px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700" onClick={addWork}>
+                        Save
                     </button>
                 </div>
             </div>

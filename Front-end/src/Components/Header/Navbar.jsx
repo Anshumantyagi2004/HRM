@@ -63,6 +63,11 @@ export default function Navbar() {
 
   const handleSubmit = async (e) => {
     if (formData?.username == "" || formData?.password == "" || formData?.role == "" || formData?.email == "" || formData?.contact == "") return toast.error('Enter User Credentials First!');
+
+    if (!/^\d{10}$/.test(formData.contact)) {
+      return toast.error("Enter a valid 10-digit phone number");
+    }
+
     const response = await fetch(BaseUrl + "newUser", {
       method: "POST",
       headers: {

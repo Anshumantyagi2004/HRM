@@ -550,6 +550,10 @@ export const workUserById = async (req, res) => {
       "subDepartment",
       "workExperince",
       "managerId",
+      "probationPeriod",
+      "empStatus",
+      "lastWorkingDay",
+      "reason"
     ];
 
     fields.forEach((field) => {
@@ -688,7 +692,11 @@ export const workUserByAdmin = async (req, res) => {
       "department",
       "subDepartment",
       "workExperince",
-      "managerId"
+      "managerId",
+      "probationPeriod",
+      "empStatus",
+      "lastWorkingDay",
+      "reason"
     ];
 
     fields.forEach((field) => {

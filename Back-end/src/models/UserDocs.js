@@ -14,6 +14,10 @@ const userDocsSchema = new mongoose.Schema(
 
         url: String,
 
+        fileField: {
+            type: String,
+        },
+
         uploadedAt: {
             type: Date,
             default: Date.now,

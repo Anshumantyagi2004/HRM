@@ -1,5 +1,5 @@
 import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
-import cloudinary from "../config/cloudinary.js";
+import { uploadToR2 } from "../utils/uploadToR2.js";
 
 /* Download PDF from URL using native fetch */
 export const downloadPdfBuffer = async (pdfUrl) => {
@@ -44,19 +44,20 @@ Remark: ${remark}`;
 };
 
 /*Upload signed PDF to Cloudinary */
-export const uploadSignedPdfToCloudinary = async (buffer, fileName) => {
-    return new Promise((resolve, reject) => {
-        cloudinary.uploader.upload_stream(
-            {
-                folder: "signed-policies",
-                allowed_formats: "pdf",
-                resource_type: "auto",
-                public_id: fileName,
-            },
-            (error, result) => {
-                if (error) reject(error);
-                else resolve(result);
-            }
-        ).end(buffer);
+export const uploadSignedPdfToCloudinary = async (
+    buffer,
+    fileName
+) => {
+
+    const uploaded = await uploadToR2({
+        file: buffer,
+
+        folder: "user-accepted-policies",
+
+        fileName: `${fileName}.pdf`,
+
+        contentType: "application/pdf",
     });
+
+    return uploaded;
 };

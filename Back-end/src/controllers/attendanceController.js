@@ -1,6 +1,7 @@
 import { Attendance } from '../models/Attendance.js';
 import { User } from '../models/User.js';
 import { UserExtraDetail } from "../models/UserExtraDetails.js";
+import Holiday from "../models/Holiday.js";
 
 const OFFICE_LOCATION = {
   latitude: 28.69865783085182,
@@ -416,13 +417,27 @@ export const getMonthlyAttendanceAdmin = async (req, res) => {
       date: { $gte: start, $lte: end },
     });
 
+    const holidayRecords = await Holiday.find({
+      date: { $gte: start, $lte: end },
+    });
+
     const daysInMonth = new Date(y, m, 0).getDate();
 
     const dates = [];
     for (let day = 1; day <= daysInMonth; day++) {
-      const key = `${y}-${String(m).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+      const key = `${y}-${String(m).padStart(2, "0")}-${String(day).padStart(
+        2,
+        "0"
+      )}`;
       dates.push(key);
     }
+
+    // ✅ Holiday Map
+    const holidayMap = {};
+    holidayRecords.forEach((h) => {
+      const key = toISTKey(new Date(h.date));
+      holidayMap[key] = h;
+    });
 
     const result = users.map((user) => {
       const userAttendance = attendanceRecords.filter(
@@ -437,9 +452,29 @@ export const getMonthlyAttendanceAdmin = async (req, res) => {
       });
 
       const monthlyAttendance = dates.map((date) => {
-        const record = attendanceMap[date];
-        if (!record) return { date, status: "ABSENT" };
-        return { date, status: record.status };
+        const attendance = attendanceMap[date];
+        const holiday = holidayMap[date];
+
+        // ✅ Holiday priority
+        if (holiday) {
+          return {
+            date,
+            status: "HOLIDAY",
+            holidayName: holiday.title || "",
+          };
+        }
+
+        if (attendance) {
+          return {
+            date,
+            status: attendance.status,
+          };
+        }
+
+        return {
+          date,
+          status: "ABSENT",
+        };
       });
 
       return { user, monthlyAttendance };
@@ -451,7 +486,6 @@ export const getMonthlyAttendanceAdmin = async (req, res) => {
       range: { start, end },
       users: result,
     });
-
   } catch (error) {
     console.error("Monthly Attendance Error:", error);
     res.status(500).json({ message: "Server error" });
@@ -526,5 +560,65 @@ export const getMonthlyAttendanceUser = async (req, res) => {
   } catch (error) {
     console.error("User Monthly Attendance Error:", error);
     res.status(500).json({ message: "Server error" });
+  }
+};
+
+//edit Status
+export const updateAttendanceStatus = async (req, res) => {
+  try {
+    const { userId, status, clockInTime, clockOutTime, id } = req.body;
+    // const { id } = req.params;
+    let attendance;
+
+    if (id) {
+      attendance = await Attendance.findById(id);
+    }
+
+    if (!attendance) {
+      const userShift = await UserExtraDetail.findOne({ userId });
+      let lateBy = 0;
+      let finalStatus = status || "PRESENT";
+      if (clockInTime && userShift) {
+        const result = calculateLateAndStatus(new Date(clockInTime), userShift);
+        lateBy = result.lateBy;
+        finalStatus = result.status;
+      }
+      const today = new Date(clockInTime || new Date());
+      today.setHours(0, 0, 0, 0);
+      attendance = await Attendance.create({
+        userId,
+        date: today,
+        status: finalStatus,
+        clockInTime,
+        clockOutTime,
+        lateBy,
+        clockStatus: "CLOCKED_IN",
+      });
+
+    } else {
+      const userShift = await UserExtraDetail.findOne({
+        userId: attendance.userId,
+      });
+
+      let lateBy = attendance.lateBy;
+      if (clockInTime && userShift) {
+        const result = calculateLateAndStatus(new Date(clockInTime), userShift);
+        lateBy = result.lateBy;
+      }
+
+      attendance.status = status || attendance.status;
+      attendance.clockInTime = clockInTime || attendance.clockInTime;
+      attendance.clockOutTime = clockOutTime || attendance.clockOutTime;
+      attendance.lateBy = lateBy;
+      await attendance.save();
+    }
+    res.status(200).json({
+      message: "Attendance saved successfully",
+      data: attendance,
+    });
+
+  } catch (error) {
+    console.error("Attendance update error:", error);
+    res.status(500).json({ message: "Failed to update attendance" });
   }
 };

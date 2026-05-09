@@ -3,29 +3,63 @@ import { UserDocuments } from '../models/UserDocs.js';
 import { CompanyPolicy } from '../models/CompanyPolicy.js';
 import { UserPolicy } from '../models/Policy.js';
 import Notification from "../models/Notification.js";
+import { uploadToR2 } from "../utils/uploadToR2.js";
+import { deleteFromR2 } from "../utils/deleteFromR2.js";
 
 // Profile image upload controller
 export const uploadProfileImage = async (req, res) => {
     try {
         const user = await User.findById(req.user.id);
+
         if (!user) {
-            return res.status(404).json({ message: "User not found" });
+            return res.status(404).json({
+                message: "User not found",
+            });
         }
 
         if (!req.file) {
-            return res.status(400).json({ message: "No file uploaded" });
+            return res.status(400).json({
+                message: "No file uploaded",
+            });
         }
 
-        user.profileImage = req.file.path;
+        // delete old image
+        if (user.profileImageField) {
+            await deleteFromR2(user.profileImageField);
+        }
+
+        // extension
+        const ext = req.file.originalname.split(".").pop();
+
+        // unique file name
+        const fileName = `${Date.now()}-${user._id}.${ext}`;
+
+        // upload to R2
+        const uploaded = await uploadToR2({
+            file: req.file.buffer,
+            folder: "profile-image",
+            fileName,
+            contentType: req.file.mimetype,
+        });
+
+        // save new data
+        user.profileImage = uploaded.url;
+
+        // save key separately
+        user.profileImageField = uploaded.key;
+
         await user.save();
 
         res.status(200).json({
             message: "Profile image uploaded successfully",
-            imageUrl: req.file.path,
+            imageUrl: uploaded.url,
         });
     } catch (error) {
         console.error("Upload error:", error);
-        res.status(500).json({ message: "Upload failed" });
+
+        res.status(500).json({
+            message: "Upload failed",
+        });
     }
 };
 
@@ -33,26 +67,100 @@ export const uploadProfileImage = async (req, res) => {
 export const uploadUserDocument = async (req, res) => {
     try {
         const { documentType } = req.body;
+
         const userId = req.user.id;
 
+        if (!req.file) {
+            return res.status(400).json({
+                message: "No file uploaded",
+            });
+        }
+
+        // extension
+        const ext = req.file.originalname.split(".").pop();
+
+        // unique filename
+        const fileName = `${Date.now()}-${userId}-${documentType}.${ext}`;
+
+        // upload to R2
+        const uploaded = await uploadToR2({
+            file: req.file.buffer,
+            folder: "user-documents",
+            fileName,
+            contentType: req.file.mimetype,
+        });
+
+        // save in db
         const docs = new UserDocuments({
             userDocsId: userId,
             type: documentType,
-            url: req.file.path,
+
+            // public url
+            url: uploaded.url,
+
+            // optional r2 key
+            fileField: uploaded.key,
         });
 
-        const UserDocs = await docs.save();
+        await docs.save();
 
         res.status(200).json({
             message: "Document uploaded successfully",
+
             document: {
                 type: documentType,
-                url: req.file.path,
+                url: uploaded.url,
             },
         });
+
     } catch (error) {
+
         console.error("Upload error:", error);
-        res.status(500).json({ message: "Document upload failed" });
+
+        res.status(500).json({
+            message: "Document upload failed",
+        });
+    }
+};
+
+// Document Delete controller
+export const deleteUserDocument = async (req, res) => {
+    try {
+
+        const { id } = req.params;
+
+        const userId = req.user.id;
+
+        const document = await UserDocuments.findOne({
+            _id: id,
+            userDocsId: userId,
+        });
+
+        if (!document) {
+            return res.status(404).json({
+                message: "Document not found",
+            });
+        }
+
+        // delete from R2
+        if (document.fileField) {
+            await deleteFromR2(document.fileField);
+        }
+
+        // delete from DB
+        await UserDocuments.findByIdAndDelete(id);
+
+        res.status(200).json({
+            message: "Document deleted successfully",
+        });
+
+    } catch (error) {
+
+        console.log(error);
+
+        res.status(500).json({
+            message: "Delete failed",
+        });
     }
 };
 
@@ -76,51 +184,56 @@ export const getDocsUser = async (req, res) => {
 export const uploadProfileImageByAdmin = async (req, res) => {
     try {
         const user = await User.findById(req.params.id);
+
         if (!user) {
-            return res.status(404).json({ message: "User not found" });
+            return res.status(404).json({
+                message: "User not found",
+            });
         }
 
         if (!req.file) {
-            return res.status(400).json({ message: "No file uploaded" });
+            return res.status(400).json({
+                message: "No file uploaded",
+            });
         }
 
-        user.profileImage = req.file.path;
+        // delete old image
+        if (user.profileImageField) {
+            await deleteFromR2(user.profileImageField);
+        }
+
+        // extension
+        const ext = req.file.originalname.split(".").pop();
+
+        // unique file name
+        const fileName = `${Date.now()}-${user._id}.${ext}`;
+
+        // upload to R2
+        const uploaded = await uploadToR2({
+            file: req.file.buffer,
+            folder: "profile-image",
+            fileName,
+            contentType: req.file.mimetype,
+        });
+
+        // save new data
+        user.profileImage = uploaded.url;
+
+        // save key separately
+        user.profileImageField = uploaded.key;
+
         await user.save();
 
         res.status(200).json({
             message: "Profile image uploaded successfully",
-            imageUrl: req.file.path,
+            imageUrl: uploaded.url,
         });
     } catch (error) {
         console.error("Upload error:", error);
-        res.status(500).json({ message: "Upload failed" });
-    }
-};
 
-// Document upload controller
-export const uploadUserDocumentByAdmin = async (req, res) => {
-    try {
-        const { documentType } = req.body;
-        const userId = req.params.id;
-
-        const docs = new UserDocuments({
-            userDocsId: userId,
-            type: documentType,
-            url: req.file.path,
+        res.status(500).json({
+            message: "Upload failed",
         });
-
-        const UserDocs = await docs.save();
-
-        res.status(200).json({
-            message: "Document uploaded successfully",
-            document: {
-                type: documentType,
-                url: req.file.path,
-            },
-        });
-    } catch (error) {
-        console.error("Upload error:", error);
-        res.status(500).json({ message: "Document upload failed" });
     }
 };
 
@@ -146,37 +259,109 @@ export const uploadPolicy = async (req, res) => {
     try {
         const { documentName } = req.body;
 
-        const docs = new CompanyPolicy({
-            documentName: documentName,
-            url: req.file.path,
+        if (!req.file) {
+            return res.status(400).json({
+                message: "No file uploaded",
+            });
+        }
+
+        // extension
+        const ext = req.file.originalname.split(".").pop();
+
+        // unique filename
+        const fileName = `${Date.now()}-${documentName}.${ext}`;
+
+        // upload to R2
+        const uploaded = await uploadToR2({
+            file: req.file.buffer,
+            folder: "company-policies",
+            fileName,
+            contentType: req.file.mimetype,
         });
 
-        const UserDocs = await docs.save();
+        // save in DB
+        const docs = new CompanyPolicy({
+            documentName,
 
+            // public url
+            url: uploaded.url,
+
+            // r2 key
+            fileField: uploaded.key,
+        });
+
+        await docs.save();
+
+        // all users
         const users = await User.find({}, "_id");
 
-        // 🔔 CREATE NOTIFICATIONS
+        // notifications
         const notifications = users.map((user) => ({
             receiver: user._id,
-            title: "New Policy Added",
-            message: `${documentName} has been Added in Policy Section Check it Out`,
-            type: "reminder",
-            link: "/myProfile",
 
+            title: "New Policy Added",
+
+            message: `${documentName} has been added in policy section. Check it out.`,
+
+            type: "reminder",
+
+            link: "/myProfile",
         }));
 
         await Notification.insertMany(notifications);
 
         res.status(200).json({
-            message: "Document uploaded successfully",
+            message: "Policy uploaded successfully",
+
             document: {
-                documentName: documentName,
-                url: req.file.path,
+                documentName,
+                url: uploaded.url,
             },
         });
+
     } catch (error) {
+
         console.error("Upload error:", error);
-        res.status(500).json({ message: "Document upload failed" });
+
+        res.status(500).json({
+            message: "Document upload failed",
+        });
+    }
+};
+
+// delete policy
+export const deletePolicy = async (req, res) => {
+    try {
+
+        const { id } = req.params;
+
+        const policy = await CompanyPolicy.findById(id);
+
+        if (!policy) {
+            return res.status(404).json({
+                message: "Policy not found",
+            });
+        }
+
+        // delete from R2
+        if (policy.fileField) {
+            await deleteFromR2(policy.fileField);
+        }
+
+        // delete from DB
+        await CompanyPolicy.findByIdAndDelete(id);
+
+        res.status(200).json({
+            message: "Policy deleted successfully",
+        });
+
+    } catch (error) {
+
+        console.log(error);
+
+        res.status(500).json({
+            message: "Delete failed",
+        });
     }
 };
 

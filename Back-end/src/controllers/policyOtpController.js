@@ -53,8 +53,8 @@ export const sendPolicyOTP = async (req, res) => {
 export const verifyOtpAndSignPolicy = async (req, res) => {
     try {
         const user = req.user;
-        const { policyId, policyName, otp, pdfPath,username } = req.body;
-        
+        const { policyId, policyName, otp, pdfPath, username } = req.body;
+
         if (!otp || !policyId || !pdfPath) {
             return res.status(400).json({ message: "Missing required fields" });
         }
@@ -117,7 +117,7 @@ export const verifyOtpAndSignPolicy = async (req, res) => {
             fileName
         );
 
-        const signedPdfUrl = uploadResult.secure_url;
+        const signedPdfUrl = uploadResult.url;
         await UserPolicy.create({
             userId: user.id,
             documentName: policyName,
