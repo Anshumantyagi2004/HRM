@@ -20,7 +20,7 @@ app.use(express.json());
 app.use(cookieParser());
 
 app.get("/", (req, res) => {
-  res.send("Backend is running");
+  res.send(`Backend is running CLIENT_URL: ${CLIENT_URL}`);
 });
 
 connectDB();
