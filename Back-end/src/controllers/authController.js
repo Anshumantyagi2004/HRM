@@ -8,6 +8,7 @@ import jwt from 'jsonwebtoken';
 import mongoose from 'mongoose';
 import { generateOTP, saveOTP, getOTP, deleteOTP } from "../services/otpService.js";
 import { sendOTPEmail } from "../services/mailService.js";
+import { CompanyInfo } from '../models/CompanyInfo.js';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_here';
 
@@ -279,6 +280,27 @@ export const getAllUsers = async (req, res) => {
   }
 };
 
+//delete user by id
+export const deleteUserById = async (req, res) => {
+  try {
+    const id = req.params.id;
+    const deletedUser = await User.findByIdAndDelete(id);
+
+    if (!deletedUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.status(200).json({
+      message: "User deleted successfully",
+    });
+  } catch (error) {
+    console.error("Delete user error:", error);
+    res.status(500).json({
+      message: "Something went wrong",
+    });
+  }
+};
+
 //Add new user
 export const addNewUser = async (req, res) => {
   const { username, email, password, role, contact } = req.body;
@@ -287,8 +309,24 @@ export const addNewUser = async (req, res) => {
     if (existingUser) return res.status(400).json({ message: 'User Mail already exists' });
 
     const hashedPassword = await bcrypt.hash(password, 12);
+
+    const companyInfo = await CompanyInfo.findOne({ default: true });
     const user = new User({ username, email, password: hashedPassword, role, contact });
     await user.save();
+
+    // UserExtraDetail default values
+    const userExtraDetail = new UserExtraDetail({
+      userId: user._id,
+      shiftStartTime: companyInfo.shiftStartTime,
+      shiftOutTime: companyInfo.shiftOutTime,
+      inTimeGrace: companyInfo.inTimeGrace,
+      outTimeGrace: companyInfo.outTimeGrace,
+      fullDay: companyInfo.fullDay,
+      halfDay: companyInfo.halfDay,
+      casualLeave: companyInfo.casualLeave,
+      sickLeave: companyInfo.sickLeave,
+    });
+    await userExtraDetail.save();
 
     // const token = jwt.sign({ id: user._id, role: user.role }, JWT_SECRET, { expiresIn: '1d' });
     res.status(201).json({ result: user });

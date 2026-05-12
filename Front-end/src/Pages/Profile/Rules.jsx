@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { Pencil, CalendarDays, Calendar1, CalendarClock, ClipboardCheck, Clock1, CalendarCheck, } from "lucide-react";
 import Modal from '../../Components/Modal/Modal';
 import { BaseUrl } from "../../BaseApi/Api";
+import toast from "react-hot-toast";
 
 export default function Rules(props) {
     const {
@@ -41,6 +42,7 @@ export default function Rules(props) {
         casualLeave: "",
         sickLeave: "",
         ruleName: "",
+        defaultRule: false,
     });
 
     const handleChangeRulesForm = (e) => {
@@ -77,7 +79,9 @@ export default function Rules(props) {
                     casualLeave: "",
                     sickLeave: "",
                     ruleName: "",
+                    defaultRule: false,
                 });
+                toast.success(result.message || "Rules added successfully ✅");
                 setRulesAddModal(false)
             }
         } catch (err) {
@@ -316,7 +320,7 @@ export default function Rules(props) {
                             onChange={handleChangeRules}
                             value={rulesForm?.compOff || rulesInfo?.compOff || ""}
                         >
-                            <option value="0" disabled>Select</option>
+                            <option>Select</option>
                             <option>Yes</option>
                             <option>No</option>
                         </select>
@@ -324,7 +328,7 @@ export default function Rules(props) {
                         <p className="value">{rulesInfo?.compOff || "-"}</p>
                     )}
                 </div>
-                
+
                 <div></div>
                 <div className={`flex justify-end gap-3 items-end transition-all duration-300
                                 ${editText === "Rules"
@@ -346,9 +350,12 @@ export default function Rules(props) {
         <Modal open={rulesAddModal} onClose={() => setRulesAddModal(false)}>
             <Modal.Header title="Add Rules Here" />
             <Modal.Body>
-                {rulesAddModalDetails ? <div className='h-80 overflow-auto space-y-2'>
+                {rulesAddModalDetails ? <div className='h-80 no-scrollbar overflow-auto space-y-2'>
                     {rules.map((i, idx) => (
-                        <div className='space-y-2 border shadow-sm transition px-2 py-3 rounded-md' key={idx}>
+                        <div className='relative space-y-2 border shadow-sm transition p-2 rounded-md' key={idx}>
+                            <div className='absolute top-2 right-3'>
+                                <input type="radio" name="defaultRule" checked={i.defaultRule} />
+                            </div>
                             <div className="grid grid-cols-2 gap-3">
                                 <p><span className="font-medium">Name:</span> {i?.ruleName}</p>
                                 <p><span className="font-medium">Assigned Emp:</span> 2</p>
@@ -373,10 +380,7 @@ export default function Rules(props) {
                     ))}
                 </div>
                     : <>
-                        <div className="flex flex-col mb-2">
-                            {/* <label className="text-sm font-medium text-gray-700 mb-1">
-                        Rule Name
-                    </label> */}
+                        <div className="flex items-center mb-2 gap-2">
                             <input
                                 type="text"
                                 name="ruleName"
@@ -384,6 +388,18 @@ export default function Rules(props) {
                                 onChange={handleChangeRulesForm}
                                 placeholder="Rule Name"
                                 className="input w-full"
+                            />
+                            <input
+                                type="checkbox"
+                                name="defaultRule"
+                                className='w-5 h-5'
+                                checked={rulesInfoForm.defaultRule}
+                                onChange={() =>
+                                    setRulesInfoForm((prev) => ({
+                                        ...prev,
+                                        defaultRule: !prev.defaultRule,
+                                    }))
+                                }
                             />
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 ">
@@ -511,10 +527,10 @@ export default function Rules(props) {
             <Modal.Footer>
                 <div className="flex justify-between w-full">
                     <button
-                        onClick={() => { setRulesAddModalDetails(true); }}
+                        onClick={() => { setRulesAddModalDetails(!rulesAddModalDetails); }}
                         className="px-4 py-2 border rounded-lg text-gray-700 hover:bg-gray-100"
                     >
-                        Details
+                        {rulesAddModalDetails ? "Add New Rule" : "View Existing Rules"}
                     </button>
 
                     <div className='flex gap-2'>

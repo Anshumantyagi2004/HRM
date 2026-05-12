@@ -5,3 +5,10 @@
 .value {
   @apply text-gray-800 font-medium;
 }
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  /* Internet Explorer 10+ */
+  scrollbar-width: none;
+  /* Firefox */
+}

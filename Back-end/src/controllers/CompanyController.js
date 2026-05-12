@@ -11,8 +11,16 @@ export const addRules = async (req, res) => {
             halfDay,
             casualLeave,
             sickLeave,
-            ruleName
+            ruleName,
+            defaultRule,
         } = req.body;
+
+        if (defaultRule) {
+            await CompanyInfo.updateMany(
+                { defaultRule: true },
+                { $set: { defaultRule: false } }
+            );
+        }
 
         const rules = await CompanyInfo.create({
             shiftStartTime,
@@ -23,7 +31,8 @@ export const addRules = async (req, res) => {
             halfDay,
             casualLeave,
             sickLeave,
-            ruleName
+            ruleName,
+            defaultRule,
         });
 
         return res.status(201).json({

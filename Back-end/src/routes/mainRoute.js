@@ -1,6 +1,6 @@
 import express from 'express';
 import { authenticateJWT } from '../middleware/authMiddleware.js';
-import { sendLoginOTP, verifyLoginOTP, signup, login, logout, getUserById, getAllUsers, addNewUser, updateUserById, educationUserById, getEducationByUser, workUserById, getWorkByUser, workHistoryUserById, updateUserByAdmin, getUserByAdmin, educationUserByAdmin, getEducationByAdmin, workUserByAdmin, getWorkByAdmin, workHistoryUserByAdmin, rulesById, getRuleById, rulesByAdmin, getRuleByAdmin, addOrUpdatePayroll, getUserPayroll, addOrUpdatePayrollByAdmin, getUserPayrollByAdmin, getAllUsersPayroll, findUserPayroll, getAllUsersLeave } from '../controllers/authController.js';
+import { sendLoginOTP, verifyLoginOTP, signup, login, logout, getUserById, getAllUsers, addNewUser, updateUserById, educationUserById, getEducationByUser, workUserById, getWorkByUser, workHistoryUserById, updateUserByAdmin, getUserByAdmin, educationUserByAdmin, getEducationByAdmin, workUserByAdmin, getWorkByAdmin, workHistoryUserByAdmin, rulesById, getRuleById, rulesByAdmin, getRuleByAdmin, addOrUpdatePayroll, getUserPayroll, addOrUpdatePayrollByAdmin, getUserPayrollByAdmin, getAllUsersPayroll, findUserPayroll, getAllUsersLeave, deleteUserById } from '../controllers/authController.js';
 import { applyLeave, getAllLeave, getLeaveByUser, updateLeaveStatus, updateUserLeave } from '../controllers/leaveController.js';
 import documentRoutes from "./documentRoutes.js";
 import { clockIn, clockOut, getAdminAttendanceByDate, getAttendanceByDate, getMonthlyAttendanceAdmin, getMonthlyAttendanceUser, getTodayAttendance, updateAttendanceStatus } from '../controllers/attendanceController.js';
@@ -15,6 +15,7 @@ const router = express.Router();
 // RESIGTER API
 router.post('/signup', signup);
 router.post('/newUser', addNewUser);
+router.delete('/removeUser/:id', deleteUserById);
 router.post('/login', login);
 router.post("/logout", logout);
 router.post("/send-otp", sendLoginOTP);

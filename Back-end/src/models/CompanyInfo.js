@@ -15,6 +15,10 @@ const companyInfo = new mongoose.Schema(
         halfDay: String,
         casualLeave: Number,
         sickLeave: Number,
+        defaultRule: {
+            type: Boolean,
+            default: false,
+        }
     },
     { timestamps: true }
 );

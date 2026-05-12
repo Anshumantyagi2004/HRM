@@ -300,19 +300,9 @@ export default function Navbar() {
               className="w-full mb-3 p-2 border rounded"
             />
 
-            {/* <select value={formData?.designation} onChange={handleChange} name="designation"
-              className="w-full mb-3 p-2 border rounded">
-              <option value="" disabled>Designation</option>
-              <option value="Web Developer">Web Developer</option>
-              <option value="SEO">SEO</option>
-              <option value="Social Media">Social Media</option>
-              <option value="ADS Manger">ADS Manger</option>
-              <option value="Marketing">Marketing</option>
-            </select> */}
-
             <select value={formData?.role} onChange={handleChange} name="role"
               className="w-full mb-3 p-2 border rounded">
-              <option value="" disabled>Role</option>
+              <option value="" disabled>Select Role</option>
               <option value="Admin">Admin</option>
               <option value="Sub Admin">Sub Admin</option>
               <option value="Employee">Employee</option>

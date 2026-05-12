@@ -1,4 +1,4 @@
-import { Eye, Search, Mail, Phone, User, Handbag, Calendar, Transgender, MapPinHouse } from "lucide-react";
+import { Eye, Search, Mail, Phone, User, Handbag, Calendar, Transgender, MapPinHouse, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { BaseUrl } from "../../BaseApi/Api";
 import Modal from "../../Components/Modal/Modal";
@@ -35,6 +35,25 @@ export default function Employees() {
   const handleOpen = (emp) => {
     setSelectedEmp(emp);
     setOpen(true);
+  };
+
+  const handleDelete = async (id) => {
+    if (window.confirm("Are you sure you want to delete this employee?")) {
+      try {
+        const res = await fetch(`${BaseUrl}removeUser/${id}`, {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+        const data = await res.json();
+        console.log(data);
+        // Remove the deleted user from the list
+        setAllUsers(allUsers.filter(user => user._id !== id));
+      } catch (error) {
+        console.error("Delete user error:", error);
+      }
+    }
   };
 
   return (
@@ -90,14 +109,18 @@ export default function Employees() {
                   <td className="px-4 py-3">{emp?.email}</td>
                   <td className="px-4 py-3">{emp?.officialEmail || "-"}</td>
                   <td className="px-4 py-3">{emp?.contact}</td>
-                  <td className="px-4 py-3 text-center">
-                    <button
-                      onClick={() => handleOpen(emp)}
+                  <td className="px-4 py-3 text-center flex gap-2 justify-center">
+                    <button onClick={() => handleOpen(emp)}
                       className="inline-flex items-center justify-center w-9 h-9 rounded-full 
                       bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition"
                     >
                       <Eye size={18} />
                     </button>
+                    {user?.role === "Admin" &&
+                      <button onClick={() => handleDelete(emp._id)} className="inline-flex items-center justify-center w-9 h-9 rounded-full 
+                      bg-red-50 text-red-600 hover:bg-red-100 transition">
+                        <Trash2 size={18} />
+                      </button>}
                   </td>
                 </tr>
               ))}
