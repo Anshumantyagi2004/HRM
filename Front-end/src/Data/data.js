@@ -14,4 +14,3 @@ export const months = [
     { name: "Nov", id: 10 },
     { name: "Dec", id: 11 },
 ];
-

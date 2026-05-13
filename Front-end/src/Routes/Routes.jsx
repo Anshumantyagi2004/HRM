@@ -14,6 +14,7 @@ import Payroll from '../Pages/Payroll/Payroll.jsx';
 import Holiday from '../Pages/Holiday/Holiday.jsx';
 import OtpLogin from '../Components/Login/OtpLogin.jsx';
 import Notification from '../Pages/Notification/Notification.jsx';
+import Settings from '../Pages/Settings/Settings.jsx';
 
 function AllRoute() {
   return (
@@ -35,6 +36,7 @@ function AllRoute() {
             <Route path="/payroll" element={<Payroll />} />
             <Route path="/holiday" element={<Holiday />} />
             <Route path="/notification" element={<Notification />} />
+            <Route path="/settings" element={<Settings />} />
           </Route>
         </Route>
       </Routes>

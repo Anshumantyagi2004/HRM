@@ -5,6 +5,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { loginSuccess } from "../../Redux/authSlice";
 import { Eye, EyeOff } from "lucide-react";
+import CompLogo from "./../../Assets/company_logo.png";
+
 function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const dispatch = useDispatch();
@@ -45,48 +47,124 @@ function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="bg-white p-6 rounded-lg shadow-md w-full max-w-md">
-        <h2 className="text-2xl font-bold mb-4 text-center">Login</h2>
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-900 flex items-center justify-center px-4 py-10">
+      <div className="w-full max-w-6xl grid md:grid-cols-2 bg-white/10 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl overflow-hidden">
 
-        {/* Name */}
-        <input
-          type="text"
-          name="email"
-          placeholder="Email"
-          value={formData?.email}
-          onChange={handleChange}
-          className="w-full mb-3 p-2 border rounded"
-        />
+        {/* Left Side */}
+        <div className="hidden md:flex flex-col items-center justify-center relative bg-gradient-to-br from-blue-900 via-slate-900 to-cyan-900 text-white p-12">
 
-        {/* Password */}
-        <div className="relative">
-          <input
-            type={showPassword ? "text" : "password"}
-            name="password"
-            placeholder="Password"
-            value={formData.password}
-            onChange={handleChange}
-            className="w-full mb-4 p-2 border rounded pr-10"
+          {/* Glow Effects */}
+          <div className="absolute w-80 h-80 bg-blue-500/20 rounded-full blur-3xl top-[-100px] left-[-100px]" />
+          <div className="absolute w-72 h-72 bg-cyan-400/10 rounded-full blur-3xl bottom-[-80px] right-[-80px]" />
+
+          <img
+            src={CompLogo}
+            alt="Company Logo"
+            className="w-56 h-56 object-contain drop-shadow-2xl z-10"
           />
 
-          <button
-            type="button"
-            onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-5 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-          >
-            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-          </button>
+          <h1 className="text-4xl font-bold mt-6 z-10">
+            Welcome Back 👋
+          </h1>
+
+          <p className="text-blue-100 mt-4 text-center max-w-sm leading-relaxed z-10">
+            Securely login to access your dashboard and manage your account with ease.
+          </p>
         </div>
 
-        <button onClick={handleSubmit} type="submit"
-          className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700 mb-4">
-          Login
-        </button>
+        <div className="flex items-center justify-center p-6 md:p-12 bg-white/5 backdrop-blur-lg">
+          <div className="w-full max-w-md">
+            <div className="md:hidden flex flex-col items-center mb-4">
+              <img
+                src={CompLogo}
+                alt="Company Logo"
+                className="w-28 h-28 object-contain"
+              />
+            </div>
 
-        <Link to={"/login-otp"} className="flex justify-center text-sm font-semibold text-indigo-600 cursor-pointer">
-          Login with OTP
-        </Link>
+            {/* Heading */}
+            <div className="mb-6 text-center">
+              <h2 className="text-3xl font-bold text-white">
+                Login
+              </h2>
+
+              <p className="text-blue-200 mt-2">
+                Sign in to continue
+              </p>
+            </div>
+
+            {/* Email */}
+            <div className="mb-5">
+              <label className="block text-sm font-medium text-blue-100 mb-2">
+                Email
+              </label>
+
+              <input
+                type="email"
+                name="email"
+                placeholder="Enter your email"
+                value={formData?.email}
+                onChange={handleChange}
+                className="w-full px-4 py-3 bg-white/10 border border-blue-400/20 rounded-xl text-white placeholder:text-blue-200/60 focus:ring-1 focus:ring-cyan-400 focus:border-cyan-400 outline-none transition"
+              />
+            </div>
+
+            {/* Password */}
+            <div className="mb-3">
+              <label className="block text-sm font-medium text-blue-100 mb-2">
+                Password
+              </label>
+
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  name="password"
+                  placeholder="Enter your password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 pr-12 bg-white/10 border border-blue-400/20 rounded-xl text-white placeholder:text-blue-200/60 focus:ring-1 focus:ring-cyan-400 focus:border-cyan-400 outline-none transition"
+                />
+
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-blue-200 hover:text-cyan-300 transition"
+                >
+                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
+              </div>
+            </div>
+
+            {/* Forgot Password */}
+            <div className="flex justify-end mb-5">
+              <button className="text-sm text-cyan-300 hover:text-cyan-200 font-medium transition">
+                Forgot Password?
+              </button>
+            </div>
+
+            {/* Login Button */}
+            <button onClick={handleSubmit} type="submit"
+              className="w-full bg-gradient-to-r from-blue-600 to-cyan-500 text-white py-3 rounded-xl font-semibold shadow-lg hover:scale-[1.01] hover:shadow-cyan-500/30 transition-all duration-300"
+            >
+              Login
+            </button>
+
+            {/* Divider */}
+            <div className="flex items-center gap-4 my-6">
+              <div className="flex-1 h-px bg-blue-400/20"></div>
+              <span className="text-sm text-blue-200">OR</span>
+              <div className="flex-1 h-px bg-blue-400/20"></div>
+            </div>
+
+            {/* OTP Login */}
+            <Link
+              to={"/login-otp"}
+              className="w-full flex justify-center border border-cyan-400 text-cyan-300 py-3 rounded-xl font-semibold hover:bg-cyan-400/10 transition"
+            >
+              Login with OTP
+            </Link>
+          </div>
+        </div>
       </div>
     </div>
   );

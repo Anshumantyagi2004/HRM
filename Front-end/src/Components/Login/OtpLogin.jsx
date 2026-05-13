@@ -4,6 +4,7 @@ import toast from "react-hot-toast";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { loginSuccess } from "../../Redux/authSlice";
+import CompLogo from "./../../Assets/company_logo.png";
 
 function OtpLogin() {
     const dispatch = useDispatch();
@@ -82,69 +83,121 @@ function OtpLogin() {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-100">
-            <div className="bg-white p-6 rounded-lg shadow-md w-full max-w-md">
-                <h2 className="text-2xl font-bold mb-4 text-center">
-                    {step === "email" ? "Login with OTP" : "Verify OTP"}
-                </h2>
+        <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-900 flex items-center justify-center px-4 py-10">
+            <div className="w-full max-w-md bg-white/10 backdrop-blur-2xl border border-white/10 rounded-3xl shadow-2xl overflow-hidden">
+                <div className="relative h-32 bg-gradient-to-r from-blue-700 via-cyan-600 to-blue-800 flex items-center justify-center">
+                    <div className="absolute w-40 h-40 bg-cyan-300/20 rounded-full blur-3xl"></div>
 
-                {step === "email" && (
-                    <>
-                        <input
-                            type="email"
-                            name="officialEmail"
-                            placeholder="Official Email"
-                            value={formData.officialEmail}
-                            onChange={handleChange}
-                            className="w-full mb-4 p-2 border rounded"
-                        />
+                    <div className="relative z-10 text-center">
+                        <div className="w-20 h-20 mx-auto rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/20 shadow-lg">
+                            <img
+                                src={CompLogo}
+                                alt="Company Logo"
+                                className="w-full h-full object-contain"
+                            />
+                        </div>
 
-                        <button
-                            onClick={handleSendOtp}
-                            disabled={loading}
-                            className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700"
-                        >
-                            {loading ? "Sending OTP..." : "Send OTP"}
-                        </button>
-                    </>
-                )}
+                        <h2 className="text-white text-2xl font-bold">
+                            {step === "email" ? "Login with OTP" : "Verify OTP"}
+                        </h2>
+                    </div>
+                </div>
 
-                {step === "otp" && (
-                    <>
-                        <p className="text-sm text-gray-600 mb-2 text-center">
-                            OTP sent to: <b>{formData.officialEmail}</b>
-                        </p>
+                <div className="p-8">
 
-                        <input
-                            type="text"
-                            name="otp"
-                            placeholder="Enter OTP"
-                            value={formData.otp}
-                            onChange={handleChange}
-                            className="w-full mb-4 p-2 border rounded text-center tracking-widest text-lg"
-                        />
+                    {step === "email" && (
+                        <>
+                            <p className="text-blue-100 text-sm mb-6 text-center">
+                                Enter your official email to receive a secure OTP
+                            </p>
 
-                        <button
-                            onClick={handleVerifyOtp}
-                            disabled={loading}
-                            className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
-                        >
-                            {loading ? "Verifying..." : "Verify OTP"}
-                        </button>
+                            <div className="mb-5">
+                                <label className="block text-sm font-medium text-blue-100 mb-2">
+                                    Official Email
+                                </label>
 
-                        <button
-                            onClick={handleSendOtp}
-                            disabled={loading}
-                            className="w-full text-sm text-indigo-600 hover:underline"
-                        >
-                            Resend OTP
-                        </button>
-                    </>
-                )}
+                                <input
+                                    type="email"
+                                    name="officialEmail"
+                                    placeholder="Enter your official email"
+                                    value={formData.officialEmail}
+                                    onChange={handleChange}
+                                    className="w-full px-4 py-3 bg-white/10 border border-blue-400/20 rounded-xl text-white placeholder:text-blue-200/50 focus:ring-1 focus:ring-cyan-400 focus:border-cyan-400 outline-none transition"
+                                />
+                            </div>
 
-                <Link to={"/login"} className="mt-4 flex justify-center text-sm w-full font-semibold text-indigo-600 cursor-pointer">
-                    Login with Password
-                </Link>
+                            <button
+                                onClick={handleSendOtp}
+                                disabled={loading}
+                                className="w-full bg-gradient-to-r from-blue-600 to-cyan-500 text-white py-3 rounded-xl font-semibold shadow-lg hover:scale-[1.01] hover:shadow-cyan-500/30 transition-all duration-300 disabled:opacity-60"
+                            >
+                                {loading ? "Sending OTP..." : "Send OTP"}
+                            </button>
+                        </>
+                    )}
+
+                    {step === "otp" && (
+                        <>
+                            <div className="bg-blue-500/10 border border-blue-400/20 rounded-xl p-4 mb-6">
+                                <p className="text-sm text-blue-100 text-center">
+                                    OTP sent to
+                                </p>
+
+                                <p className="text-cyan-300 font-semibold text-center mt-1 break-all">
+                                    {formData.officialEmail}
+                                </p>
+                            </div>
+
+                            <div className="mb-5">
+                                <label className="block text-sm font-medium text-blue-100 mb-2">
+                                    Enter OTP
+                                </label>
+
+                                <input
+                                    type="text"
+                                    name="otp"
+                                    placeholder="••••••"
+                                    value={formData.otp}
+                                    onChange={handleChange}
+                                    maxLength={6}
+                                    className="w-full px-4 py-3 bg-white/10 border border-blue-400/20 rounded-xl text-white text-center tracking-[10px] text-2xl placeholder:text-blue-200/50 focus:ring-1 focus:ring-cyan-400 focus:border-cyan-400 outline-none transition"
+                                />
+                            </div>
+
+                            <button
+                                onClick={handleVerifyOtp}
+                                disabled={loading}
+                                className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 text-white py-3 rounded-xl font-semibold shadow-lg hover:scale-[1.01] hover:shadow-cyan-500/30 transition-all duration-300 disabled:opacity-60"
+                            >
+                                {loading ? "Verifying..." : "Verify OTP"}
+                            </button>
+
+                            <button
+                                onClick={handleSendOtp}
+                                disabled={loading}
+                                className="w-full mt-4 text-sm text-cyan-300 hover:text-cyan-200 transition"
+                            >
+                                Resend OTP
+                            </button>
+                        </>
+                    )}
+
+                    {/* Divider */}
+                    <div className="flex items-center gap-4 my-6">
+                        <div className="flex-1 h-px bg-blue-400/20"></div>
+                        <span className="text-sm text-blue-200">OR</span>
+                        <div className="flex-1 h-px bg-blue-400/20"></div>
+                    </div>
+
+                    {/* Login Link */}
+                    <Link
+                        to={"/login"}
+                        className="w-full flex justify-center border border-cyan-400 text-cyan-300 py-3 rounded-xl font-semibold hover:bg-cyan-400/10 transition"
+                    >
+                        Login with Password
+                    </Link>
+
+                </div>
             </div>
         </div>
     );

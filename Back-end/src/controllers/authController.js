@@ -953,7 +953,7 @@ export const getRuleById = async (req, res) => {
     const userId = req.user.id;
 
     const rules = await UserExtraDetail.findOne({ userId });
-    console.log(userId, rules);
+    // console.log(userId, rules);
 
     if (!rules) {
       return res.status(404).json({ message: "not found" });
@@ -1418,6 +1418,53 @@ export const getAllUsersLeave = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Failed to fetch users"
+    });
+  }
+};
+
+//Change Password
+export const changePassword = async (req, res) => {
+  try {
+    const { userId, newPassword, confirmPassword } = req.body;
+
+    if (!newPassword || !confirmPassword) {
+      return res.status(400).json({
+        success: false,
+        message: "All fields are required",
+      });
+    }
+
+    if (newPassword !== confirmPassword) {
+      return res.status(400).json({
+        success: false,
+        message: "Passwords do not match",
+      });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: "Password must be at least 6 characters",
+      });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 12);
+
+    await User.findByIdAndUpdate(userId, {
+      password: hashedPassword,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Password updated successfully",
+    });
+
+  } catch (error) {
+    console.log(error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Server Error",
     });
   }
 };

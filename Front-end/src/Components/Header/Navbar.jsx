@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
-import { Menu, X, Gauge, Users, Calendar, User, Handbag, Bell, Sun, LogOut, UserCircle, UserPlus, IndianRupee, Search, CalendarHeart } from "lucide-react";
+import { Menu, X, Gauge, Users, Calendar, User, Handbag, Bell, Sun, LogOut, UserCircle, UserPlus, IndianRupee, Search, CalendarHeart, Settings } from "lucide-react";
 import { BaseUrl } from "../../BaseApi/Api";
 import Modal from "../Modal/Modal";
 import toast from "react-hot-toast";
@@ -412,6 +412,12 @@ export default function Navbar() {
           className="flex items-center gap-3 p-2 rounded hover:bg-indigo-50 transition"
         >
           <Bell size={18} /> Notifications
+        </Link>
+        <Link
+          to="/settings" onClick={() => setIsSidebarOpen(false)}
+          className="flex items-center gap-3 p-2 rounded hover:bg-indigo-50 transition"
+        >
+          <Settings size={18} /> Settings
         </Link>
       </div>
     </aside>

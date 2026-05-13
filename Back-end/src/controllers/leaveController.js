@@ -2,6 +2,9 @@ import mongoose from "mongoose";
 import Leave from "../models/Leave.js";
 import { UserExtraDetail } from "../models/UserExtraDetails.js";
 import { getUserSocketId } from "../socket/socket.js";
+import { UserWork } from "../models/UserWork.js";
+import { mailTransporter } from "../config/mail.js";
+import { User } from "../models/User.js";
 
 const calculateDays = (startDate, endDate) => {
     const start = new Date(startDate);
@@ -49,6 +52,16 @@ export const applyLeave = async (req, res) => {
             });
         }
 
+        const currentUser = await User.findById(userId);
+
+        if (!currentUser) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found",
+            });
+        }
+
+        // Create leave
         const leave = await Leave.create({
             user: userId,
             leaveType,
@@ -57,7 +70,124 @@ export const applyLeave = async (req, res) => {
             reason,
         });
 
-        
+        // Fetch Admin & Sub Admin
+        const admins = await User.find({
+            role: { $in: ["Admin", "Sub Admin"] },
+            officialEmail: { $exists: true, $ne: "" },
+        });
+
+        // Extract emails
+        const adminEmails = admins.map((admin) => admin.officialEmail);
+
+        // Send mail to all admins/subadmins
+        if (adminEmails.length > 0) {
+            const oneDay = 1000 * 60 * 60 * 24;
+
+            const totalDays = Math.ceil((new Date(endDate) - new Date(startDate)) / oneDay) + 1;
+
+            await mailTransporter.sendMail({
+                from: `"HRMS Portal" <${process.env.MAIL_USER}>`,
+
+                to: adminEmails.join(","),
+
+                subject: `New Leave Request - ${currentUser.username}`,
+
+                html: `
+                    <div style="font-family: Arial, sans-serif; padding: 20px;">
+                        
+                        <h2 style="color:#4f46e5;">
+                            New Leave Application
+                        </h2>
+
+                        <p>
+                            An employee has applied for leave.
+                        </p>
+
+                        <table 
+                            style="
+                                border-collapse: collapse;
+                                width: 100%;
+                                margin-top: 20px;
+                            "
+                        >
+                            <tr>
+                                <td style="padding:10px; border:1px solid #ddd;">
+                                    <b>Employee Name</b>
+                                </td>
+
+                                <td style="padding:10px; border:1px solid #ddd;">
+                                    ${currentUser.username}
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td style="padding:10px; border:1px solid #ddd;">
+                                    <b>Official Email</b>
+                                </td>
+
+                                <td style="padding:10px; border:1px solid #ddd;">
+                                    ${currentUser.officialEmail || "-"}
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td style="padding:10px; border:1px solid #ddd;">
+                                    <b>Leave Type</b>
+                                </td>
+
+                                <td style="padding:10px; border:1px solid #ddd;">
+                                    ${leaveType}
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td style="padding:10px; border:1px solid #ddd;">
+                                    <b>Start Date</b>
+                                </td>
+
+                                <td style="padding:10px; border:1px solid #ddd;">
+                                    ${startDate}
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td style="padding:10px; border:1px solid #ddd;">
+                                    <b>End Date</b>
+                                </td>
+
+                                <td style="padding:10px; border:1px solid #ddd;">
+                                    ${endDate}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding:10px; border:1px solid #ddd;">
+                                    <b>Total Days</b>
+                                </td>
+
+                                <td style="padding:10px; border:1px solid #ddd;">
+                                    ${totalDays}
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td style="padding:10px; border:1px solid #ddd;">
+                                    <b>Reason</b>
+                                </td>
+
+                                <td style="padding:10px; border:1px solid #ddd;">
+                                    ${reason}
+                                </td>
+                            </tr>
+                        </table>
+
+                        <p style="margin-top:20px;">
+                            Please review the leave request in the HRMS portal.
+                        </p>
+
+                    </div>
+                `,
+            });
+        }
 
         return res.status(201).json({
             message: "Leave applied successfully",
@@ -75,11 +205,29 @@ export const applyLeave = async (req, res) => {
 export const getAllLeave = async (req, res) => {
     try {
         const leave = await Leave.find()
-            .populate("user", "username email profileImage")
-            .populate("actionBy", "username email profileImage")
+            .populate("user", "username email officialEmail profileImage")
+            .populate("actionBy", "username email officialEmail profileImage")
             .sort({ createdAt: -1 });
 
-        res.status(200).json(leave);
+        // Attach userWork manually
+        const updatedLeave = await Promise.all(
+            leave.map(async (item) => {
+
+                const userWork = await UserWork.findOne({
+                    userWorkId: item.user?._id,
+                });
+
+                return {
+                    ...item.toObject(),
+                    userWork,
+                };
+            })
+        );
+
+        res.status(200).json({
+            success: true,
+            data: updatedLeave,
+        });
     } catch (error) {
         console.error("Get leave error:", error);
         res.status(500).json({ message: "Failed to fetch leave" });
@@ -93,8 +241,7 @@ export const getLeaveByUser = async (req, res) => {
 
         const leaves = await Leave.find({
             user: new mongoose.Types.ObjectId(userId),
-        })
-            .populate("user", "username email designation")
+        }).populate("user", "username email designation")
             .populate("actionBy", "username email designation")
             .sort({ createdAt: -1 });
 
@@ -147,7 +294,7 @@ export const updateLeaveStatus = async (req, res) => {
 
         const userExtra = await UserExtraDetail.findOne({ userId: leave.user._id });
         if (!userExtra) return res.status(404).json({ message: "User extra details not found" });
-        
+
         const days = calculateDays(leave.startDate, leave.endDate);
         const oldStatus = leave.status;
         const leaveType = leave.leaveType;

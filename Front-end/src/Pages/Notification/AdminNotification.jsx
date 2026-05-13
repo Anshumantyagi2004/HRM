@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { BaseUrl } from "../../BaseApi/Api";
-import { CheckCheck, Circle, PlusCircle, Trash2 } from "lucide-react";
+import { BellRing, CheckCheck, Circle, PlusCircle, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Modal from "../../Components/Modal/Modal";
 import toast from "react-hot-toast";
@@ -142,58 +142,128 @@ export default function AdminNotification(props) {
     };
 
     return (
-        <div className="max-w-5xl mx-auto p-6">
-            <h1 className="text-2xl font-semibold mb-4 w-full flex justify-between ">
-                Notifications
-                <button className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition"
-                    onClick={() => setAddNotifications(true)}>
-                    <PlusCircle size={20} />
-                </button>
-            </h1>
+        <div className="min-h-screen bg-gray-50 p-4 md:p-8">
+            <div className="max-w-4xl mx-auto mb-8">
+                <div className="flex items-center justify-between flex-wrap gap-4">
+                    <div>
+                        <h1 className="text-3xl font-bold text-slate-800">
+                            Notifications
+                        </h1>
 
-            <div className="space-y-3">
+                        <p className="text-slate-500 mt-1">
+                            Manage HRMS announcements and employee notifications.
+                        </p>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+
+                        <div className="bg-blue-100 text-blue-700 px-4 py-2 rounded-xl text-sm font-semibold">
+                            {notifications.length} Notifications
+                        </div>
+
+                        <button
+                            className="inline-flex items-center justify-center w-11 h-11 rounded-full bg-indigo-600 text-white hover:bg-indigo-700 transition shadow-sm"
+                            onClick={() => setAddNotifications(true)}
+                        >
+                            <PlusCircle size={22} />
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div className="max-w-4xl mx-auto space-y-4">
                 {notifications.length > 0 ? (
                     notifications.map((n) => (
-                        <div key={n._id} onClick={() => handleNotificationClick(n)}
-                            className={`flex items-start justify-between gap-4 p-4 rounded-lg border cursor-pointer transition hover:bg-gray-50 ${!n.isRead ? "bg-blue-50 border-blue-200" : "bg-white"}`}>
-                           {!n.isRead && ( <Circle size={10} className="text-blue-500 mt-2 fill-blue-500" />)}
-                            <div className="flex-1">
-                                <p className="font-medium text-gray-800">
-                                    {n.title}
-                                </p>
+                        <div
+                            key={n._id}
+                            onClick={() => handleNotificationClick(n)}
+                            className={`group relative overflow-hidden rounded-2xl border transition-all duration-300 cursor-pointer shadow-sm hover:shadow-md
+                        
+                        ${!n.isRead
+                                    ? "bg-gradient-to-r from-blue-50 to-sky-50 border-blue-200"
+                                    : "bg-white border-gray-200 hover:border-blue-200"
+                                }
+                    `}
+                        >
 
-                                <p className="text-sm text-gray-900 mt-1">
-                                    {n.message}
-                                </p>
+                            {!n.isRead && (
+                                <div className="absolute left-0 top-0 h-full w-1 bg-blue-500"></div>
+                            )}
 
-                                <p className="text-xs text-gray-600 mt-1">
-                                    {new Date(n.createdAt).toLocaleString()}
-                                </p>
-                            </div>
+                            <div className="p-5 flex items-start justify-between gap-4">
+                                <div className="flex gap-4 flex-1">
+                                    <div className="pt-2">
+                                        {!n.isRead ? (
+                                            <div className="w-3 h-3 rounded-full bg-blue-500 animate-pulse"></div>
+                                        ) : (
+                                            <div className="w-3 h-3 rounded-full bg-gray-300"></div>
+                                        )}
+                                    </div>
 
-                            {/* Actions */}
-                            <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                                {!n.isRead && (
-                                    <CheckCheck
-                                        size={25}
-                                        title="Mark as read"
-                                        className="text-gray-600 hover:text-green-500 hover:bg-green-100 cursor-pointer bg-gray-100 p-1 rounded-md"
-                                        onClick={() => markAsRead(n._id)}
-                                    />
-                                )}
+                                    <div className="flex-1">
+                                        <div className="flex items-center gap-2 flex-wrap">
+                                            <h2 className="text-lg font-semibold text-slate-800">
+                                                {n.title}
+                                            </h2>
 
-                                <Trash2
-                                    size={25}
-                                    title="Delete"
-                                    className="text-gray-600 hover:text-red-600 hover:bg-red-100 p-1 rounded-md cursor-pointer bg-gray-100"
-                                    onClick={() => deleteNotification(n._id)}
-                                />
+                                            {!n.isRead && (
+                                                <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full font-medium">
+                                                    New
+                                                </span>
+                                            )}
+                                        </div>
+
+                                        <p className="text-gray-800 mt-1 leading-relaxed">
+                                            {n.message}
+                                        </p>
+
+                                        <p className="text-xs text-gray-500">
+                                            {new Date(n.createdAt).toLocaleString()}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                                    {!n.isRead && (
+                                        <button
+                                            onClick={() => markAsRead(n._id)}
+                                            className="w-10 h-10 rounded-xl bg-green-50 hover:bg-green-100 flex items-center justify-center transition group/button"
+                                            title="Mark as read"
+                                        >
+                                            <CheckCheck
+                                                size={20}
+                                                className="text-green-600 group-hover/button:scale-110 transition"
+                                            />
+                                        </button>
+                                    )}
+
+                                    <button onClick={() => deleteNotification(n._id)}
+                                        className="w-10 h-10 rounded-xl bg-red-50 hover:bg-red-100 flex items-center justify-center transition group/button"
+                                        title="Delete"
+                                    >
+                                        <Trash2
+                                            size={20}
+                                            className="text-red-500 group-hover/button:scale-110 transition"
+                                        />
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     ))
                 ) : (
-                    <div className="text-center text-gray-500 py-10">
-                        No notifications yet
+                    <div className="bg-white rounded-3xl border border-gray-200 shadow-sm py-20 px-6 text-center">
+
+                        <div className="w-20 h-20 mx-auto rounded-full bg-blue-100 flex items-center justify-center mb-5">
+                            <BellRing className="text-blue-600" size={36} />
+                        </div>
+
+                        <h2 className="text-2xl font-semibold text-slate-700">
+                            No Notifications
+                        </h2>
+
+                        <p className="text-slate-500 mt-2">
+                            You're all caught up. New notifications will appear here.
+                        </p>
                     </div>
                 )}
             </div>
@@ -210,7 +280,7 @@ export default function AdminNotification(props) {
                                     name="user"
                                     value={formData?.user}
                                     onChange={handleChange}
-                                    className={`input w-full ${formData?.sendToAll && "cursor-not-allowed"}`}
+                                    className={`input w-full ${formData?.sendToAll && "cursor-not-allowed bg-gray-100"}`}
                                 >
                                     <option>Select</option>
                                     {allUsers.map((i, idx) => (
