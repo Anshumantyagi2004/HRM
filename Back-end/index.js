@@ -8,7 +8,6 @@ import mainRoute from "./src/routes/mainRoute.js";
 import { initSocket } from "./src/socket/socket.js";
 import cookieParser from "cookie-parser";
 import { connectRedis } from "./src/config/redis.js";
-// import { connectRedis } from "./src/config/redis.js";
 
 dotenv.config();
 
