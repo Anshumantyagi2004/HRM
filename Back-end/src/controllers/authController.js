@@ -310,7 +310,7 @@ export const addNewUser = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    const companyInfo = await CompanyInfo.findOne({ default: true });
+    const companyInfo = await CompanyInfo.findOne({ defaultRule: true });
     const user = new User({ username, email, password: hashedPassword, role, contact });
     await user.save();
 

@@ -257,7 +257,11 @@ export const getDocsUserByAdmin = async (req, res) => {
 //policy
 export const uploadPolicy = async (req, res) => {
     try {
-        const { documentName } = req.body;
+
+        const {
+            documentName,
+            assignedUsers
+        } = req.body;
 
         if (!req.file) {
             return res.status(400).json({
@@ -265,57 +269,91 @@ export const uploadPolicy = async (req, res) => {
             });
         }
 
+        // parse assigned users
+        let parsedUsers = [];
+
+        if (assignedUsers) {
+            parsedUsers = JSON.parse(assignedUsers);
+        }
+
         // extension
-        const ext = req.file.originalname.split(".").pop();
+        const ext = req.file.originalname
+            .split(".")
+            .pop();
 
         // unique filename
-        const fileName = `${Date.now()}-${documentName}.${ext}`;
+        const fileName =
+            `${Date.now()}-${documentName}.${ext}`;
 
         // upload to R2
         const uploaded = await uploadToR2({
             file: req.file.buffer,
+
             folder: "company-policies",
+
             fileName,
+
             contentType: req.file.mimetype,
         });
 
-        // save in DB
+        // save policy
         const docs = new CompanyPolicy({
+
             documentName,
 
-            // public url
             url: uploaded.url,
 
-            // r2 key
             fileField: uploaded.key,
+
+            assignedUsers: parsedUsers,
         });
 
         await docs.save();
 
-        // all users
-        const users = await User.find({}, "_id");
+        // notification users
+        let users = [];
 
-        // notifications
+        // if selected users exist
+        if (parsedUsers.length > 0) {
+
+            users = await User.find(
+                {
+                    _id: { $in: parsedUsers }
+                },
+                "_id"
+            );
+
+        } else {
+
+            // send to all users
+            users = await User.find({}, "_id");
+        }
+
         const notifications = users.map((user) => ({
             receiver: user._id,
 
             title: "New Policy Added",
 
-            message: `${documentName} has been added in policy section. Check it out.`,
+            message:
+                `${documentName} has been added in policy section. Check it out.`,
 
             type: "reminder",
 
             link: "/myProfile",
         }));
 
-        await Notification.insertMany(notifications);
+        if (notifications.length > 0) {
+            await Notification.insertMany(notifications);
+        }
 
-        res.status(200).json({
+        return res.status(200).json({
+
             message: "Policy uploaded successfully",
 
             document: {
                 documentName,
                 url: uploaded.url,
+                assignedUsers: parsedUsers,
             },
         });
 
@@ -323,7 +361,7 @@ export const uploadPolicy = async (req, res) => {
 
         console.error("Upload error:", error);
 
-        res.status(500).json({
+        return res.status(500).json({
             message: "Document upload failed",
         });
     }
@@ -380,16 +418,81 @@ export const getAllPolicy = async (req, res) => {
 
 export const getPolicyUser = async (req, res) => {
     try {
+
         const userId = req.user.id;
 
-        const DocsList = await UserPolicy.find({ userId: userId });
+        // company policies visible to user
+        const companyPolicies = await CompanyPolicy.find({
+
+            $or: [
+
+                // public policy
+                {
+                    assignedUsers: {
+                        $size: 0
+                    }
+                },
+
+                // assigned policy
+                {
+                    assignedUsers: userId
+                }
+            ]
+        });
+
+        // signed policies
+        const userPolicies = await UserPolicy.find({
+            userId
+        });
+
+        // merge
+        const mergedPolicies = companyPolicies.map((policy) => {
+
+            const signed = userPolicies.find(
+                (u) =>
+                    u.documentName === policy.documentName
+            );
+
+            if (signed) {
+
+                return {
+                    ...policy.toObject(),
+
+                    status: "VERIFIED",
+
+                    url: signed.url,
+
+                    signedBy: signed.signedBy,
+
+                    signedAt: signed.signedAt,
+
+                    remark: signed.remark,
+
+                    isSigned: true,
+                };
+            }
+
+            return {
+                ...policy.toObject(),
+
+                status: "PENDING",
+
+                isSigned: false,
+            };
+        });
 
         res.status(200).json({
             success: true,
-            data: DocsList,
+            data: mergedPolicies,
         });
+
     } catch (error) {
-        res.status(500).json({ message: "Failed to fetch education" });
+
+        console.log(error);
+
+        res.status(500).json({
+            message: "Failed to fetch policies"
+        });
     }
 };
 
@@ -397,13 +500,77 @@ export const getPolicyAdmin = async (req, res) => {
     try {
         const userId = req.params.id;
 
-        const DocsList = await UserPolicy.find({ userId: userId });
+        // company policies visible to user
+        const companyPolicies = await CompanyPolicy.find({
+
+            $or: [
+
+                // public policy
+                {
+                    assignedUsers: {
+                        $size: 0
+                    }
+                },
+
+                // assigned policy
+                {
+                    assignedUsers: userId
+                }
+            ]
+        });
+
+        // signed policies
+        const userPolicies = await UserPolicy.find({
+            userId
+        });
+
+        // merge
+        const mergedPolicies = companyPolicies.map((policy) => {
+
+            const signed = userPolicies.find(
+                (u) =>
+                    u.documentName === policy.documentName
+            );
+
+            if (signed) {
+
+                return {
+                    ...policy.toObject(),
+
+                    status: "VERIFIED",
+
+                    url: signed.url,
+
+                    signedBy: signed.signedBy,
+
+                    signedAt: signed.signedAt,
+
+                    remark: signed.remark,
+
+                    isSigned: true,
+                };
+            }
+
+            return {
+                ...policy.toObject(),
+
+                status: "PENDING",
+
+                isSigned: false,
+            };
+        });
 
         res.status(200).json({
             success: true,
-            data: DocsList,
+            data: mergedPolicies || [],
         });
+
     } catch (error) {
-        res.status(500).json({ message: "Failed to fetch education" });
+
+        console.log(error);
+
+        res.status(500).json({
+            message: "Failed to fetch policies"
+        });
     }
 };

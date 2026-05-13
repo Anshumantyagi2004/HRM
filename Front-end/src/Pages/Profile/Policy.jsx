@@ -10,13 +10,37 @@ export default function Policy(props) {
         userId,
         fetchPolicy,
         userPolicies,
+        allDocs
     } = props
     const [loading, setLoading] = useState(false);
     const [documentModal, setDocumentModal] = useState(false);
     const [file, setFile] = useState(null);
     const [documentName, setDocumentName] = useState(null);
-    const [allDocs, setAllDocs] = useState([])
+
     const [adminPolicies, setAdminPolicies] = useState([])
+    const [allUsers, setAllUsers] = useState([]);
+    const [selectedUsers, setSelectedUsers] = useState([]);
+
+    useEffect(() => {
+        async function fetchMyProfile() {
+            try {
+                const res = await fetch(BaseUrl + "users", {
+                    method: "GET",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                });
+                const data = await res.json();
+                // console.log(data.data);
+
+                setAllUsers(data.data);
+            } catch (error) {
+                console.error("Fetch profile error:", error);
+                throw error;
+            }
+        };
+        fetchMyProfile()
+    }, [])
 
     const handleFileChange = (e) => {
         const selectedFile = e.target.files[0];
@@ -34,6 +58,11 @@ export default function Policy(props) {
         const formData = new FormData();
         formData.append("file", file);
         formData.append("documentName", documentName);
+        formData.append(
+            "assignedUsers",
+            JSON.stringify(selectedUsers)
+        );
+
         try {
             setLoading(true)
             const res = await fetch(`${BaseUrl}api/upload-policy`, { method: "POST", body: formData, credentials: "include", });
@@ -43,6 +72,7 @@ export default function Policy(props) {
             setFile(null);
             fetchDocs()
             fetchPolicy()
+            setSelectedUsers([]);
             toast.success("Document uploaded successfully");
         } catch (err) {
             console.error(err);
@@ -90,38 +120,6 @@ export default function Policy(props) {
         fetchDocs()
         fetchPolicy()
     }, [])
-
-    useEffect(() => {
-        const mergePolicies = (adminPolicies, userPolicies) => {
-            return adminPolicies.map((adminDoc) => {
-                const signed = userPolicies.find(
-                    (u) => u.documentName === adminDoc.documentName
-                );
-
-                if (signed) {
-                    // user has verified this policy
-                    return {
-                        ...adminDoc,
-                        status: "VERIFIED",
-                        url: signed.url,                 // signed pdf
-                        signedBy: signed.signedBy,
-                        signedAt: signed.signedAt,
-                        remark: signed.remark,
-                        isSigned: true
-                    };
-                } else {
-                    // not verified yet
-                    return {
-                        ...adminDoc,
-                        status: "PENDING",
-                        isSigned: false
-                    };
-                }
-            });
-        };
-        const mergedData = mergePolicies(adminPolicies, userPolicies);
-        setAllDocs(mergedData);
-    }, [adminPolicies, userPolicies])
 
     const [showPDF, setShowPDF] = useState(false);
     const [verifyPDF, setVerifyPDF] = useState(false);
@@ -243,7 +241,7 @@ export default function Policy(props) {
                     <tbody>
                         {allDocs.length > 0 ? (
                             allDocs.map((i, idx) => (
-                                <tr className="border-b hover:bg-gray-50">
+                                <tr className="border-b hover:bg-gray-50" key={idx}>
                                     <td className="p-2 font-semibold w-56" title={i?.documentName}>
                                         {i?.documentName?.toString().length > 24 ? i?.documentName?.slice(0, 24) + "..." : i?.documentName}
                                     </td>
@@ -355,10 +353,12 @@ export default function Policy(props) {
             <Modal open={documentModal} onClose={() => setDocumentModal(false)}>
                 <Modal.Header title="Add Policy Here" />
                 <Modal.Body>
-                    <div className="bg-white w-full max-w-md">
-                        <input type="text" className='input mb-2 w-full'
+                    <div className="bg-white w-full w-full">
+                        <input type="text"
+                            className='input mb-2 w-full'
                             placeholder='Enter Policy Name Here'
-                            onChange={(e) => setDocumentName(e.target.value)} />
+                            onChange={(e) => setDocumentName(e.target.value)}
+                        />
                         <input
                             type="file"
                             accept="image/*,.pdf"
@@ -370,6 +370,46 @@ export default function Policy(props) {
                                                file:bg-indigo-600 file:text-white
                                                 hover:file:bg-indigo-700 cursor-pointer"
                         />
+
+                        <div className="mt-4">
+                            <label className="block mb-2 font-medium text-sm">
+                                Assign Users
+                            </label>
+
+                            <div className="border rounded-lg max-h-52 overflow-y-auto p-2">
+                                {allUsers?.map((u) => (
+                                    <label
+                                        key={u._id}
+                                        className="flex items-center gap-2 py-1 cursor-pointer"
+                                    >
+                                        <input
+                                            type="checkbox"
+                                            checked={selectedUsers.includes(u._id)}
+                                            onChange={(e) => {
+                                                if (e.target.checked) {
+                                                    setSelectedUsers((prev) => [
+                                                        ...prev,
+                                                        u._id
+                                                    ]);
+                                                } else {
+                                                    setSelectedUsers((prev) =>
+                                                        prev.filter((id) => id !== u._id)
+                                                    );
+                                                }
+                                            }}
+                                        />
+
+                                        <span>
+                                            {u.username}
+                                        </span>
+                                    </label>
+                                ))}
+                            </div>
+
+                            <p className="text-xs text-gray-500 mt-1">
+                                Leave empty to assign policy to all users
+                            </p>
+                        </div>
                     </div>
                 </Modal.Body>
                 <Modal.Footer>

@@ -516,6 +516,7 @@ export default function MyProfile() {
 
     //Policy
     const [userPolicies, setUserPolicies] = useState([])
+    const [allDocs1, setAllDocs1] = useState([])
     const fetchPolicy = async () => {
         try {
             const response = await fetch(`${BaseUrl}api/get-policy-byAdmin/${userId}`, { credentials: "include", });
@@ -523,7 +524,8 @@ export default function MyProfile() {
                 toast.error("No policy Available");
             } else {
                 const data = await response.json();
-                setUserPolicies(data?.data)
+                console.log(data);
+                setAllDocs1(data?.data)
             }
         } catch (error) {
             toast.error("Add Education Error:", error.message);
@@ -641,6 +643,7 @@ export default function MyProfile() {
                     {text == "Policy" &&
                         <Policy
                             user={user}
+                            allDocs={allDocs1}
                             userId={userId}
                             fetchPolicy={fetchPolicy}
                             userPolicies={userPolicies}
