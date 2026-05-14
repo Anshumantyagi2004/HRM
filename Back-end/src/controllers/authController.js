@@ -325,6 +325,8 @@ export const addNewUser = async (req, res) => {
       halfDay: companyInfo.halfDay,
       casualLeave: companyInfo.casualLeave,
       sickLeave: companyInfo.sickLeave,
+      casualLeaveRemaining: companyInfo.casualLeave,
+      sickLeaveRemaining: companyInfo.sickLeave,
     });
     await userExtraDetail.save();
 
