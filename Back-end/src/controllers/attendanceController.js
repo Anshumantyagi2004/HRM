@@ -4,8 +4,8 @@ import { UserExtraDetail } from "../models/UserExtraDetails.js";
 import Holiday from "../models/Holiday.js";
 
 const OFFICE_LOCATION = {
-  latitude: 28.69865783085182,
-  longitude: 77.11480389734629,
+  latitude: 28.692301898136748,
+  longitude: 77.1483210938225,
   radius: 100, // meters
 };
 

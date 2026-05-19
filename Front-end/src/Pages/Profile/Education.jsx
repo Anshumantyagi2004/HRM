@@ -41,7 +41,7 @@ export default function Education(props) {
 
                                 <div className="flex gap-2 items-center">
                                     <button onClick={() => { setQualificationModal(true); setFormDataEdu(edu); setEduEdit(true) }} className="inline-flex items-center justify-center w-9 h-9 rounded-full 
-                                                 bg-indigo-50 text-indigo-500 hover:bg-indigo-100 hover:text-indigo-600 transition"
+                                                 bg-indigo-50 text-gray-700 hover:bg-indigo-100 hover:text-gray-800 transition"
                                         title="Edit">
                                         <Edit size={18} />
                                     </button>
@@ -94,9 +94,8 @@ export default function Education(props) {
                             </span>
                         </div>
 
-                        <button
-                            onClick={() => setQualificationModal(true)}
-                            className="text-sm font-medium text-blue-600 hover:underline"
+                        <button onClick={() => setQualificationModal(true)}
+                            className="text-sm font-medium text-gray-700 hover:underline"
                         >
                             Add
                         </button>

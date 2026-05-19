@@ -72,7 +72,7 @@ export default function SearchBar() {
         <div className="relative w-full sm:w-64 mr-1 md:flex hidden">
             <Search
                 size={18}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-[#f45a06]"
             />
 
             <input
@@ -81,7 +81,7 @@ export default function SearchBar() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 onKeyDown={handleKeyDown}
-                className="w-full pl-10 pr-4 py-2 text-sm border rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                className="w-full pl-10 pr-4 py-2 text-sm border border-orange-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#f45a06]"
             />
 
             {filteredUsers.length > 0 && (

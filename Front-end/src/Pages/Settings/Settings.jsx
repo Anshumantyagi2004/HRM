@@ -238,7 +238,7 @@ export default function Settings() {
                             Close
                         </button>
                         <button onClick={handleUpdatePassword} disabled={loading}
-                            className="px-4 py-2 border rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white">
+                            className="px-4 py-2 border rounded-lg bg-gray-700 hover:bg-gray-800 text-white">
                             {loading ? "Updating..." : "Update"}
                         </button>
                     </div>

@@ -77,7 +77,7 @@ export default function EmployeeLeave(
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
                     <h2 className="text-lg font-semibold text-gray-800">Apply Leaves</h2>
                     <div className="">
-                        <button className="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-md"
+                        <button className="btn-color px-3 py-2 rounded-md"
                             onClick={() => setOpen(true)}>
                             Apply For Leave
                         </button>
@@ -86,11 +86,11 @@ export default function EmployeeLeave(
 
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
                     <div className="flex gap-2 items-center">
-                        <button className="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-md"
+                        <button className="btn-color px-3 py-2 rounded-md"
                             onClick={() => setText("Balance")}>
                             Balance
                         </button>
-                        <button className="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-md"
+                        <button className="btn-color px-3 py-2 rounded-md"
                             onClick={() => setText("Logs")}>
                             Logs
                         </button>
@@ -261,7 +261,7 @@ export default function EmployeeLeave(
                         <div className="col-span-12 md:col-span-9 overflow-x-auto">
                             <table className="w-full text-sm rounded-md">
                                 <thead>
-                                    <tr className="bg-indigo-600 text-white text-left">
+                                    <tr className="bg-gray-800 text-white text-left">
                                         <th className="px-4 py-3">Details</th>
                                         {months.map((i, idx) => (
                                             <th className="px-4 py-3" key={idx}>{i?.name}</th>
@@ -340,17 +340,16 @@ export default function EmployeeLeave(
                                         <button
                                             onClick={() => handleEditLeave(leave)}
                                             className="inline-flex items-center justify-center w-9 h-9 rounded-full 
-                                                 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition"
+                                                 bg-indigo-50 text-gray-800 hover:bg-indigo-100 transition"
                                         >
                                             <Edit size={18} />
                                         </button>
                                     </div>
                                 ) :
                                     <div className="flex justify-end">
-                                        <button
-                                            onClick={() => handleLeaveDetail(leave)}
+                                        <button onClick={() => handleLeaveDetail(leave)}
                                             className="inline-flex items-center justify-center w-9 h-9 rounded-full 
-                                                 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition"
+                                                 bg-indigo-50 text-gray-800 hover:bg-indigo-100 transition"
                                         >
                                             <Eye size={18} />
                                         </button>
@@ -421,12 +420,12 @@ export default function EmployeeLeave(
                     <Modal.Footer>
                         <button
                             onClick={() => setEditModal(false)}
-                            className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+                             className="px-4 py-2 border bg-gray-100 text-black rounded-lg hover:bg-gray-200"
                         >
                             Close
                         </button>
                         <button onClick={handleLeaveEdit}
-                            className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+                            className="px-4 py-2 rounded-lg btn-color"
                         >
                             Edit
                         </button>
@@ -510,7 +509,7 @@ export default function EmployeeLeave(
                     <Modal.Footer>
                         <button
                             onClick={() => setDetailModal(false)}
-                            className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+                            className="px-4 py-2 border bg-gray-100 text-black rounded-lg hover:bg-gray-200"
                         >
                             Close
                         </button>

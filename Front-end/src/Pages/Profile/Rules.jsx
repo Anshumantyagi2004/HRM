@@ -109,11 +109,11 @@ export default function Rules(props) {
         <div className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition p-4">
             <div className="flex justify-between items-center">
                 <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-1">
-                    <ClipboardCheck onClick={() => { user?.role == "Admin" && setRulesAddModal(true) }}
+                    <ClipboardCheck onClick={() => { (user?.role == "Admin" || user?.role == "Sub Admin") && setRulesAddModal(true) }}
                         size={18} className="text-indigo-600 bg-indigo-50 hover:bg-indigo-100 h-8 w-8 p-1.5 rounded-full" />
                     Rules
                 </h2>
-                {user?.role == "Admin" &&
+                {(user?.role == "Admin" || user?.role == "Sub Admin") &&
                     <button className="p-2 rounded-full hover:bg-gray-100 transition" onClick={() => setEditText("Rules")}>
                         <Pencil size={18} />
                     </button>}
@@ -340,7 +340,7 @@ export default function Rules(props) {
                         Cancel
                     </button>
 
-                    <button className="px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700" onClick={addRules}>
+                    <button className="px-4 py-2 rounded-lg btn-color" onClick={addRules}>
                         Save
                     </button>
                 </div>
@@ -535,17 +535,16 @@ export default function Rules(props) {
 
                     <div className='flex gap-2'>
                         <button
-                            onClick={() => handleSubmit()}
-                            className="px-4 py-2 border rounded-lg text-white hover:bg-indigo-700 bg-indigo-600"
-                        >
-                            Add
-                        </button>
-
-                        <button
                             onClick={() => { setRulesAddModal(false); setRulesAddModalDetails(false) }}
                             className="px-4 py-2 border rounded-lg text-gray-700 hover:bg-gray-100"
                         >
                             Close
+                        </button>
+                        <button
+                            onClick={() => handleSubmit()}
+                            className="px-4 py-2 border rounded-lg btn-color"
+                        >
+                            Add
                         </button>
                     </div>
                 </div>

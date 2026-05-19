@@ -74,7 +74,7 @@ export default function Documents(props) {
 
                         <button
                             onClick={handleDocuments}
-                            className="text-sm font-medium text-blue-600 hover:underline"
+                            className="text-sm font-medium text-gray-700 hover:underline"
                         >
                             Add
                         </button>

@@ -157,12 +157,12 @@ export default function AdminNotification(props) {
 
                     <div className="flex items-center gap-3">
 
-                        <div className="bg-blue-100 text-blue-700 px-4 py-2 rounded-xl text-sm font-semibold">
+                        <div className="bg-blue-100 text-gray-800 px-4 py-2 rounded-xl text-sm font-semibold">
                             {notifications.length} Notifications
                         </div>
 
                         <button
-                            className="inline-flex items-center justify-center w-11 h-11 rounded-full bg-indigo-600 text-white hover:bg-indigo-700 transition shadow-sm"
+                            className="inline-flex items-center justify-center w-11 h-11 rounded-full bg-gray-700 text-white hover:bg-gray-800 transition shadow-sm"
                             onClick={() => setAddNotifications(true)}
                         >
                             <PlusCircle size={22} />
@@ -288,7 +288,7 @@ export default function AdminNotification(props) {
                                     ))}
                                 </select>
                                 <button onClick={() => setFormData((prev) => ({ ...prev, sendToAll: !prev.sendToAll, user: "" }))}
-                                    className={`bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-md`}>
+                                    className={`bg-gray-700 hover:bg-gray-800 text-white px-3 py-2 rounded-md`}>
                                     All
                                 </button>
                             </div>
@@ -340,7 +340,7 @@ export default function AdminNotification(props) {
                             Close
                         </button>
                         <button onClick={sendNotification}
-                            className="px-4 py-2 border rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white">
+                            className="px-4 py-2 border rounded-lg bg-gray-700 hover:bg-gray-800 text-white">
                             Add
                         </button>
                     </div>

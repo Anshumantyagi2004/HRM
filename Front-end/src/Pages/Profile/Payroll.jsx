@@ -185,7 +185,7 @@ export default function Payroll(props) {
                         Cancel
                     </button>
 
-                    <button className="px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700" onClick={addPayroll}>
+                    <button className="px-4 py-2 rounded-lg btn-color" onClick={addPayroll}>
                         Save
                     </button>
                 </div>
@@ -198,7 +198,7 @@ export default function Payroll(props) {
                     <ReceiptIndianRupee size={18} className="text-indigo-600 bg-indigo-50 hover:bg-indigo-100 h-8 w-8 p-1.5 rounded-full" />
                     Salary Structure
                 </h2>
-                {user?.role == "Admin" &&
+                {(user?.role == "Admin" || user?.role == "Sub Admin") &&
                     <button className="p-2 rounded-full hover:bg-gray-100 transition" onClick={() => setEditText("Salary")}>
                         <Pencil size={18} />
                     </button>}
@@ -360,7 +360,7 @@ export default function Payroll(props) {
                         Cancel
                     </button>
 
-                    <button className="px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700" onClick={addPayroll}>
+                    <button className="px-4 py-2 rounded-lg btn-color" onClick={addPayroll}>
                         Save
                     </button>
                 </div>

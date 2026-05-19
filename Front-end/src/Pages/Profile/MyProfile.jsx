@@ -632,7 +632,7 @@ export default function MyProfile() {
                                 className="w-full h-full rounded-full object-cover border"
                             />
 
-                            <label className="absolute bottom-1 right-1 bg-indigo-600 p-2 rounded-full cursor-pointer hover:bg-indigo-700 z-10 transition">
+                            <label className="absolute bottom-1 right-1 bg-[#f45a06] p-2 rounded-full cursor-pointer hover:bg-[#1f2937] z-10 transition">
                                 <Camera size={16} className="text-white" />
                                 <input
                                     type="file"
@@ -657,13 +657,13 @@ export default function MyProfile() {
 
                 <div className="col-span-12 md:col-span-6 space-y-2">
                     <div className="flex items-center gap-2 flex-wrap">
-                        <button onClick={() => setText("PersonalInfo")} className="bg-indigo-600 text-white hover:bg-indigo-700 px-2 py-1 rounded-md">Personal</button>
-                        <button onClick={() => { setText("Education"); fetchEducation() }} className="bg-indigo-600 text-white hover:bg-indigo-700 px-2 py-1 rounded-md">Education</button>
-                        <button onClick={() => { setText("Work"); fetchWork() }} className="bg-indigo-600 text-white hover:bg-indigo-700 px-2 py-1 rounded-md">Work</button>
-                        <button onClick={() => { setText("Documents"); fetchDocs() }} className="bg-indigo-600 text-white hover:bg-indigo-700 px-2 py-1 rounded-md">Documents</button>
-                        <button onClick={() => { setText("Rules"); fetchRules() }} className="bg-indigo-600 text-white hover:bg-indigo-700 px-2 py-1 rounded-md">Rules</button>
-                        <button onClick={() => { setText("Payroll"); fetchPayroll() }} className="bg-indigo-600 text-white hover:bg-indigo-700 px-2 py-1 rounded-md">Payroll</button>
-                        <button onClick={() => { setText("Policy"); }} className="bg-indigo-600 text-white hover:bg-indigo-700 px-2 py-1 rounded-md">Policy</button>
+                        <button onClick={() => setText("PersonalInfo")} className="bg-[#28374c] text-white hover:bg-[#1f2937] px-2 py-1 rounded-md">Personal</button>
+                        <button onClick={() => { setText("Education"); fetchEducation() }} className="bg-[#28374c] text-white hover:bg-[#1f2937] px-2 py-1 rounded-md">Education</button>
+                        <button onClick={() => { setText("Work"); fetchWork() }} className="bg-[#28374c] text-white hover:bg-[#1f2937] px-2 py-1 rounded-md">Work</button>
+                        <button onClick={() => { setText("Documents"); fetchDocs() }} className="bg-[#28374c] text-white hover:bg-[#1f2937] px-2 py-1 rounded-md">Documents</button>
+                        <button onClick={() => { setText("Rules"); fetchRules() }} className="bg-[#28374c] text-white hover:bg-[#1f2937] px-2 py-1 rounded-md">Rules</button>
+                        <button onClick={() => { setText("Payroll"); fetchPayroll() }} className="bg-[#28374c] text-white hover:bg-[#1f2937] px-2 py-1 rounded-md">Payroll</button>
+                        <button onClick={() => { setText("Policy"); }} className="bg-[#28374c] text-white hover:bg-[#1f2937] px-2 py-1 rounded-md">Policy</button>
                     </div>
 
                     {text == "PersonalInfo" &&
@@ -749,7 +749,7 @@ export default function MyProfile() {
                                 Social Media
                             </h2>
                             <button className="p-2 rounded-full hover:bg-gray-100 transition">
-                                <Pencil size={18} />
+                                <Pencil size={18} />    
                             </button>
                         </div>
 
@@ -757,11 +757,11 @@ export default function MyProfile() {
                             <div className="w-10 h-10 flex items-center justify-center rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 transition">
                                 <Facebook size={18} />
                             </div>
-                            <div className="w-10 h-10 flex items-center justify-center rounded-full bg-blue-50 text-blue-700 hover:bg-blue-100 transition">
-                                <Linkedin size={18} />
-                            </div>
                             <div className="w-10 h-10 flex items-center justify-center rounded-full bg-pink-50 text-pink-600 hover:bg-pink-100 transition">
                                 <Instagram size={18} />
+                            </div>
+                            <div className="w-10 h-10 flex items-center justify-center rounded-full bg-blue-50 text-blue-700 hover:bg-blue-100 transition">
+                                <Linkedin size={18} />
                             </div>
                         </div>
                     </div>
@@ -794,8 +794,8 @@ export default function MyProfile() {
                                 file:mr-3 file:py-2 file:px-4
                                 file:rounded-lg file:border-0
                                 file:text-sm file:font-medium
-                               file:bg-indigo-600 file:text-white
-                                hover:file:bg-indigo-700 cursor-pointer"
+                               file:bg-gray-700 file:text-white
+                                hover:file:bg-gray-800 cursor-pointer"
                             />
 
                             {file && (
@@ -828,7 +828,7 @@ export default function MyProfile() {
 
                             <button
                                 onClick={() => uploadDocument()}
-                                className="px-4 py-2 border rounded-lg text-white hover:bg-indigo-700 bg-indigo-600"
+                                className="px-4 py-2 border rounded-lg btn-color"
                             >
                                 Add
                             </button>
@@ -957,7 +957,7 @@ export default function MyProfile() {
                                 </button>
                                 : <button
                                     onClick={() => addEducation()}
-                                    className="px-4 py-2 border rounded-lg text-white hover:bg-indigo-700 bg-indigo-600"
+                                    className="px-4 py-2 border rounded-lg btn-color"
                                 >
                                     Add
                                 </button>}
@@ -1053,13 +1053,13 @@ export default function MyProfile() {
                             {workEdit ?
                                 <button
                                     // onClick={() => addEducation()}
-                                    className="px-4 py-2 border rounded-lg text-white hover:bg-indigo-700 bg-indigo-600"
+                                    className="px-4 py-2 border rounded-lg btn-color"
                                 >
                                     Edit
                                 </button>
                                 : <button
                                     onClick={() => addWorkHistory()}
-                                    className="px-4 py-2 border rounded-lg text-white hover:bg-indigo-700 bg-indigo-600"
+                                    className="px-4 py-2 border rounded-lg btn-color"
                                 >
                                     Add
                                 </button>}

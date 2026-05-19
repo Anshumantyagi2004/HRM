@@ -147,22 +147,23 @@ export default function AdminPayroll({ user }) {
             </div>
             <div className='flex justify-between mb-4'>
                 <div className='flex gap-2 items-center'>
-                    <button className="bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-2 rounded-md"
+                    <button className="btn-color py-2 px-2 rounded-md"
                         onClick={() => setText("Employee")}>
                         Employee
                     </button>
-                    <button className="bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-2 rounded-md"
+                    <button className="btn-color py-2 px-2 rounded-md"
                         onClick={() => setText("Overview")}>
                         Overview
                     </button>
                 </div>
                 {text == "Employee" &&
-                    <div className="relative">
-                        <Search size={18} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <div className="relative w-full sm:w-64">
+                        <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-orange-600" />
                         <input
                             type="text"
                             placeholder="Search employees..."
-                            className="input"
+                            className="w-full pl-10 pr-4 py-2 text-sm border rounded-lg border-orange-300
+              focus:outline-none focus:ring-1 focus:ring-orange-500"
                         />
                     </div>}
             </div>
@@ -171,7 +172,7 @@ export default function AdminPayroll({ user }) {
                 <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                         <thead>
-                            <tr className="bg-indigo-600 text-white text-left">
+                            <tr className="bg-gray-800 text-white text-left">
                                 <th className="px-4 py-3">Emp Name</th>
                                 <th className="px-4 py-3">Location</th>
                                 <th className="px-4 py-3">Designation</th>
@@ -191,7 +192,7 @@ export default function AdminPayroll({ user }) {
                                         <div className="flex items-center justify-start">
                                             {i?.profileImage ?
                                                 <img src={i?.profileImage} alt={i?.username?.slice(0, 1)?.toUpperCase()} className="w-8 h-8 rounded-full mr-2" />
-                                                : <div className="w-8 h-8 rounded-full bg-indigo-500 text-white flex items-center justify-center mr-2">
+                                                : <div className="w-8 h-8 rounded-full bg-orange-500 text-white flex items-center justify-center mr-2">
                                                     {i?.username?.slice(0, 1).toUpperCase()}
                                                 </div>}
                                             {i?.username}
@@ -206,11 +207,11 @@ export default function AdminPayroll({ user }) {
                                     <td className="p-3">{i?.paidDays}</td>
                                     <td className="p-3">
                                         <button onClick={() => { setSelectedDetail(i); setOpen(true) }} className="inline-flex items-center justify-center w-9 h-9 rounded-full 
-                                                      bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition">
+                                                      bg-indigo-50 text-gray-800 hover:bg-indigo-100 transition">
                                             <Eye size={18} />
                                         </button>
                                         <button onClick={() => { previewPdf(i); setOpen1(true) }} className="inline-flex items-center justify-center w-9 h-9 rounded-full 
-                                                      bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition ml-2">
+                                                      bg-indigo-50 text-gray-800 hover:bg-indigo-100 transition ml-2">
                                             <Download size={18} />
                                         </button>
                                     </td>
@@ -221,32 +222,32 @@ export default function AdminPayroll({ user }) {
                 </div>}
 
             {text == "Overview" &&
-                <div className="border border-indigo-200 bg-indigo-50 rounded-xl py-3 px-2 shadow-sm">
+                <div className="border border-gray-200 bg-gray-50 rounded-xl py-3 px-2 shadow-sm">
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4 text-center">
 
-                        <div className="bg-white rounded-lg p-4 shadow-sm">
-                            <p className="text-sm text-indigo-500 font-medium">Total Employees</p>
-                            <p className="text-2xl font-bold text-indigo-700">{allUsers?.length}</p>
+                        <div className="bg-white rounded-lg p-4 shadow-sm border">
+                            <p className="text-sm text-gray-500 font-medium">Total Employees</p>
+                            <p className="text-2xl font-bold text-gray-700">{allUsers?.length}</p>
                         </div>
 
-                        <div className="bg-white rounded-lg p-4 shadow-sm">
-                            <p className="text-sm text-indigo-500 font-medium">Payroll Completed</p>
-                            <p className="text-2xl font-bold text-indigo-700">0</p>
+                        <div className="bg-white rounded-lg p-4 shadow-sm border">
+                            <p className="text-sm text-gray-500 font-medium">Payroll Completed</p>
+                            <p className="text-2xl font-bold text-gray-700">0</p>
                         </div>
 
-                        <div className="bg-white rounded-lg p-4 shadow-sm">
-                            <p className="text-sm text-indigo-500 font-medium">Gross Pay</p>
-                            <p className="text-2xl font-bold text-indigo-700">₹85,000</p>
+                        <div className="bg-white rounded-lg p-4 shadow-sm border">
+                            <p className="text-sm text-gray-500 font-medium">Gross Pay</p>
+                            <p className="text-2xl font-bold text-gray-700">₹85,000</p>
                         </div>
 
-                        <div className="bg-white rounded-lg p-4 shadow-sm">
-                            <p className="text-sm text-indigo-500 font-medium">Net Pay</p>
-                            <p className="text-2xl font-bold text-indigo-700">₹85,000</p>
+                        <div className="bg-white rounded-lg p-4 shadow-sm border">
+                            <p className="text-sm text-gray-500 font-medium">Net Pay</p>
+                            <p className="text-2xl font-bold text-gray-700">₹85,000</p>
                         </div>
 
-                        <div className="bg-white rounded-lg p-4 shadow-sm">
-                            <p className="text-sm text-indigo-500 font-medium">Total Payout</p>
-                            <p className="text-2xl font-bold text-indigo-700">0</p>
+                        <div className="bg-white rounded-lg p-4 shadow-sm border">
+                            <p className="text-sm text-gray-500 font-medium">Total Payout</p>
+                            <p className="text-2xl font-bold text-gray-700">0</p>
                         </div>
 
                     </div>
@@ -259,7 +260,7 @@ export default function AdminPayroll({ user }) {
                         <div className="flex justify-center mb-2">
                             {selectedDetail?.profileImage ?
                                 <img src={selectedDetail?.profileImage} alt={"Image"} className="w-24 h-24 rounded-full" />
-                                : <div className="w-24 h-24 rounded-full bg-indigo-500 text-white flex items-center justify-center text-4xl">
+                                : <div className="w-24 h-24 rounded-full bg-orange-500 text-white flex items-center justify-center text-4xl">
                                     {selectedDetail?.username.slice(0, 1).toUpperCase()}
                                 </div>}
                         </div>

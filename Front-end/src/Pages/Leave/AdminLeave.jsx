@@ -76,17 +76,17 @@ export default function AdminLeave(
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
                     <h2 className="text-lg font-semibold text-gray-800">All Leaves</h2>
                     <div className="flex items-center gap-2">
-                        <button className="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-md"
+                        <button className="btn-color px-3 py-2 rounded-md"
                             onClick={() => setOpen(true)}>
                             Apply For Leave
                         </button>
                         <div className="relative w-full sm:w-64">
-                            <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                            <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-orange-600" />
                             <input
                                 type="text"
                                 placeholder="Search employees..."
-                                className="w-full pl-10 pr-4 py-2 text-sm border rounded-lg 
-                                focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                className="w-full pl-10 pr-4 py-2 text-sm border rounded-lg border-orange-300
+              focus:outline-none focus:ring-1 focus:ring-orange-500"
                             />
                         </div>
                     </div>
@@ -94,11 +94,11 @@ export default function AdminLeave(
 
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
                     <div className="flex gap-2 items-center">
-                        <button className="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-md"
+                        <button className="btn-color px-3 py-2 rounded-md"
                             onClick={() => setText("Logs")}>
                             Logs
                         </button>
-                        <button className="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-md"
+                        <button className="btn-color px-3 py-2 rounded-md"
                             onClick={() => { setText("Balance"); fetchMyProfile(); }}>
                             Balance
                         </button>
@@ -126,7 +126,7 @@ export default function AdminLeave(
                     <div className="overflow-x-auto">
                         <table className="w-full text-sm">
                             <thead>
-                                <tr className="bg-indigo-600 text-white text-left">
+                                <tr className="bg-gray-800 text-white text-left">
                                     <th className="p-3">Emp Name</th>
                                     <th className="p-3">Department</th>
                                     <th className="p-3">Designation</th>
@@ -150,7 +150,7 @@ export default function AdminLeave(
                                             <Link to={`/userProfile/${emp?.user?._id}`} className="flex items-center justify-start">
                                                 {emp?.user?.profileImage ?
                                                     <img src={emp?.user?.profileImage} alt={emp?.user?.username.slice(0, 1).toUpperCase()} className="w-8 h-8 rounded-full mr-2" />
-                                                    : <div className="w-8 h-8 rounded-full bg-indigo-500 text-white flex items-center justify-center mr-2">
+                                                    : <div className="w-8 h-8 rounded-full bg-orange-500 text-white flex items-center justify-center mr-2">
                                                         {emp?.user?.username.slice(0, 1).toUpperCase()}
                                                     </div>}
                                                 {emp?.user?.username}
@@ -167,7 +167,7 @@ export default function AdminLeave(
                                         <td className="p-3 text-center">
                                             <button onClick={() => handleOpen(emp, totalDays)}
                                                 className="inline-flex items-center justify-center w-9 h-9 rounded-full 
-                                                 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition"
+                                                 bg-indigo-50 text-gray-800 hover:bg-indigo-100 transition"
                                             >
                                                 <Eye size={18} />
                                             </button>
@@ -182,7 +182,7 @@ export default function AdminLeave(
                     <div className="overflow-x-auto">
                         <table className="w-full text-sm">
                             <thead>
-                                <tr className="bg-indigo-600 text-white text-left">
+                                <tr className="bg-gray-800 text-white text-left">
                                     <th className="p-3">Emp Name</th>
                                     <th className="p-3">Designation</th>
                                     <th className="p-3">Department</th>
@@ -202,7 +202,7 @@ export default function AdminLeave(
                                             <Link to={`/userProfile/${emp?._id}`} className="flex items-center justify-start">
                                                 {emp?.profileImage ?
                                                     <img src={emp?.profileImage} alt={emp?.username.slice(0, 1).toUpperCase()} className="w-8 h-8 rounded-full mr-2" />
-                                                    : <div className="w-8 h-8 rounded-full bg-indigo-500 text-white flex items-center justify-center mr-2">
+                                                    : <div className="w-8 h-8 rounded-full bg-orange-500 text-white flex items-center justify-center mr-2">
                                                         {emp?.username.slice(0, 1).toUpperCase()}
                                                     </div>}
                                                 {emp?.username}
@@ -219,7 +219,7 @@ export default function AdminLeave(
                                             <button
                                                 // onClick={() => handleOpen(emp)}
                                                 className="inline-flex items-center justify-center w-9 h-9 rounded-full 
-                                                 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition"
+                                                 bg-indigo-50 text-gray-800 hover:bg-indigo-100 transition"
                                             >
                                                 <Eye size={18} />
                                             </button>

@@ -1,5 +1,9 @@
 .input {
-  @apply border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500 text-gray-800 bg-white;
+  @apply border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-[#1f2937] text-gray-800 bg-white;
+}
+
+.btn-color {
+  @apply bg-[#28374c] text-white hover:bg-[#1f2937];
 }
 
 .value {

@@ -212,14 +212,13 @@ export default function Leave() {
                 </div>
             </Modal.Body>
             <Modal.Footer>
-                <button
-                    onClick={() => setOpen(false)}
-                    className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+                <button onClick={() => setOpen(false)}
+                    className="px-4 py-2 border bg-gray-100 text-black rounded-lg hover:bg-gray-200"
                 >
                     Close
                 </button>
                 <button onClick={handleSubmit}
-                    className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+                    className="px-4 py-2 btn-color rounded-lg"
                 >
                     Apply
                 </button>

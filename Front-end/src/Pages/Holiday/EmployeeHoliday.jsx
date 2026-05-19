@@ -38,23 +38,23 @@ export default function EmployeeHoliday(props) {
                     <h2 className="text-lg font-semibold text-gray-800">Holiday</h2>
                     <div className="">
                         <div className="relative w-full sm:w-64">
-                            <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                            <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-orange-600" />
                             <input
                                 type="text"
                                 placeholder="Search..."
-                                className="w-full pl-10 pr-4 py-2 text-sm border rounded-lg 
-                                focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                className="w-full pl-10 pr-4 py-2 text-sm border rounded-lg border-orange-300
+                                                         focus:outline-none focus:ring-1 focus:ring-orange-500"
                             />
                         </div>
                     </div>
                 </div>
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
                     <div className="flex gap-2 items-center">
-                        <button className="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-md"
+                        <button className="btn-color px-3 py-2 rounded-md"
                             onClick={() => setText("HolidayCalendar")}>
                             Holiday Calendar
                         </button>
-                        <button className="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-md"
+                        <button className="btn-color px-3 py-2 rounded-md"
                             onClick={() => setText("HolidayList")}>
                             Holiday List
                         </button>
@@ -88,7 +88,7 @@ export default function EmployeeHoliday(props) {
                     <div className="grid grid-cols-12 gap-4">
                         <div className="col-span-12 md:col-span-8">
                             <div className="bg-white shadow-md rounded-xl md:p-5 p-2 flex flex-col items-center text-center transition hover:shadow-lg">
-                                <AttendanceCalendar holidays={holidays}  mode = {"holiday"}/>
+                                <AttendanceCalendar holidays={holidays} mode={"holiday"} />
                             </div>
                         </div>
 
@@ -103,7 +103,7 @@ export default function EmployeeHoliday(props) {
                     <div className="overflow-x-auto">
                         <table className="w-full text-base">
                             <thead>
-                                <tr className="bg-indigo-600 text-white text-left">
+                                <tr className="bg-gray-800 text-white text-left">
                                     <th className="p-3">Name</th>
                                     <th className="p-3">Date</th>
                                     <th className="p-3">Day</th>
@@ -130,7 +130,7 @@ export default function EmployeeHoliday(props) {
                                                 <button
                                                     // onClick={() => { setFormData(holiday); setIsEdit(true); setOpen(true) }}
                                                     className="inline-flex items-center justify-center w-9 h-9 rounded-full 
-                                                                      bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition"
+                                                                      bg-indigo-50 text-gray-800 hover:bg-indigo-100 transition"
                                                 >
                                                     <Eye size={18} />
                                                 </button>

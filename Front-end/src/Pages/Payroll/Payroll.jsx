@@ -70,5 +70,5 @@ export default function Payroll() {
         { label: "Overtime", key: "overtime" }, // if not present → fallback
     ];
 
-    return (<>{user.role == "Admin" ? <AdminPayroll user={user}/> : <EmployeePayroll user={user}/>}</>)
+    return (<>{(user?.role == "Admin" || user?.role ==="Sub Admin")? <AdminPayroll user={user}/> : <EmployeePayroll user={user}/>}</>)
 }

@@ -89,7 +89,7 @@ export default function EmployeeNotification(props) {
                         </p>
                     </div>
 
-                    <div className="bg-blue-100 text-blue-700 px-4 py-2 rounded-xl text-sm font-semibold">
+                    <div className="bg-blue-100 text-gray-800 px-4 py-2 rounded-xl text-sm font-semibold">
                         {notifications.length} Notifications
                     </div>
                 </div>

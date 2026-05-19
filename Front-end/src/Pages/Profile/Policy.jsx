@@ -220,7 +220,7 @@ export default function Policy(props) {
                     Policy
                 </h2>
 
-                {user?.role == "Admin" &&
+                {(user?.role == "Admin" || user?.role == "Sub Admin") &&
                     <button className="p-2 rounded-full hover:bg-gray-100 transition" onClick={() => setDocumentModal(true)}>
                         <Pencil size={18} />
                     </button>}
@@ -229,7 +229,7 @@ export default function Policy(props) {
             <div className="mt-4">
                 <table className="w-full text-sm">
                     <thead>
-                        <tr className="bg-indigo-600 text-white text-left">
+                        <tr className="bg-[#28374c] text-white text-left">
                             <th className="px-2 py-3">Document Name</th>
                             <th className="px-2 py-3">Added Date</th>
                             <th className="px-2 py-3">Accepeted Date</th>
@@ -321,12 +321,12 @@ export default function Policy(props) {
                                     <p className="text-base font-semibold">
                                         I, <span className="font-bold">{user?.username},</span> acknowledge and accept the{" "}
                                         <span className="font-bold">{activePDF?.documentName}</span> of
-                                        Promozione Branding Private Limited.
+                                        Inquiry Bazaar Pvt Ltd.
                                     </p>
                                 </div>
                                 <div className="flex justify-center mt-2">
                                     <button disabled={!accepted || otpLoading} onClick={handleSendOTP}
-                                        className={`px-4 py-2 rounded-md text-white transition ${accepted && !otpLoading ? "bg-indigo-600 hover:bg-indigo-700" : "bg-gray-400 cursor-not-allowed"}`}>
+                                        className={`px-4 py-2 rounded-md text-white transition ${accepted && !otpLoading ? "btn-color" : "bg-gray-400 cursor-not-allowed"}`}>
                                         {otpLoading ? "Sending OTP..." : "Send OTP"}
                                     </button>
                                 </div>
@@ -343,7 +343,7 @@ export default function Policy(props) {
                                 />
 
                                 <button disabled={otpLoading} onClick={handleVerifyOTP}
-                                    className={`px-4 py-2 rounded-md text-white transition ${!otpLoading ? "bg-indigo-600 hover:bg-indigo-700" : "bg-gray-400 cursor-not-allowed"}`}>
+                                    className={`px-4 py-2 rounded-md text-white transition ${!otpLoading ? "btn-color" : "bg-gray-400 cursor-not-allowed"}`}>
                                     {otpLoading ? "Verifying OTP..." : "Verify OTP"}
                                 </button>
                             </div>)}
@@ -367,8 +367,8 @@ export default function Policy(props) {
                                                 file:mr-3 file:py-2 file:px-4
                                                 file:rounded-lg file:border-0
                                                 file:text-sm file:font-medium
-                                               file:bg-indigo-600 file:text-white
-                                                hover:file:bg-indigo-700 cursor-pointer"
+                                               file:bg-gray-700 file:text-white
+                                                hover:file:bg-gray-800 cursor-pointer"
                         />
 
                         <div className="mt-4">
@@ -419,7 +419,7 @@ export default function Policy(props) {
                         </button>
 
                         <button onClick={() => uploadPolicy()} disabled={loading}
-                            className={`px-4 py-2 border rounded-lg text-white hover:bg-indigo-700 bg-indigo-600 ${loading && "cursor-not-allowed"}`}>
+                            className={`px-4 py-2 border rounded-lg btn-color ${loading && "cursor-not-allowed"}`}>
                             {loading ? "Adding..." : "Add"}
                         </button>
                     </div>

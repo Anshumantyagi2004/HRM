@@ -116,23 +116,24 @@ export default function EmployeePayroll({ user }) {
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
                 <h2 className="text-lg font-semibold text-gray-800">Payroll | {user?.username}</h2>
                 <div className="flex gap-2 flex-wrap">
-                    <div className="relative">
-                        <Search size={18} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <div className="relative w-full sm:w-64">
+                        <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-orange-600" />
                         <input
                             type="text"
-                            placeholder="Search employees..."
-                            className="input"
+                            placeholder="Search..."
+                            className="w-full pl-10 pr-4 py-2 text-sm border rounded-lg border-orange-300
+                                 focus:outline-none focus:ring-1 focus:ring-orange-500"
                         />
                     </div>
                 </div>
             </div>
             <div className='flex justify-between mb-4'>
                 <div className='flex gap-2 items-center'>
-                    <button className="bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-2 rounded-md"
+                    <button className="btn-color py-2 px-2 rounded-md"
                         onClick={() => setText("PaySlip")}>
                         Pay Slip
                     </button>
-                    <button className="bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-2 rounded-md"
+                    <button className="btn-color py-2 px-2 rounded-md"
                         onClick={() => setText("SalaryStructure")}>
                         Salary Structure
                     </button>
@@ -171,20 +172,20 @@ export default function EmployeePayroll({ user }) {
                         {/* Header */}
                         <div className="flex items-center justify-between mb-4">
                             <div>
-                                <h2 className="text-2xl font-bold text-indigo-800">Payslip</h2>
+                                <h2 className="text-2xl font-bold text-gray-800">Payslip</h2>
                                 <p className="text-lg text-gray-700">Salary Statement</p>
                             </div>
                             <div className="flex gap-3">
                                 <button
                                     onClick={downloadPayslip}
-                                    className="p-2 rounded-full bg-indigo-50 hover:bg-indigo-100 text-indigo-600 transition"
+                                    className="p-2 rounded-full bg-indigo-50 hover:bg-indigo-100 text-gray-800 transition"
                                 >
                                     <Download size={20} />
                                 </button>
 
                                 <button
                                     onClick={previewPdf}
-                                    className="p-2 rounded-full bg-indigo-50 hover:bg-indigo-100 text-indigo-600 transition"
+                                    className="p-2 rounded-full bg-indigo-50 hover:bg-indigo-100 text-gray-800 transition"
                                 >
                                     <Eye size={20} />
                                 </button>
@@ -195,7 +196,7 @@ export default function EmployeePayroll({ user }) {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-5 text-sm">
                             {/* Employee Details */}
                             <div className="bg-indigo-50/70 p-4 rounded-lg border border-indigo-100">
-                                <h3 className="text-indigo-700 font-semibold mb-3 flex items-center gap-2">
+                                <h3 className="text-gray-800 font-semibold mb-3 flex items-center gap-2">
                                     <User size={16} /> Employee Details
                                 </h3>
                                 <div className="grid grid-cols-2 gap-y-2 text-gray-800">
@@ -218,7 +219,7 @@ export default function EmployeePayroll({ user }) {
 
                             {/* Payment Details */}
                             <div className="bg-indigo-50/70 p-4 rounded-lg border border-indigo-100">
-                                <h3 className="text-indigo-700 font-semibold mb-3 flex items-center gap-2">
+                                <h3 className="text-gray-800 font-semibold mb-3 flex items-center gap-2">
                                     <Building2 size={16} /> Payment Details
                                 </h3>
                                 <div className="grid grid-cols-2 gap-y-2 text-gray-800">
@@ -246,10 +247,10 @@ export default function EmployeePayroll({ user }) {
                 <div className="">
                     <div className="bg-white rounded-xl shadow-sm border border-indigo-200 overflow-hidden">
                         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 px-6 py-4 bg-indigo-50 border-b border-indigo-200">
-                            <h2 className="text-lg font-semibold text-indigo-800">Current Salary</h2>
-                            <p className="text-sm text-indigo-600">
+                            <h2 className="text-lg font-semibold text-gray-800">Current Salary</h2>
+                            <p className="text-sm text-gray-600">
                                 Effective Date:&nbsp;
-                                <span className="font-medium text-indigo-800">
+                                <span className="font-medium text-gray-800">
                                     {new Date(userPayRoll?.userWork[0]?.joiningDate).toLocaleDateString("en-IN")}
                                 </span>
                             </p>
@@ -259,9 +260,9 @@ export default function EmployeePayroll({ user }) {
                             <table className="min-w-full text-sm">
                                 <thead className="bg-indigo-100">
                                     <tr>
-                                        <th className="text-left px-6 py-3 font-semibold text-indigo-700">Components</th>
-                                        <th className="text-right px-6 py-3 font-semibold text-indigo-700">Monthly</th>
-                                        <th className="text-right px-6 py-3 font-semibold text-indigo-700">Annual</th>
+                                        <th className="text-left px-6 py-3 font-semibold text-gray-700">Components</th>
+                                        <th className="text-right px-6 py-3 font-semibold text-gray-700">Monthly</th>
+                                        <th className="text-right px-6 py-3 font-semibold text-gray-700">Annual</th>
                                     </tr>
                                 </thead>
 
@@ -271,17 +272,17 @@ export default function EmployeePayroll({ user }) {
                                             key={i}
                                             className="hover:bg-indigo-50 transition-colors duration-150"
                                         >
-                                            <td className="px-6 py-3 font-medium text-gray-700">
+                                            <td className="px-6 py-3 font-medium text-gray-800">
                                                 {item.label}
                                             </td>
 
                                             {/* Monthly */}
-                                            <td className="px-6 py-3 text-right text-indigo-700 font-semibold">
+                                            <td className="px-6 py-3 text-right text-gray-600 font-semibold">
                                                 {userPayRoll?.userPayroll?.[0]?.[item.key] ?? "-"}
                                             </td>
 
                                             {/* Yearly or duplicate column (if needed same value) */}
-                                            <td className="px-6 py-3 text-right text-indigo-700 font-semibold">
+                                            <td className="px-6 py-3 text-right text-gray-600 font-semibold">
                                                 {userPayRoll?.userPayroll?.[0]?.[item.key] * 12 ?? "-"}
                                             </td>
                                         </tr>

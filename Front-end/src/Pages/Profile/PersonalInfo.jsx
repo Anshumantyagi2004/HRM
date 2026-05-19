@@ -138,7 +138,7 @@ export default function PersonalInfo(props) {
                         Cancel
                     </button>
 
-                    <button className="px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700" onClick={handleSavePersonal}>
+                    <button className="px-4 py-2 rounded-lg btn-color" onClick={handleSavePersonal}>
                         Save
                     </button>
                 </div>
@@ -241,7 +241,7 @@ export default function PersonalInfo(props) {
                             Cancel
                         </button>
 
-                        <button className="px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700" onClick={handleSavePersonal}>
+                        <button className="px-4 py-2 rounded-lg btn-color" onClick={handleSavePersonal}>
                             Save
                         </button>
                     </div>
@@ -316,7 +316,7 @@ export default function PersonalInfo(props) {
                             Cancel
                         </button>
 
-                        <button className="px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700" onClick={handleSavePersonal}>
+                        <button className="px-4 py-2 rounded-lg btn-color" onClick={handleSavePersonal}>
                             Save
                         </button>
                     </div>

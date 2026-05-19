@@ -27,11 +27,11 @@ export default function IdCard({ employee, workInfo }) {
                 <div className="flex justify-between items-center">
                     <h2 className="text-lg font-semibold">Id Card</h2>
                     <div className="flex gap-2">
-                        <button onClick={previewPdf} className="p-2 rounded-full text-indigo-600 bg-indigo-50">
+                        <button onClick={previewPdf} className="p-2 rounded-full text-[#f45a06] bg-orange-50 border border-orange-100">
                             <Eye size={18} />
                         </button>
 
-                        <button onClick={downloadPdf} className="p-2 rounded-full text-indigo-600 bg-indigo-50">
+                        <button onClick={downloadPdf} className="p-2 rounded-full text-[#f45a06] bg-orange-50 border border-orange-100">
                             <Download size={18} />
                         </button>
                     </div>

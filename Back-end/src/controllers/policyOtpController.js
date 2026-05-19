@@ -28,7 +28,7 @@ export const sendPolicyOTP = async (req, res) => {
         });
 
         await mailTransporter.sendMail({
-            from: `"Promozione Branding" <${process.env.MAIL_USER}>`,
+            from: `"Inquiry Bazaar" <${process.env.MAIL_USER}>`,
             to: email,
             subject: "Policy Verification Code",
             html: `

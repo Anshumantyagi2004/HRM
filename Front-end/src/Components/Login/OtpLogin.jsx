@@ -4,7 +4,7 @@ import toast from "react-hot-toast";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { loginSuccess } from "../../Redux/authSlice";
-import CompLogo from "./../../Assets/company_logo.png";
+import CompLogo from "./../../Assets/logoo.webp";
 
 function OtpLogin() {
     const dispatch = useDispatch();
@@ -20,6 +20,7 @@ function OtpLogin() {
 
     const handleChange = (e) => {
         const { name, value } = e.target;
+
         setFormData((prev) => ({
             ...prev,
             [name]: value,
@@ -27,23 +28,32 @@ function OtpLogin() {
     };
 
     const handleSendOtp = async () => {
-        if (!formData.officialEmail) return toast.error("Enter Email!");
+        if (!formData.officialEmail) {
+            return toast.error("Enter Email!");
+        }
 
         try {
             setLoading(true);
+
             const res = await fetch(BaseUrl + "send-otp", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
                 },
-                body: JSON.stringify({ officialEmail: formData.officialEmail })
+                body: JSON.stringify({
+                    officialEmail: formData.officialEmail
+                })
             });
+
             const data = await res.json();
+
             if (!res.ok) {
                 return toast.error(data.message || "OTP send failed");
             }
-            toast.success("OTP sent to email");
+
+            toast.success("OTP sent successfully");
             setStep("otp");
+
         } catch (err) {
             toast.error("Server error");
         } finally {
@@ -52,9 +62,13 @@ function OtpLogin() {
     };
 
     const handleVerifyOtp = async () => {
-        if (!formData.otp) return toast.error("Enter OTP!");
+        if (!formData.otp) {
+            return toast.error("Enter OTP!");
+        }
+
         try {
             setLoading(true);
+
             const res = await fetch(BaseUrl + "verify-otp", {
                 method: "POST",
                 credentials: "include",
@@ -66,15 +80,22 @@ function OtpLogin() {
                     otp: formData.otp
                 })
             });
+
             const data = await res.json();
+
             if (res.ok) {
                 toast.success("Login Successful!");
+
                 dispatch(loginSuccess({ user: data.user }));
+
                 navigate("/", { replace: true });
+
                 window.location.href = "/";
+
             } else {
-                return toast.error(data.message || "OTP verification failed");
+                toast.error(data.message || "OTP verification failed");
             }
+
         } catch (err) {
             toast.error("Server error");
         } finally {
@@ -83,13 +104,23 @@ function OtpLogin() {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-900 flex items-center justify-center px-4 py-10">
-            <div className="w-full max-w-md bg-white/10 backdrop-blur-2xl border border-white/10 rounded-3xl shadow-2xl overflow-hidden">
-                <div className="relative h-32 bg-gradient-to-r from-blue-700 via-cyan-600 to-blue-800 flex items-center justify-center">
-                    <div className="absolute w-40 h-40 bg-cyan-300/20 rounded-full blur-3xl"></div>
+        <div className="min-h-screen bg-[#0f172a] flex items-center justify-center px-4 py-10 relative overflow-hidden">
 
-                    <div className="relative z-10 text-center">
-                        <div className="w-20 h-20 mx-auto rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/20 shadow-lg">
+            {/* Background Glow */}
+            <div className="absolute top-[-120px] left-[-120px] w-[280px] h-[280px] bg-[#f45a06]/20 rounded-full blur-3xl"></div>
+
+            <div className="absolute bottom-[-120px] right-[-120px] w-[280px] h-[280px] bg-[#1e3a56]/40 rounded-full blur-3xl"></div>
+
+            <div className="w-full max-w-md bg-white/5 border border-white/10 backdrop-blur-2xl rounded-3xl overflow-hidden shadow-[0_20px_80px_rgba(0,0,0,0.5)]">
+
+                {/* Top Section */}
+                <div className="relative bg-gradient-to-br from-[#1e3a56] to-[#13293d] px-8 py-10 text-center">
+
+                    <div className="absolute w-48 h-48 bg-[#f45a06]/20 blur-3xl rounded-full top-[-80px] right-[-80px]" />
+
+                    <div className="relative z-10">
+
+                        <div className="w-32 h-24 mx-auto mb-5 bg-white/10 border border-white/10 backdrop-blur-xl rounded-2xl flex items-center justify-center shadow-lg">
                             <img
                                 src={CompLogo}
                                 alt="Company Logo"
@@ -97,22 +128,28 @@ function OtpLogin() {
                             />
                         </div>
 
-                        <h2 className="text-white text-2xl font-bold">
-                            {step === "email" ? "Login with OTP" : "Verify OTP"}
+                        <h2 className="text-3xl font-bold text-white">
+                            {step === "email"
+                                ? "OTP Login"
+                                : "Verify OTP"}
                         </h2>
+
+                        <p className="text-gray-300 mt-3 text-sm">
+                            {step === "email"
+                                ? "Secure login using email verification"
+                                : "Enter the OTP sent to your email"}
+                        </p>
+
                     </div>
                 </div>
 
-                <div className="p-8">
+                {/* Form Section */}
+                <div className="p-8 bg-[#111827]/80">
 
                     {step === "email" && (
                         <>
-                            <p className="text-blue-100 text-sm mb-6 text-center">
-                                Enter your official email to receive a secure OTP
-                            </p>
-
-                            <div className="mb-5">
-                                <label className="block text-sm font-medium text-blue-100 mb-2">
+                            <div className="mb-6">
+                                <label className="block text-sm font-medium text-gray-300 mb-2">
                                     Official Email
                                 </label>
 
@@ -122,14 +159,14 @@ function OtpLogin() {
                                     placeholder="Enter your official email"
                                     value={formData.officialEmail}
                                     onChange={handleChange}
-                                    className="w-full px-4 py-3 bg-white/10 border border-blue-400/20 rounded-xl text-white placeholder:text-blue-200/50 focus:ring-1 focus:ring-cyan-400 focus:border-cyan-400 outline-none transition"
+                                    className="w-full px-4 py-3 rounded-xl bg-[#1f2937] border border-gray-700 text-white placeholder:text-gray-500 focus:outline-none focus:ring-1 focus:ring-[#f45a06] transition"
                                 />
                             </div>
 
                             <button
                                 onClick={handleSendOtp}
                                 disabled={loading}
-                                className="w-full bg-gradient-to-r from-blue-600 to-cyan-500 text-white py-3 rounded-xl font-semibold shadow-lg hover:scale-[1.01] hover:shadow-cyan-500/30 transition-all duration-300 disabled:opacity-60"
+                                className="w-full bg-[#f45a06] hover:bg-[#d94d05] text-white py-3 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-[#f45a06]/30 hover:scale-[1.01] disabled:opacity-60"
                             >
                                 {loading ? "Sending OTP..." : "Send OTP"}
                             </button>
@@ -138,18 +175,21 @@ function OtpLogin() {
 
                     {step === "otp" && (
                         <>
-                            <div className="bg-blue-500/10 border border-blue-400/20 rounded-xl p-4 mb-6">
-                                <p className="text-sm text-blue-100 text-center">
+                            {/* Email Box */}
+                            <div className="mb-6 p-4 rounded-2xl bg-[#1f2937] border border-gray-700">
+
+                                <p className="text-gray-400 text-sm text-center">
                                     OTP sent to
                                 </p>
 
-                                <p className="text-cyan-300 font-semibold text-center mt-1 break-all">
+                                <p className="text-[#f45a06] font-semibold text-center mt-1 break-all">
                                     {formData.officialEmail}
                                 </p>
                             </div>
 
-                            <div className="mb-5">
-                                <label className="block text-sm font-medium text-blue-100 mb-2">
+                            {/* OTP Input */}
+                            <div className="mb-6">
+                                <label className="block text-sm font-medium text-gray-300 mb-2">
                                     Enter OTP
                                 </label>
 
@@ -160,22 +200,24 @@ function OtpLogin() {
                                     value={formData.otp}
                                     onChange={handleChange}
                                     maxLength={6}
-                                    className="w-full px-4 py-3 bg-white/10 border border-blue-400/20 rounded-xl text-white text-center tracking-[10px] text-2xl placeholder:text-blue-200/50 focus:ring-1 focus:ring-cyan-400 focus:border-cyan-400 outline-none transition"
+                                    className="w-full px-4 py-3 rounded-xl bg-[#1f2937] border border-gray-700 text-white text-center tracking-[12px] text-2xl placeholder:text-gray-500 focus:outline-none focus:ring-1 focus:ring-[#f45a06] transition"
                                 />
                             </div>
 
+                            {/* Verify Button */}
                             <button
                                 onClick={handleVerifyOtp}
                                 disabled={loading}
-                                className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 text-white py-3 rounded-xl font-semibold shadow-lg hover:scale-[1.01] hover:shadow-cyan-500/30 transition-all duration-300 disabled:opacity-60"
+                                className="w-full bg-[#f45a06] hover:bg-[#d94d05] text-white py-3 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-[#f45a06]/30 hover:scale-[1.01] disabled:opacity-60"
                             >
                                 {loading ? "Verifying..." : "Verify OTP"}
                             </button>
 
+                            {/* Resend */}
                             <button
                                 onClick={handleSendOtp}
                                 disabled={loading}
-                                className="w-full mt-4 text-sm text-cyan-300 hover:text-cyan-200 transition"
+                                className="w-full mt-5 text-sm text-[#f45a06] hover:text-orange-400 transition"
                             >
                                 Resend OTP
                             </button>
@@ -183,16 +225,20 @@ function OtpLogin() {
                     )}
 
                     {/* Divider */}
-                    <div className="flex items-center gap-4 my-6">
-                        <div className="flex-1 h-px bg-blue-400/20"></div>
-                        <span className="text-sm text-blue-200">OR</span>
-                        <div className="flex-1 h-px bg-blue-400/20"></div>
+                    <div className="flex items-center gap-4 my-7">
+                        <div className="flex-1 h-px bg-gray-700"></div>
+
+                        <span className="text-sm text-gray-400">
+                            OR
+                        </span>
+
+                        <div className="flex-1 h-px bg-gray-700"></div>
                     </div>
 
-                    {/* Login Link */}
+                    {/* Password Login */}
                     <Link
                         to={"/login"}
-                        className="w-full flex justify-center border border-cyan-400 text-cyan-300 py-3 rounded-xl font-semibold hover:bg-cyan-400/10 transition"
+                        className="w-full flex justify-center border border-[#f45a06] text-[#f45a06] py-3 rounded-xl font-semibold hover:bg-[#f45a06]/10 transition"
                     >
                         Login with Password
                     </Link>

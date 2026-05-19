@@ -1,16 +1,18 @@
 import { useState } from "react";
 import { BaseUrl } from "./../../BaseApi/Api";
-import toast, { Toaster } from 'react-hot-toast';
+import toast from "react-hot-toast";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { loginSuccess } from "../../Redux/authSlice";
 import { Eye, EyeOff } from "lucide-react";
-import CompLogo from "./../../Assets/company_logo.png";
+import CompLogo from "./../../Assets/logoo.webp";
 
 function Login() {
   const [showPassword, setShowPassword] = useState(false);
+
   const dispatch = useDispatch();
-  const navigate = useNavigate()
+  const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -18,100 +20,120 @@ function Login() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+
     setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
   };
 
-  const handleSubmit = async (e) => {
-    if (formData?.email == "" && formData?.password == "") return toast.error('Enter Email and Password!');
-    const response = await fetch(BaseUrl + "login", {
-      method: "POST",
-      credentials: "include",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(formData)
-    });
-    const data = await response.json();
-    if (response.ok) {
-      toast.success('Login Sucessfully!')
-      dispatch(loginSuccess({ user: data.user }));
-      navigate("/", { replace: true });
-      window.location.href = "/";
-    } else {
-      toast.error(data.message || "Login failed");
+  const handleSubmit = async () => {
+    if (!formData.email || !formData.password) {
+      return toast.error("Enter Email and Password!");
     }
 
+    try {
+      const response = await fetch(BaseUrl + "login", {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        toast.success("Login Successfully!");
+
+        dispatch(loginSuccess({ user: data.user }));
+
+        navigate("/", { replace: true });
+
+        window.location.href = "/";
+      } else {
+        toast.error(data.message || "Login failed");
+      }
+    } catch (error) {
+      toast.error("Something went wrong");
+    }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-900 flex items-center justify-center px-4 py-10">
-      <div className="w-full max-w-6xl grid md:grid-cols-2 bg-white/10 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl overflow-hidden">
+    <div className="min-h-screen bg-[#0f172a] flex items-center justify-center px-4 py-10 overflow-hidden relative">
 
-        {/* Left Side */}
-        <div className="hidden md:flex flex-col items-center justify-center relative bg-gradient-to-br from-blue-900 via-slate-900 to-cyan-900 text-white p-12">
+      {/* Background Glow */}
+      <div className="absolute top-[-120px] left-[-120px] w-[300px] h-[300px] bg-[#f45a06]/20 blur-3xl rounded-full"></div>
 
-          {/* Glow Effects */}
-          <div className="absolute w-80 h-80 bg-blue-500/20 rounded-full blur-3xl top-[-100px] left-[-100px]" />
-          <div className="absolute w-72 h-72 bg-cyan-400/10 rounded-full blur-3xl bottom-[-80px] right-[-80px]" />
+      <div className="absolute bottom-[-120px] right-[-120px] w-[300px] h-[300px] bg-[#1e3a56]/40 blur-3xl rounded-full"></div>
+
+      <div className="w-full max-w-6xl grid md:grid-cols-2 bg-white/5 border border-white/10 backdrop-blur-2xl rounded-3xl overflow-hidden shadow-[0_20px_80px_rgba(0,0,0,0.5)]">
+
+        {/* LEFT SIDE */}
+        <div className="hidden md:flex flex-col justify-center items-center bg-gradient-to-br from-[#1e3a56] to-[#13293d] text-white relative p-14">
+
+          <div className="absolute w-72 h-72 bg-[#f45a06]/20 rounded-full blur-3xl top-[-80px] right-[-80px]" />
 
           <img
             src={CompLogo}
             alt="Company Logo"
-            className="w-56 h-56 object-contain drop-shadow-2xl z-10"
+            className="w-72 object-contain mb-6 z-10 drop-shadow-2xl"
           />
 
-          <h1 className="text-4xl font-bold mt-6 z-10">
-            Welcome Back 👋
+          <h1 className="text-4xl font-bold z-10 tracking-wide">
+            Welcome Back
           </h1>
 
-          <p className="text-blue-100 mt-4 text-center max-w-sm leading-relaxed z-10">
-            Securely login to access your dashboard and manage your account with ease.
+          <p className="text-gray-300 mt-5 text-center max-w-sm leading-relaxed z-10 text-lg">
+            Securely login to access your dashboard and manage your business efficiently.
           </p>
         </div>
 
-        <div className="flex items-center justify-center p-6 md:p-12 bg-white/5 backdrop-blur-lg">
+        {/* RIGHT SIDE */}
+        <div className="flex items-center justify-center bg-[#111827]/80 px-6 py-10 md:px-14">
+
           <div className="w-full max-w-md">
-            <div className="md:hidden flex flex-col items-center mb-4">
+
+            {/* Mobile Logo */}
+            <div className="md:hidden flex justify-center mb-6">
               <img
                 src={CompLogo}
-                alt="Company Logo"
-                className="w-28 h-28 object-contain"
+                alt="Logo"
+                className="w-40 object-contain"
               />
             </div>
 
             {/* Heading */}
-            <div className="mb-6 text-center">
-              <h2 className="text-3xl font-bold text-white">
+            <div className="mb-8">
+              <h2 className="text-4xl font-bold text-white">
                 Login
               </h2>
 
-              <p className="text-blue-200 mt-2">
-                Sign in to continue
+              <p className="text-gray-400 mt-2">
+                Please sign in to continue
               </p>
             </div>
 
             {/* Email */}
             <div className="mb-5">
-              <label className="block text-sm font-medium text-blue-100 mb-2">
-                Email
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Email Address
               </label>
 
               <input
                 type="email"
                 name="email"
                 placeholder="Enter your email"
-                value={formData?.email}
+                value={formData.email}
                 onChange={handleChange}
-                className="w-full px-4 py-3 bg-white/10 border border-blue-400/20 rounded-xl text-white placeholder:text-blue-200/60 focus:ring-1 focus:ring-cyan-400 focus:border-cyan-400 outline-none transition"
+                className="w-full px-4 py-3 rounded-xl bg-[#1f2937] border border-gray-700 text-white placeholder:text-gray-500 focus:outline-none focus:ring-1 focus:ring-[#f45a06] transition"
               />
             </div>
 
             {/* Password */}
             <div className="mb-3">
-              <label className="block text-sm font-medium text-blue-100 mb-2">
+              <label className="block text-sm font-medium text-gray-300 mb-2">
                 Password
               </label>
 
@@ -122,47 +144,57 @@ function Login() {
                   placeholder="Enter your password"
                   value={formData.password}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 pr-12 bg-white/10 border border-blue-400/20 rounded-xl text-white placeholder:text-blue-200/60 focus:ring-1 focus:ring-cyan-400 focus:border-cyan-400 outline-none transition"
+                  className="w-full px-4 py-3 pr-12 rounded-xl bg-[#1f2937] border border-gray-700 text-white placeholder:text-gray-500 focus:outline-none focus:ring-1 focus:ring-[#f45a06] transition"
                 />
 
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-blue-200 hover:text-cyan-300 transition"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#f45a06] transition"
                 >
-                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  {showPassword ? (
+                    <EyeOff size={20} />
+                  ) : (
+                    <Eye size={20} />
+                  )}
                 </button>
               </div>
             </div>
 
             {/* Forgot Password */}
-            <div className="flex justify-end mb-5">
-              <button className="text-sm text-cyan-300 hover:text-cyan-200 font-medium transition">
+            <div className="flex justify-end mb-6">
+              <button className="text-sm text-[#f45a06] hover:text-orange-400 transition">
                 Forgot Password?
               </button>
             </div>
 
             {/* Login Button */}
-            <button onClick={handleSubmit} type="submit"
-              className="w-full bg-gradient-to-r from-blue-600 to-cyan-500 text-white py-3 rounded-xl font-semibold shadow-lg hover:scale-[1.01] hover:shadow-cyan-500/30 transition-all duration-300"
+            <button
+              onClick={handleSubmit}
+              className="w-full bg-[#f45a06] hover:bg-[#d94d05] text-white py-3 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-[#f45a06]/30 hover:scale-[1.01]"
             >
               Login
             </button>
 
             {/* Divider */}
-            <div className="flex items-center gap-4 my-6">
-              <div className="flex-1 h-px bg-blue-400/20"></div>
-              <span className="text-sm text-blue-200">OR</span>
-              <div className="flex-1 h-px bg-blue-400/20"></div>
+            <div className="flex items-center gap-4 my-7">
+              <div className="flex-1 h-px bg-gray-700"></div>
+
+              <span className="text-sm text-gray-400">
+                OR
+              </span>
+
+              <div className="flex-1 h-px bg-gray-700"></div>
             </div>
 
             {/* OTP Login */}
             <Link
               to={"/login-otp"}
-              className="w-full flex justify-center border border-cyan-400 text-cyan-300 py-3 rounded-xl font-semibold hover:bg-cyan-400/10 transition"
+              className="w-full flex justify-center border border-[#f45a06] text-[#f45a06] py-3 rounded-xl font-semibold hover:bg-[#f45a06]/10 transition"
             >
               Login with OTP
             </Link>
+
           </div>
         </div>
       </div>

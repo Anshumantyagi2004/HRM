@@ -59,16 +59,15 @@ export default function Employees() {
   return (
     <div className="w-full px-3">
       <div className="bg-white shadow-md rounded-xl hover:shadow-lg transition p-5">
-
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
           <h2 className="text-lg font-semibold text-gray-800">Employees</h2>
           <div className="relative w-full sm:w-64">
-            <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-orange-600" />
             <input
               type="text"
               placeholder="Search employees..."
-              className="w-full pl-10 pr-4 py-2 text-sm border rounded-lg 
-              focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full pl-10 pr-4 py-2 text-sm border rounded-lg border-orange-300
+              focus:outline-none focus:ring-1 focus:ring-orange-500"
             />
           </div>
         </div>
@@ -76,7 +75,7 @@ export default function Employees() {
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-indigo-600 text-white text-left">
+              <tr className="bg-gray-800 text-white text-left">
                 <th className="px-4 py-3" style={{ width: "200px" }}>Emp Name</th>
                 <th className="px-4 py-3">Emp Id</th>
                 <th className="px-4 py-3">Department</th>
@@ -96,7 +95,7 @@ export default function Employees() {
                     <div className="flex items-center justify-start">
                       {emp?.profileImage ?
                         <img src={emp?.profileImage} alt={emp?.username.slice(0, 1).toUpperCase()} className="w-8 h-8 rounded-full mr-2" />
-                        : <div className="w-8 h-8 rounded-full bg-indigo-500 text-white flex items-center justify-center mr-2">
+                        : <div className="w-8 h-8 rounded-full bg-orange-500 text-white flex items-center justify-center mr-2">
                           {emp?.username.slice(0, 1).toUpperCase()}
                         </div>}
                       {emp?.username}
@@ -112,11 +111,11 @@ export default function Employees() {
                   <td className="px-4 py-3 text-center flex gap-2 justify-center">
                     <button onClick={() => handleOpen(emp)}
                       className="inline-flex items-center justify-center w-9 h-9 rounded-full 
-                      bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition"
+                      bg-indigo-50 text-gray-600 hover:bg-indigo-100 transition"
                     >
                       <Eye size={18} />
                     </button>
-                    {user?.role === "Admin" &&
+                    {(user?.role === "Admin" || user?.role === "Sub Admin") &&
                       <button onClick={() => handleDelete(emp._id)} className="inline-flex items-center justify-center w-9 h-9 rounded-full 
                       bg-red-50 text-red-600 hover:bg-red-100 transition">
                         <Trash2 size={18} />
@@ -136,7 +135,7 @@ export default function Employees() {
             <div className="flex justify-center mb-4">
               {selectedEmp?.profileImage ?
                 <img src={selectedEmp?.profileImage} alt={"Image"} className="w-24 h-24 rounded-full" />
-                : <div className="w-24 h-24 rounded-full bg-indigo-500 text-white flex items-center justify-center text-4xl">
+                : <div className="w-24 h-24 rounded-full bg-orange-500 text-white flex items-center justify-center text-4xl">
                   {selectedEmp?.username.slice(0, 1).toUpperCase()}
                 </div>}
             </div>
@@ -237,15 +236,14 @@ export default function Employees() {
         </Modal.Body>
         <Modal.Footer>
           <div className="flex justify-end w-full gap-2">
-            <button
-              onClick={() => setOpen(false)}
+            <button onClick={() => setOpen(false)}
               className="px-4 py-2 border rounded-lg text-gray-700 hover:bg-gray-100"
             >
               Close
             </button>
-            {user?.role === "Admin" &&
+            {(user?.role === "Admin" || user?.role === "Sub Admin") &&
               <Link to={`/userProfile/${selectedEmp?._id}`}>
-                <button className="px-4 py-2 border rounded-lg text-white hover:bg-indigo-700 bg-indigo-600">
+                <button className="px-4 py-2 border rounded-lg text-white hover:bg-gray-800 bg-gray-700">
                   View Profile
                 </button>
               </Link>}

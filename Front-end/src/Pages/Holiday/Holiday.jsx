@@ -7,6 +7,6 @@ export default function Holiday() {
     const { user } = useSelector((state) => state.auth);
 
     return (<>
-        {user.role == "Admin" ? <AdminHoliday user={user} /> : <EmployeeHoliday user={user} />}
+        {(user?.role == "Admin" || user?.role == "Sub Admin")? <AdminHoliday user={user} /> : <EmployeeHoliday user={user} />}
     </>)
 }

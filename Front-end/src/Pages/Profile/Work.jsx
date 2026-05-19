@@ -98,7 +98,7 @@ export default function Work(props) {
                     <BriefcaseBusiness size={18} className="text-indigo-600 bg-indigo-50 hover:bg-indigo-100 h-8 w-8 p-1.5 rounded-full" />
                     Work Info
                 </h2>
-                {user?.role == "Admin" &&
+                {(user?.role == "Admin" || user?.role == "Sub Admin") &&
                     <button className="p-2 rounded-full hover:bg-gray-100 transition" onClick={() => setEditText("workInfo")}>
                         <Pencil size={18} />
                     </button>}
@@ -320,7 +320,7 @@ export default function Work(props) {
                         Cancel
                     </button>
 
-                    <button className="px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700" onClick={addWork}>
+                    <button className="px-4 py-2 rounded-lg btn-color" onClick={addWork}>
                         Save
                     </button>
                 </div>
@@ -394,9 +394,8 @@ export default function Work(props) {
                             </span>
                         </div>
 
-                        <button
-                            onClick={() => setWorkModal(true)}
-                            className="text-sm font-medium text-blue-600 hover:underline"
+                        <button onClick={() => setWorkModal(true)}
+                            className="text-sm font-medium text-gray-700 hover:underline"
                         >
                             Add
                         </button>
@@ -409,7 +408,7 @@ export default function Work(props) {
                 <h2 className="text-lg font-semibold text-gray-800">
                     Resignation Info
                 </h2>
-                {user?.role == "Admin" &&
+                {(user?.role == "Admin" || user?.role == "Sub Admin") &&
                     <button className="p-2 rounded-full hover:bg-gray-100 transition" onClick={() => setEditText("resignationInfo")}>
                         <Pencil size={18} />
                     </button>}
@@ -483,7 +482,7 @@ export default function Work(props) {
                         Cancel
                     </button>
 
-                    <button className="px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700" onClick={addWork}>
+                    <button className="px-4 py-2 rounded-lg btn-color" onClick={addWork}>
                         Save
                     </button>
                 </div>

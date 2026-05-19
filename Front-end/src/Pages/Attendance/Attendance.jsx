@@ -298,12 +298,12 @@ export default function Attendance() {
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
                     <h2 className="text-lg font-semibold text-gray-800">Attendance log</h2>
                     <div className="relative w-full sm:w-64">
-                        <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                        <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-orange-600" />
                         <input
                             type="text"
-                            placeholder="Search..."
-                            className="w-full pl-10 pr-4 py-2 text-sm border rounded-lg 
-                            focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            placeholder="Search employees..."
+                            className="w-full pl-10 pr-4 py-2 text-sm border rounded-lg border-orange-300
+              focus:outline-none focus:ring-1 focus:ring-orange-500"
                         />
                     </div>
                 </div>
@@ -311,11 +311,11 @@ export default function Attendance() {
                 <div className="flex flex-col">
                     <div className="flex items-center gap-2 justify-between">
                         <div className="flex items-center gap-2">
-                            <button className="bg-indigo-500 hover:bg-indigo-600 text-white py-2 px-2 rounded-md"
+                            <button className="btn-color py-2 px-2 rounded-md"
                                 onClick={() => setText("Daily")}>
                                 Daily Log
                             </button>
-                            <button className="bg-indigo-500 hover:bg-indigo-600 text-white py-2 px-2 rounded-md"
+                            <button className="btn-color py-2 px-2 rounded-md"
                                 onClick={() => { setText("Monthly"), fetchUserMonthlyAttendance(year, month) }}>
                                 Monthly Log
                             </button>
@@ -358,7 +358,7 @@ export default function Attendance() {
                         <div className="mt-4 border rounded-lg overflow-x-auto">
                             <table className="w-full text-sm">
                                 <thead>
-                                    <tr className="bg-indigo-600 text-white">
+                                    <tr className="bg-gray-800 text-white">
                                         <th className="px-4 py-3 text-left">S No</th>
                                         <th className="px-4 py-3 text-left">ClockIn Time</th>
                                         <th className="px-4 py-3 text-left">ClockOut Time</th>
@@ -403,7 +403,7 @@ export default function Attendance() {
                         <div className="mt-4 overflow-auto h-80">
                             <table className="w-full text-sm">
                                 <thead>
-                                    <tr className="bg-indigo-600 text-white text-left sticky top-0">
+                                    <tr className="bg-gray-800 text-white text-left sticky top-0">
                                         <th className="px-4 py-3 border-r border-indigo-400">Date</th>
                                         <th className="px-4 py-3 border-r border-indigo-400">Status</th>
                                         <th className="px-4 py-3 border-r border-indigo-400">In Time</th>
@@ -441,7 +441,7 @@ export default function Attendance() {
                                                 <button
                                                     //   onClick={() => handleOpen(emp)}
                                                     className="inline-flex items-center justify-center w-9 h-9 rounded-full 
-                                                         bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition">
+                                                         bg-indigo-50 text-gray-800 hover:bg-indigo-100 transition">
                                                     <Eye size={18} />
                                                 </button>
                                             </td>
@@ -459,12 +459,12 @@ export default function Attendance() {
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
                     <h2 className="text-lg font-semibold text-gray-800">Attendance log</h2>
                     <div className="relative w-full sm:w-64">
-                        <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                        <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-orange-600" />
                         <input
                             type="text"
-                            placeholder="Search..."
-                            className="w-full pl-10 pr-4 py-2 text-sm border rounded-lg 
-                            focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            placeholder="Search employees..."
+                            className="w-full pl-10 pr-4 py-2 text-sm border rounded-lg border-orange-300
+              focus:outline-none focus:ring-1 focus:ring-orange-500"
                         />
                     </div>
                 </div>
@@ -472,11 +472,11 @@ export default function Attendance() {
                 <div className="flex flex-col">
                     <div className="flex items-center gap-2 justify-between">
                         <div className="flex items-center gap-2">
-                            <button className="bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-2 rounded-md"
+                            <button className="btn-color py-2 px-2 rounded-md"
                                 onClick={() => setText("Daily")}>
                                 Daily Log
                             </button>
-                            <button className="bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-2 rounded-md"
+                            <button className="btn-color py-2 px-2 rounded-md"
                                 onClick={() => { setText("Monthly"); fetchMonthlyAttendance(year, month) }}>
                                 Monthly Log
                             </button>
@@ -521,7 +521,7 @@ export default function Attendance() {
                         <div className="mt-4 overflow-x-auto border rounded-lg">
                             <table className="w-full text-sm">
                                 <thead>
-                                    <tr className="bg-indigo-600 text-white text-left">
+                                    <tr className="bg-gray-800 text-white text-left">
                                         <th className="px-4 py-3" style={{ width: "200px" }}>Emp Name</th>
                                         <th className="px-4 py-3">Status</th>
                                         <th className="px-4 py-3">In Time</th>
@@ -541,7 +541,7 @@ export default function Attendance() {
                                                 <Link to={`/userProfile/${i?._id}`} className="flex items-center justify-start">
                                                     {i?.profileImage ?
                                                         <img src={i?.profileImage} alt={i?.username.slice(0, 1).toUpperCase()} className="w-8 h-8 rounded-full mr-2" />
-                                                        : <div className="w-8 h-8 rounded-full bg-indigo-500 text-white flex items-center justify-center mr-2">
+                                                        : <div className="w-8 h-8 rounded-full bg-orange-500 text-white flex items-center justify-center mr-2">
                                                             {i?.username.slice(0, 1).toUpperCase()}
                                                         </div>}
                                                     {i?.username}
@@ -596,7 +596,7 @@ export default function Attendance() {
                                                     });
                                                 }}
                                                     className="inline-flex items-center justify-center w-9 h-9 rounded-full 
-                                                         bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition">
+                                                         bg-indigo-50 text-gray-800 hover:bg-indigo-100 transition">
                                                     <Edit size={18} />
                                                 </button>
                                             </td>
@@ -611,9 +611,9 @@ export default function Attendance() {
                             <div className="w-full overflow-x-auto border rounded-lg">
                                 <table className="min-w-max text-sm border-collapse w-full">
                                     <thead>
-                                        <tr className="bg-indigo-600 text-white">
+                                        <tr className="bg-gray-800 text-white">
                                             {/* Sticky Employee Column */}
-                                            <th className="px-4 py-3 text-left sticky left-0 z-20 bg-indigo-600 border-r border-indigo-400">
+                                            <th className="px-4 py-3 text-left sticky left-0 z-20 bg-gray-800 border-r border-gray-600">
                                                 Emp Name
                                             </th>
 
@@ -621,7 +621,7 @@ export default function Attendance() {
                                             {monthDays.map((d) => (
                                                 <th
                                                     key={d.key}
-                                                    className="px-3 py-2 text-center border-r border-indigo-400"
+                                                    className="px-3 py-2 text-center border-r border-gray-600"
                                                 >
                                                     <div className="text-xs">{d.day}</div>
                                                     <div className="text-[10px] opacity-80">{d.label}</div>
@@ -706,7 +706,7 @@ export default function Attendance() {
                                     Close
                                 </button>
                                 <button onClick={handleUpdate}
-                                    className="px-4 py-2 border rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white">
+                                    className="px-4 py-2 border rounded-lg btn-color">
                                     Edit
                                 </button>
                             </div>
@@ -714,7 +714,6 @@ export default function Attendance() {
                     </Modal>
                 </div>
             </div>
-        </div>
-    }
+        </div>}
     </>);
 }

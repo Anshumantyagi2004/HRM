@@ -6,6 +6,6 @@ import EmployeeNotification from './EmployeeNotification';
 export default function Notification() {
   const { user } = useSelector((state) => state.auth);
   return (<>
-    {user.role == "Admin" ? <AdminNotification user={user} /> : <EmployeeNotification user={user} />}
+    {(user.role == "Admin" || user.role == "Sub Admin") ? <AdminNotification user={user} /> : <EmployeeNotification user={user} />}
   </>)
 }

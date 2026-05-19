@@ -1,5 +1,5 @@
 import React from "react";
-import CompLogo from "./../../Assets/company_logo.png";
+import CompLogo from "./../../Assets/logoo.webp";
 import { Facebook, Instagram, Linkedin, Bell, ClipboardList, User, LayoutDashboard, Users, CalendarCheck, LogOut, IndianRupee, Heart, CalendarHeart } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -12,15 +12,8 @@ export default function Home() {
             <img
               src={CompLogo}
               alt="Company Logo"
-              className="w-36 h-36 object-contain mb-3 rounded-xl"
+              className="w-56 h-22 object-contain mb-3 rounded-xl"
             />
-            <h2 className="text-lg font-semibold text-gray-800">
-              Promozione Branding
-            </h2>
-
-            <p className="text-sm text-gray-600">
-              Digital Marketing Agency
-            </p>
 
             <div className="flex gap-4 mt-3">
               <Link
@@ -32,6 +25,14 @@ export default function Home() {
                 <Facebook size={18} />
               </Link>
 
+              <Link to="/"
+                className="w-9 h-9 flex items-center justify-center rounded-full 
+               bg-pink-50 text-pink-600 
+               hover:bg-pink-100 transition"
+              >
+                <Instagram size={18} />
+              </Link>
+
               <Link
                 to="/"
                 className="w-9 h-9 flex items-center justify-center rounded-full 
@@ -40,101 +41,215 @@ export default function Home() {
               >
                 <Linkedin size={18} />
               </Link>
-
-              <Link
-                to="/"
-                className="w-9 h-9 flex items-center justify-center rounded-full 
-               bg-pink-50 text-pink-600 
-               hover:bg-pink-100 transition"
-              >
-                <Instagram size={18} />
-              </Link>
             </div>
           </div>
         </div>
 
         <div className="col-span-12 md:col-span-6">
           <div className="bg-white shadow-md rounded-xl p-6 transition hover:shadow-lg">
-            <h2 className="text-lg font-semibold text-gray-800 mb-5">
-              Quick Access
-            </h2>
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="text-lg font-bold text-[#1e3a56]">
+                Quick Access
+              </h2>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+              <div className="w-10 h-1 rounded-full bg-[#f45a06]"></div>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-5">
+
+              {/* My Profile */}
               <Link
                 to="/myProfile"
-                className="flex flex-col items-center justify-center gap-2 p-4 rounded-lg 
-                   bg-gray-50 hover:bg-indigo-50 transition"
+                className="group relative overflow-hidden flex flex-col items-center justify-center gap-3 p-5 rounded-2xl 
+    border border-[#1e3a56]/10 bg-white hover:bg-[#1e3a56] 
+    shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
               >
-                <User className="text-indigo-600" size={24} />
-                <span className="text-sm font-medium text-gray-700">My Profile</span>
+                <div className="absolute inset-0 bg-gradient-to-br from-[#1e3a56]/5 to-[#f45a06]/10 opacity-0 group-hover:opacity-100 transition"></div>
+
+                <div className="relative z-10 p-3 rounded-xl bg-[#f45a06]/10 group-hover:bg-white/10 transition">
+                  <User
+                    className="text-[#f45a06] group-hover:text-white transition"
+                    size={24}
+                  />
+                </div>
+
+                <span className="relative z-10 text-sm font-semibold text-[#1e3a56] group-hover:text-white transition">
+                  My Profile
+                </span>
               </Link>
+
+              {/* Dashboard */}
               <Link
                 to="/dashboard"
-                className="flex flex-col items-center justify-center gap-2 p-4 rounded-lg 
-                   bg-gray-50 hover:bg-indigo-50 transition"
+                className="group relative overflow-hidden flex flex-col items-center justify-center gap-3 p-5 rounded-2xl 
+    border border-[#1e3a56]/10 bg-white hover:bg-[#1e3a56] 
+    shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
               >
-                <LayoutDashboard className="text-indigo-600" size={24} />
-                <span className="text-sm font-medium text-gray-700">Dashboard</span>
+                <div className="absolute inset-0 bg-gradient-to-br from-[#1e3a56]/5 to-[#f45a06]/10 opacity-0 group-hover:opacity-100 transition"></div>
+
+                <div className="relative z-10 p-3 rounded-xl bg-[#f45a06]/10 group-hover:bg-white/10 transition">
+                  <LayoutDashboard
+                    className="text-[#f45a06] group-hover:text-white transition"
+                    size={24}
+                  />
+                </div>
+
+                <span className="relative z-10 text-sm font-semibold text-[#1e3a56] group-hover:text-white transition">
+                  Dashboard
+                </span>
               </Link>
+
+              {/* Employees */}
               <Link
                 to="/employees"
-                className="flex flex-col items-center justify-center gap-2 p-4 rounded-lg 
-                   bg-gray-50 hover:bg-indigo-50 transition"
+                className="group relative overflow-hidden flex flex-col items-center justify-center gap-3 p-5 rounded-2xl 
+    border border-[#1e3a56]/10 bg-white hover:bg-[#1e3a56] 
+    shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
               >
-                <Users className="text-indigo-600" size={24} />
-                <span className="text-sm font-medium text-gray-700">Employees</span>
+                <div className="absolute inset-0 bg-gradient-to-br from-[#1e3a56]/5 to-[#f45a06]/10 opacity-0 group-hover:opacity-100 transition"></div>
+
+                <div className="relative z-10 p-3 rounded-xl bg-[#f45a06]/10 group-hover:bg-white/10 transition">
+                  <Users
+                    className="text-[#f45a06] group-hover:text-white transition"
+                    size={24}
+                  />
+                </div>
+
+                <span className="relative z-10 text-sm font-semibold text-[#1e3a56] group-hover:text-white transition">
+                  Employees
+                </span>
               </Link>
+
+              {/* Attendance */}
               <Link
                 to="/attendance"
-                className="flex flex-col items-center justify-center gap-2 p-4 rounded-lg 
-                   bg-gray-50 hover:bg-indigo-50 transition"
+                className="group relative overflow-hidden flex flex-col items-center justify-center gap-3 p-5 rounded-2xl 
+    border border-[#1e3a56]/10 bg-white hover:bg-[#1e3a56] 
+    shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
               >
-                <CalendarCheck className="text-indigo-600" size={24} />
-                <span className="text-sm font-medium text-gray-700">Attendance</span>
+                <div className="absolute inset-0 bg-gradient-to-br from-[#1e3a56]/5 to-[#f45a06]/10 opacity-0 group-hover:opacity-100 transition"></div>
+
+                <div className="relative z-10 p-3 rounded-xl bg-[#f45a06]/10 group-hover:bg-white/10 transition">
+                  <CalendarCheck
+                    className="text-[#f45a06] group-hover:text-white transition"
+                    size={24}
+                  />
+                </div>
+
+                <span className="relative z-10 text-sm font-semibold text-[#1e3a56] group-hover:text-white transition">
+                  Attendance
+                </span>
               </Link>
+
+              {/* Leave */}
               <Link
                 to="/leave"
-                className="flex flex-col items-center justify-center gap-2 p-4 rounded-lg 
-                   bg-gray-50 hover:bg-indigo-50 transition"
+                className="group relative overflow-hidden flex flex-col items-center justify-center gap-3 p-5 rounded-2xl 
+    border border-[#1e3a56]/10 bg-white hover:bg-[#1e3a56] 
+    shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
               >
-                <LogOut className="text-indigo-600" size={24} />
-                <span className="text-sm font-medium text-gray-700">Leave</span>
+                <div className="absolute inset-0 bg-gradient-to-br from-[#1e3a56]/5 to-[#f45a06]/10 opacity-0 group-hover:opacity-100 transition"></div>
+
+                <div className="relative z-10 p-3 rounded-xl bg-[#f45a06]/10 group-hover:bg-white/10 transition">
+                  <LogOut
+                    className="text-[#f45a06] group-hover:text-white transition"
+                    size={24}
+                  />
+                </div>
+
+                <span className="relative z-10 text-sm font-semibold text-[#1e3a56] group-hover:text-white transition">
+                  Leave
+                </span>
               </Link>
+
+              {/* Payroll */}
               <Link
                 to="/payroll"
-                className="flex flex-col items-center justify-center gap-2 p-4 rounded-lg 
-                   bg-gray-50 hover:bg-indigo-50 transition"
+                className="group relative overflow-hidden flex flex-col items-center justify-center gap-3 p-5 rounded-2xl 
+    border border-[#1e3a56]/10 bg-white hover:bg-[#1e3a56] 
+    shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
               >
-                <IndianRupee className="text-indigo-600" size={24} />
-                <span className="text-sm font-medium text-gray-700">Payroll</span>
+                <div className="absolute inset-0 bg-gradient-to-br from-[#1e3a56]/5 to-[#f45a06]/10 opacity-0 group-hover:opacity-100 transition"></div>
+
+                <div className="relative z-10 p-3 rounded-xl bg-[#f45a06]/10 group-hover:bg-white/10 transition">
+                  <IndianRupee
+                    className="text-[#f45a06] group-hover:text-white transition"
+                    size={24}
+                  />
+                </div>
+
+                <span className="relative z-10 text-sm font-semibold text-[#1e3a56] group-hover:text-white transition">
+                  Payroll
+                </span>
               </Link>
+
             </div>
           </div>
         </div>
 
         <div className="col-span-12 md:col-span-3">
-          <div className="bg-white shadow-md rounded-xl p-5 transition hover:shadow-lg">
-            <h2 className="text-lg font-semibold text-gray-800 mb-4">
-              Information
-            </h2>
+          <div className="bg-white border border-[#1e3a56]/10 shadow-sm rounded-2xl p-5 transition-all duration-300 hover:shadow-xl">
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="text-lg font-bold text-[#1e3a56]">
+                Information
+              </h2>
 
-            <Link to={"/notification"} className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 mb-3">
-              <div className="w-9 h-9 flex items-center justify-center rounded-full bg-yellow-100 text-yellow-600">
-                <Bell size={18} />
+              <div className="w-10 h-1 rounded-full bg-[#f45a06]"></div>
+            </div>
+
+            <Link
+              to={"/notification"}
+              className="group relative overflow-hidden border border-[#1e3a56]/10 flex items-start gap-4 p-4 rounded-2xl bg-white hover:bg-[#1e3a56] transition-all duration-300 hover:-translate-y-1 hover:shadow-lg mb-4"
+            >
+
+              {/* Background Glow */}
+              <div className="absolute inset-0 bg-gradient-to-r from-[#f45a06]/5 to-transparent opacity-0 group-hover:opacity-100 transition"></div>
+
+              {/* Icon */}
+              <div className="relative z-10 w-11 h-11 flex items-center justify-center rounded-xl bg-[#f45a06]/10 group-hover:bg-white/10 transition">
+                <Bell
+                  size={20}
+                  className="text-[#f45a06] group-hover:text-white transition"
+                />
               </div>
-              <div className="text-left">
-                <p className="font-medium text-gray-700">Company Announcement</p>
-                <p className="text-sm text-gray-500">Check new announcements available</p>
+
+              {/* Content */}
+              <div className="relative z-10 text-left">
+                <p className="font-semibold text-[#1e3a56] group-hover:text-white transition">
+                  Company Announcement
+                </p>
+
+                <p className="text-sm text-gray-500 group-hover:text-gray-300 transition mt-1">
+                  Check latest company updates & notices
+                </p>
               </div>
             </Link>
-            
-            <Link to={"/holiday"} className="flex items-start gap-3 p-3 rounded-lg bg-gray-50">
-              <div className="w-9 h-9 flex items-center justify-center rounded-full bg-indigo-100 text-indigo-600">
-                <CalendarHeart size={18} />
+
+            <Link
+              to={"/holiday"}
+              className="group relative overflow-hidden border border-[#1e3a56]/10 flex items-start gap-4 p-4 rounded-2xl bg-white hover:bg-[#1e3a56] transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
+            >
+
+              {/* Background Glow */}
+              <div className="absolute inset-0 bg-gradient-to-r from-[#f45a06]/5 to-transparent opacity-0 group-hover:opacity-100 transition"></div>
+
+              {/* Icon */}
+              <div className="relative z-10 w-11 h-11 flex items-center justify-center rounded-xl bg-[#f45a06]/10 group-hover:bg-white/10 transition">
+                <CalendarHeart
+                  size={20}
+                  className="text-[#f45a06] group-hover:text-white transition"
+                />
               </div>
-              <div className="text-left">
-                <p className="font-medium text-gray-700">Holiday Calendar</p>
-                <p className="text-sm text-gray-500">Check new Holiday announcements</p>
+
+              {/* Content */}
+              <div className="relative z-10 text-left">
+                <p className="font-semibold text-[#1e3a56] group-hover:text-white transition">
+                  Holiday Calendar
+                </p>
+
+                <p className="text-sm text-gray-500 group-hover:text-gray-300 transition mt-1">
+                  View upcoming holidays & events
+                </p>
               </div>
             </Link>
           </div>

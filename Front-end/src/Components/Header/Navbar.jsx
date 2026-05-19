@@ -9,6 +9,7 @@ import SearchBar from "./Search";
 import { useSelector, useDispatch } from "react-redux";
 import { logout } from "../../Redux/authSlice";
 import NotificationBell from "./NotificationBell";
+import CompLogo from "./../../Assets/logoo.webp";
 
 export default function Navbar() {
   const dispatch = useDispatch();
@@ -118,7 +119,7 @@ export default function Navbar() {
     try {
       setLoading(true);
       const location = await getUserLocation();
-
+      // console.log(location.latitude, location.longitude)
       const res = await fetch(`${BaseUrl}clock-in`, {
         method: "POST",
         headers: {
@@ -197,22 +198,26 @@ export default function Navbar() {
   };
 
   return (<>
-    <nav className="bg-white shadow-md px-4 py-2 flex items-center justify-between sticky top-0 z-50">
+    <nav className="bg-white shadow-md px-4 py- flex items-center justify-between sticky top-0 z-50">
       <div className="flex items-center gap-3">
         {isAuthenticated &&
           <button
-            className="mdhidden text-indigo-600"
+            className="mdhidden text-[#1f2937] bg-gray-50 border border-gray-300 rounded-md p-1.5 hover:bg-gray-100"
             onClick={() => setIsSidebarOpen(true)}
           >
-            <Menu size={26} />
+            <Menu size={24} />
           </button>}
-        <Link to="/" className="text-xl font-bold text-indigo-600 md:block hidden">
-          Promozione
+        <Link to="/" className="text-xl font-bold text-[#f45a06] md:block hidden">
+          <img
+            src={CompLogo}
+            className="w-auto h-16 object-contain"
+            alt="logo"
+          />
         </Link>
       </div>
 
       <div className="flex items-center">
-        {user?.role == "Admin" &&
+        {(user?.role === "Admin" || user?.role === "Sub Admin") &&
           <SearchBar />}
 
         <SignToggle
@@ -243,7 +248,7 @@ export default function Navbar() {
                   <p className="text-base font-semibold text-gray-800">
                     {user?.username || "User"}
                   </p>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-gray-800">
                     {user?.email || "Email.com"}
                   </p>
                 </div>
@@ -277,10 +282,10 @@ export default function Navbar() {
       onClick={() => setIsSidebarOpen(false)}
     />
 
-    {user?.role == "Admin" && <>
+    {(user?.role === "Admin" || user?.role === "Sub Admin") && <>
       <div className="fixed bottom-6 right-6 z-50">
-        <button className="flex items-center justify-center h-14 w-14 rounded-full bg-indigo-600 text-white
-             shadow-lg hover:bg-indigo-700 hover:shadow-xl active:scale-95 transition duration-200"
+        <button className="flex items-center justify-center h-14 w-14 rounded-full bg-[#f45a06] text-white
+             shadow-lg hover:bg-[#e35305] hover:shadow-xl active:scale-95 transition duration-200"
           title="Add Employee" onClick={() => setIsOpen(true)}
         >
           <UserPlus size={22} />
@@ -358,8 +363,8 @@ export default function Navbar() {
         ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"}`}
     >
       <div className="flex items-center justify-between p-[17px] border-b">
-        <h2 className="text-lg font-bold text-indigo-600">Menu</h2>
-        <button onClick={() => setIsSidebarOpen(false)} className="text-indigo-600">
+        <h2 className="text-lg font-bold text-[#f45a06]">Menu</h2>
+        <button onClick={() => setIsSidebarOpen(false)} className="text-[#1f2937]">
           <X />
         </button>
       </div>
@@ -367,55 +372,55 @@ export default function Navbar() {
       <div className="p-4 space-y-4">
         <Link
           to="/myProfile" onClick={() => setIsSidebarOpen(false)}
-          className="flex items-center gap-3 p-2 rounded hover:bg-indigo-50 transition"
+          className="flex items-center gap-3 p-2 rounded hover:bg-orange-50 transition"
         >
           <User size={18} /> My Profile
         </Link>
         <Link
           to="/dashboard" onClick={() => setIsSidebarOpen(false)}
-          className="flex items-center gap-3 p-2 rounded hover:bg-indigo-50 transition"
+          className="flex items-center gap-3 p-2 rounded hover:bg-orange-50 transition"
         >
           <Gauge size={18} /> Dashboard
         </Link>
         <Link
           to="/employees" onClick={() => setIsSidebarOpen(false)}
-          className="flex items-center gap-3 p-2 rounded hover:bg-indigo-50 transition"
+          className="flex items-center gap-3 p-2 rounded hover:bg-orange-50 transition"
         >
           <Users size={18} /> Employees
         </Link>
         <Link
           to="/attendance" onClick={() => setIsSidebarOpen(false)}
-          className="flex items-center gap-3 p-2 rounded hover:bg-indigo-50 transition"
+          className="flex items-center gap-3 p-2 rounded hover:bg-orange-50 transition"
         >
           <Calendar size={18} /> Attendance
         </Link>
         <Link
           to="/leave" onClick={() => setIsSidebarOpen(false)}
-          className="flex items-center gap-3 p-2 rounded hover:bg-indigo-50 transition"
+          className="flex items-center gap-3 p-2 rounded hover:bg-orange-50 transition"
         >
           <Handbag size={18} /> Leave
         </Link>
         <Link
           to="/payroll" onClick={() => setIsSidebarOpen(false)}
-          className="flex items-center gap-3 p-2 rounded hover:bg-indigo-50 transition"
+          className="flex items-center gap-3 p-2 rounded hover:bg-orange-50 transition"
         >
           <IndianRupee size={18} /> Payroll
         </Link>
         <Link
           to="/holiday" onClick={() => setIsSidebarOpen(false)}
-          className="flex items-center gap-3 p-2 rounded hover:bg-indigo-50 transition"
+          className="flex items-center gap-3 p-2 rounded hover:bg-orange-50 transition"
         >
           <CalendarHeart size={18} /> Holiday
         </Link>
         <Link
           to="/notification" onClick={() => setIsSidebarOpen(false)}
-          className="flex items-center gap-3 p-2 rounded hover:bg-indigo-50 transition"
+          className="flex items-center gap-3 p-2 rounded hover:bg-orange-50 transition"
         >
           <Bell size={18} /> Notifications
         </Link>
         <Link
           to="/settings" onClick={() => setIsSidebarOpen(false)}
-          className="flex items-center gap-3 p-2 rounded hover:bg-indigo-50 transition"
+          className="flex items-center gap-3 p-2 rounded hover:bg-orange-50 transition"
         >
           <Settings size={18} /> Settings
         </Link>
