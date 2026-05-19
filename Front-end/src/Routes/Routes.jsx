@@ -15,6 +15,7 @@ import Holiday from '../Pages/Holiday/Holiday.jsx';
 import OtpLogin from '../Components/Login/OtpLogin.jsx';
 import Notification from '../Pages/Notification/Notification.jsx';
 import Settings from '../Pages/Settings/Settings.jsx';
+import ForgotPassword from '../Components/Login/ForgotPassword.jsx';
 
 function AllRoute() {
   return (
@@ -23,6 +24,7 @@ function AllRoute() {
         <Route path="/signup" element={<Signup />} />
         <Route path="/login" element={<Login />} />
         <Route path="/login-otp" element={<OtpLogin />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
 
         <Route element={<ProtectedRoute />}>
           <Route element={<MainLayout />}>

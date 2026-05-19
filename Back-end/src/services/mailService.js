@@ -12,10 +12,9 @@ export const sendOTPEmail = async (email, otp) => {
   await transporter.sendMail({
     from: `"HRMS" <${process.env.MAIL_USER}>`,
     to: email,
-    subject: "Your Login OTP",
+    subject: "Your HRMS One Time Password",
     html: `
       <div style="font-family:Arial">
-        <h2>Login OTP</h2>
         <p>Your OTP is:</p>
         <h1 style="letter-spacing:5px;">${otp}</h1>
         <p>Valid for 5 minutes</p>

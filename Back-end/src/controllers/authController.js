@@ -175,6 +175,46 @@ export const verifyLoginOTP = async (req, res) => {
   }
 };
 
+// verify ForgotPassword OTP
+export const verifyForgotPasswordOTP = async (req, res) => {
+  try {
+    let { officialEmail, otp } = req.body;
+    if (!officialEmail || !otp) {
+      return res.status(400).json({
+        message: "Email and OTP required",
+      });
+    }
+
+    officialEmail = officialEmail.trim().toLowerCase();
+    otp = otp.toString().trim();
+
+    const savedOTP = await getOTP(officialEmail);
+    if (!savedOTP) {
+      return res.status(400).json({
+        message: "OTP expired or not found",
+      });
+    }
+
+    if (savedOTP.toString().trim() !== otp) {
+      return res.status(400).json({
+        message: "Invalid OTP",
+      });
+    }
+
+    await deleteOTP(officialEmail);
+    res.status(200).json({
+      success: true,
+      message: "OTP verified successfully",
+    });
+
+  } catch (err) {
+    console.error("Forgot password OTP verify error:", err);
+    res.status(500).json({
+      message: "OTP verify failed",
+    });
+  }
+};
+
 //logout
 export const logout = (req, res) => {
   res.clearCookie("token", {
@@ -1464,6 +1504,58 @@ export const changePassword = async (req, res) => {
   } catch (error) {
     console.log(error);
 
+    return res.status(500).json({
+      success: false,
+      message: "Server Error",
+    });
+  }
+};
+
+//
+export const forgotPassword = async (req, res) => {
+  try {
+    const {
+      officialEmail,
+      newPassword,
+      confirmPassword,
+    } = req.body;
+
+    if (!officialEmail || !newPassword || !confirmPassword) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "All fields are required",
+      });
+    }
+
+    if (newPassword !== confirmPassword) {
+      return res.status(400).json({
+        success: false,
+        message: "Passwords do not match",
+      });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: "Password must be at least 6 characters",
+      });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 12);
+
+    await User.findOneAndUpdate(
+      { officialEmail },
+      { password: hashedPassword, }
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Password updated successfully",
+    });
+
+  } catch (error) {
+    console.log(error);
     return res.status(500).json({
       success: false,
       message: "Server Error",
