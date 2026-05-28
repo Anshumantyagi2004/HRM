@@ -1,37 +1,56 @@
-import { Eye, Search, Mail, Phone, User, Handbag, Calendar, Transgender, MapPinHouse, Trash2 } from "lucide-react";
+import { Eye, Search, Mail, Phone, User, Handbag, Calendar, Transgender, MapPinHouse, Trash2, Edit, EyeOff } from "lucide-react";
 import { useEffect, useState } from "react";
 import { BaseUrl } from "../../BaseApi/Api";
 import Modal from "../../Components/Modal/Modal";
 import { Link } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
+import toast from "react-hot-toast";
 
 export default function Employees() {
   const { isAuthenticated, user } = useSelector((state) => state.auth);
   const [allUsers, setAllUsers] = useState([])
 
-  useEffect(() => {
-    async function fetchMyProfile() {
-      try {
-        const res = await fetch(BaseUrl + "users", {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
-        const data = await res.json();
-        console.log(data.data);
+  async function fetchMyProfile() {
+    try {
+      const res = await fetch(BaseUrl + "users", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      const data = await res.json();
+      console.log(data.data);
 
-        setAllUsers(data.data);
-      } catch (error) {
-        console.error("Fetch profile error:", error);
-        throw error;
-      }
-    };
+      setAllUsers(data.data);
+    } catch (error) {
+      console.error("Fetch profile error:", error);
+      throw error;
+    }
+  };
+
+  useEffect(() => {
     fetchMyProfile()
   }, [])
 
   const [open, setOpen] = useState(false);
+  const [openEdit, setOpenEdit] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [selectedEmp, setSelectedEmp] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [passwordData, setPasswordData] = useState({
+    newPassword: "",
+    confirmPassword: "",
+    role: "",
+  });
+
+  const handlePasswordChange = (e) => {
+    setPasswordData({
+      ...passwordData,
+      [e.target.name]: e.target.value,
+    });
+  };
+
   const handleOpen = (emp) => {
     setSelectedEmp(emp);
     setOpen(true);
@@ -53,6 +72,44 @@ export default function Employees() {
       } catch (error) {
         console.error("Delete user error:", error);
       }
+    }
+  };
+
+  const handleUpdatePassword = async () => {
+    try {
+      setLoading(true);
+
+      const response = await fetch(`${BaseUrl}change-password`, {
+        method: "POST", headers: { "Content-Type": "application/json", },
+        body: JSON.stringify({
+          userId: selectedEmp._id,
+          role: passwordData.role,
+          newPassword: passwordData.newPassword,
+          confirmPassword: passwordData.confirmPassword,
+        }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        toast.error(data.message);
+        return;
+      }
+
+      toast.success(data.message);
+      setPasswordData({
+        newPassword: "",
+        confirmPassword: "",
+        role: "",
+      });
+
+      fetchMyProfile()
+      setSelectedEmp(null)
+      setOpenEdit(false);
+    } catch (error) {
+      console.log(error);
+      toast.error("Something went wrong");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -102,7 +159,7 @@ export default function Employees() {
                     </div>
                   </td>
                   <td className="px-4 py-3">{emp?.userWork?.empId || "-"}</td>
-                  <td className="px-4 py-3">{emp?.userWork?.department || "-"}</td>
+                  <td className="px-4 py-3">{emp?.userWork?.subDepartment || "-"}</td>
                   <td className="px-4 py-3">{emp?.userWork?.designation || "-"}</td>
                   <td className="px-4 py-3">{emp?.userWork?.manager?.username || "-"}</td>
                   <td className="px-4 py-3">{emp?.email}</td>
@@ -120,6 +177,11 @@ export default function Employees() {
                       bg-red-50 text-red-600 hover:bg-red-100 transition">
                         <Trash2 size={18} />
                       </button>}
+                    {(user?.role === "Admin") &&
+                      <button onClick={() => { setOpenEdit(true); setSelectedEmp(emp); setPasswordData({ ...passwordData, role: emp?.role }) }} className="inline-flex items-center justify-center w-9 h-9 rounded-full 
+                      bg-green-50 text-green-600 hover:bg-green-100 transition">
+                        <Edit size={18} />
+                      </button>}
                   </td>
                 </tr>
               ))}
@@ -128,7 +190,7 @@ export default function Employees() {
         </div>
       </div>
 
-      <Modal open={open} onClose={() => setOpen(false)}>
+      <Modal open={open} onClose={() => { setOpen(false); setSelectedEmp(null) }}>
         <Modal.Header title="Employee Details" />
         <Modal.Body>
           {selectedEmp && <>
@@ -236,7 +298,7 @@ export default function Employees() {
         </Modal.Body>
         <Modal.Footer>
           <div className="flex justify-end w-full gap-2">
-            <button onClick={() => setOpen(false)}
+            <button onClick={() => { setOpen(false); setSelectedEmp(null) }}
               className="px-4 py-2 border rounded-lg text-gray-700 hover:bg-gray-100"
             >
               Close
@@ -247,6 +309,98 @@ export default function Employees() {
                   View Profile
                 </button>
               </Link>}
+          </div>
+        </Modal.Footer>
+      </Modal>
+
+      <Modal open={openEdit} onClose={() => { setOpenEdit(false); setSelectedEmp(null) }}>
+        <Modal.Header title="Employee Edit" />
+        <Modal.Body>
+          <div className="space-y-4">
+            <div className='flex flex-col'>
+              <label className='ml-1 mb-2 font-semibold'>Role</label>
+              <select name="role"
+                value={passwordData?.role}
+                onChange={handlePasswordChange}
+                className='input'
+              >
+                <option>Select Role</option>
+                <option value="Admin">Admin</option>
+                <option value="Sub Admin">Sub Admin</option>
+                <option value="Employee">Employee</option>
+              </select>
+            </div>
+
+            <div className='flex flex-col'>
+              <label className='ml-1 font-semibold mb-2'>
+                New Password
+              </label>
+
+              <div className='relative'>
+                <input
+                  type={showNewPassword ? "text" : "password"}
+                  name="newPassword"
+                  value={passwordData.newPassword}
+                  onChange={handlePasswordChange}
+                  className='input pr-12 w-full'
+                />
+
+                <button
+                  type="button"
+                  onClick={() => setShowNewPassword(!showNewPassword)}
+                  className='absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-blue-600 transition'
+                >
+                  {showNewPassword ? (
+                    <EyeOff size={20} />
+                  ) : (
+                    <Eye size={20} />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            <div className='flex flex-col'>
+              <label className='ml-1 font-semibold mb-2'>
+                Confirm Password
+              </label>
+
+              <div className='relative'>
+                <input
+                  type={showConfirmPassword ? "text" : "password"}
+                  name="confirmPassword"
+                  value={passwordData.confirmPassword}
+                  onChange={handlePasswordChange}
+                  className='input pr-12 w-full'
+                />
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    setShowConfirmPassword(!showConfirmPassword)
+                  }
+                  className='absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-blue-600 transition'
+                >
+                  {showConfirmPassword ? (
+                    <EyeOff size={20} />
+                  ) : (
+                    <Eye size={20} />
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </Modal.Body>
+        <Modal.Footer>
+          <div className="flex justify-end w-full gap-2">
+            <button onClick={() => { setOpenEdit(false); setSelectedEmp(null) }}
+              className="px-4 py-2 border rounded-lg text-gray-700 hover:bg-gray-100"
+            >
+              Close
+            </button>
+
+            <button onClick={handleUpdatePassword} disabled={loading} className="px-4 py-2 border rounded-lg text-white hover:bg-gray-800 bg-gray-700">
+              {loading ? "Updating..." : "Update"}
+            </button>
           </div>
         </Modal.Footer>
       </Modal>

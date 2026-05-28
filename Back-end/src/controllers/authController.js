@@ -1467,38 +1467,46 @@ export const getAllUsersLeave = async (req, res) => {
 //Change Password
 export const changePassword = async (req, res) => {
   try {
-    const { userId, newPassword, confirmPassword } = req.body;
+    const { userId, newPassword, confirmPassword, role } = req.body;
 
-    if (!newPassword || !confirmPassword) {
-      return res.status(400).json({
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({
         success: false,
-        message: "All fields are required",
+        message: "User not found",
       });
     }
 
-    if (newPassword !== confirmPassword) {
-      return res.status(400).json({
-        success: false,
-        message: "Passwords do not match",
-      });
+    let updateData = {};
+
+    if (role) {
+      updateData.role = role;
     }
 
-    if (newPassword.length < 6) {
-      return res.status(400).json({
-        success: false,
-        message: "Password must be at least 6 characters",
-      });
+    if (newPassword || confirmPassword) {
+      if (!newPassword || !confirmPassword) {
+        return res.status(400).json({
+          success: false,
+          message: "Please fill both password fields",
+        });
+      }
+
+      if (newPassword !== confirmPassword) {
+        return res.status(400).json({
+          success: false,
+          message: "Passwords do not match",
+        });
+      }
+
+      const hashedPassword = await bcrypt.hash(newPassword, 12);
+      updateData.password = hashedPassword;
     }
 
-    const hashedPassword = await bcrypt.hash(newPassword, 12);
-
-    await User.findByIdAndUpdate(userId, {
-      password: hashedPassword,
-    });
+    await User.findByIdAndUpdate(userId, updateData);
 
     return res.status(200).json({
       success: true,
-      message: "Password updated successfully",
+      message: "User updated successfully",
     });
 
   } catch (error) {
