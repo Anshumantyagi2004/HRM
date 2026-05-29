@@ -205,7 +205,7 @@ export default function AdminPayroll({ user }) {
                                     <td className="p-3">{i?.userPayroll[0]?.ifscCode || "-"}</td>
                                     <td className="p-3">{i?.userPayroll[0]?.accountNumber || "-"}</td>
                                     <td className="p-3">{i?.paidDays}</td>
-                                    <td className="p-3">
+                                    <td className="p-3 flex items-center justify-center gap-2">
                                         <button onClick={() => { setSelectedDetail(i); setOpen(true) }} className="inline-flex items-center justify-center w-9 h-9 rounded-full 
                                                       bg-indigo-50 text-gray-800 hover:bg-indigo-100 transition">
                                             <Eye size={18} />

@@ -346,15 +346,31 @@ export const addNewUser = async (req, res) => {
   const { username, email, password, role, contact } = req.body;
   try {
     const existingUser = await User.findOne({ email });
-    if (existingUser) return res.status(400).json({ message: 'User Mail already exists' });
+
+    if (existingUser) {
+      return res.status(400).json({
+        message: "User Mail already exists",
+      });
+    }
 
     const hashedPassword = await bcrypt.hash(password, 12);
+    const companyInfo = await CompanyInfo.findOne({
+      defaultRule: true,
+    });
 
-    const companyInfo = await CompanyInfo.findOne({ defaultRule: true });
-    const user = new User({ username, email, password: hashedPassword, role, contact });
+    const user = new User({
+      username,
+      email,
+      password: hashedPassword,
+      role,
+      contact,
+    });
+
     await user.save();
 
-    // UserExtraDetail default values
+    const monthlyCasualLeave = Number((Number(companyInfo.casualLeave || 0) / 12).toFixed(2));
+    const currentMonth = new Date().getMonth() + 1;
+
     const userExtraDetail = new UserExtraDetail({
       userId: user._id,
       shiftStartTime: companyInfo.shiftStartTime,
@@ -363,18 +379,24 @@ export const addNewUser = async (req, res) => {
       outTimeGrace: companyInfo.outTimeGrace,
       fullDay: companyInfo.fullDay,
       halfDay: companyInfo.halfDay,
-      casualLeave: companyInfo.casualLeave,
-      sickLeave: companyInfo.sickLeave,
-      casualLeaveRemaining: companyInfo.casualLeave,
-      sickLeaveRemaining: companyInfo.sickLeave,
-    });
-    await userExtraDetail.save();
 
-    // const token = jwt.sign({ id: user._id, role: user.role }, JWT_SECRET, { expiresIn: '1d' });
-    res.status(201).json({ result: user });
+      casualLeave: monthlyCasualLeave,
+      casualLeaveRemaining: monthlyCasualLeave,
+
+      sickLeave: companyInfo.sickLeave,
+      sickLeaveRemaining: companyInfo.sickLeave,
+      lastLeaveCreditMonth: currentMonth,
+    });
+
+    await userExtraDetail.save();
+    res.status(201).json({
+      result: user,
+    });
   } catch (error) {
-    console.log("err", error);
-    res.status(500).json({ message: 'Something went wrong', err: error });
+    console.log(error);
+    res.status(500).json({
+      message: "Something went wrong",
+    });
   }
 };
 

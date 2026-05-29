@@ -94,6 +94,11 @@ export default function EmployeeLeave(
                             onClick={() => setText("Logs")}>
                             Logs
                         </button>
+                        <button className="btn-color px-3 py-2 rounded-md"
+                            onClick={() => setText("Notice")}
+                        >
+                            Notices
+                        </button>
                     </div>
                     <div className="">
                         {text == "Logs" &&
@@ -117,7 +122,7 @@ export default function EmployeeLeave(
                 {text == "Balance" &&
                     <div className="grid grid-cols-12 gap-4">
                         <div className="col-span-12 md:col-span-3">
-                            {rulesInfo?.casualLeaveRemaining &&
+                            {rulesInfo?.casualLeaveRemaining != 0 &&
                                 <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition p-4 border-l-4 border-green-500">
                                     <div className="flex justify-between items-center mb-1">
                                         <h3 className="text-lg font-semibold text-gray-800">
@@ -162,7 +167,7 @@ export default function EmployeeLeave(
                                     </div>
                                 </div>}
 
-                            {rulesInfo?.sickLeaveRemaining &&
+                            {rulesInfo?.sickLeaveRemaining != 0 &&
                                 <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition p-4 border-l-4 mt-4 border-red-500">
                                     <div className="flex justify-between items-center mb-1">
                                         <h3 className="text-lg font-semibold text-gray-800">
@@ -247,7 +252,7 @@ export default function EmployeeLeave(
                                     <div className="w-[40%] flex justify-center">
                                         <div className="bg-yellow-50 border border-yellow-200 rounded-lg px-4 py-3 text-center shadow-sm">
                                             <h1 className="text-3xl font-bold text-yellow-700 leading-none">
-                                                {0}
+                                                {rulesInfo?.compOff || "0"}
                                             </h1>
                                             <p className="text-xs font-medium text-yellow-700 mt-1">
                                                 Leave Balance
@@ -358,6 +363,167 @@ export default function EmployeeLeave(
                         })}
                     </div>}
 
+                {text === "Notice" && (
+                    <div className="space-y-4 max-w-4xl mx-auto px-4">
+                        <div className="rounded-2xl border border-red-200 bg-red-50 p-5 shadow-sm">
+                            <div className="flex items-start gap-3">
+
+                                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-100">
+                                    📌
+                                </div>
+
+                                <div>
+                                    <h3 className="text-lg font-semibold text-red-800">
+                                        Sandwich Leave Policy
+                                    </h3>
+
+                                    <p className="mt-2 text-sm leading-6 text-red-700">
+                                        If an employee applies leave before and after a weekly off
+                                        or holiday, then the holiday/weekend between those dates
+                                        will also be counted as leave.
+                                    </p>
+
+                                    <div className="mt-4 rounded-lg border border-red-200 bg-white p-3 text-sm text-gray-700">
+                                        <span className="font-semibold">
+                                            Example:
+                                        </span>
+
+                                        <ul className="mt-2 list-disc pl-5 space-y-1">
+                                            <li>
+                                                Saturday = Leave
+                                            </li>
+
+                                            <li>
+                                                Sunday = Weekly Off
+                                            </li>
+
+                                            <li>
+                                                Monday = Leave
+                                            </li>
+                                        </ul>
+
+                                        <p className="mt-3">
+                                            In this case, Sunday will also be considered as leave.
+                                            Total leave count = <span className="font-semibold">3 days</span>.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="rounded-2xl border border-purple-200 bg-purple-50 p-5 shadow-sm">
+                            <div className="flex items-start gap-3">
+
+                                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-100">
+                                    🏥
+                                </div>
+
+                                <div>
+                                    <h3 className="text-lg font-semibold text-purple-800">
+                                        Sick Leave Monthly Policy
+                                    </h3>
+
+                                    <p className="mt-2 text-sm leading-6 text-purple-700">
+                                        Employees can apply for a maximum of
+                                        <span className="font-semibold"> 2 sick leave days per month</span>.
+                                        Additional sick leave requests may be rejected automatically
+                                        according to company policy.
+                                    </p>
+
+                                    <div className="mt-4 rounded-lg border border-purple-200 bg-white p-3 text-sm text-gray-700">
+                                        <span className="font-semibold">
+                                            Example:
+                                        </span>
+
+                                        <ul className="mt-2 list-disc pl-5 space-y-1">
+                                            <li>
+                                                Employee already used 1 Sick Leave this month
+                                            </li>
+
+                                            <li>
+                                                Applying for 2 more Sick Leaves
+                                            </li>
+                                        </ul>
+
+                                        <p className="mt-3">
+                                            Total becomes
+                                            <span className="font-semibold"> 3 Sick Leaves</span>,
+                                            so the leave request may not be allowed.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="rounded-2xl border border-green-200 bg-green-50 p-5 shadow-sm">
+                            <div className="flex items-start gap-3">
+
+                                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-100">
+                                    🔄
+                                </div>
+
+                                <div>
+                                    <h3 className="text-lg font-semibold text-green-800">
+                                        Leave Carry Forward Policy
+                                    </h3>
+
+                                    <p className="mt-2 text-sm leading-6 text-green-700">
+                                        Unused leaves may be carried forward to the next year
+                                        based on company policy and approval.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="rounded-2xl border border-blue-200 bg-blue-50 p-5 shadow-sm">
+                            <div className="flex items-start gap-3">
+
+                                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100">
+                                    💰
+                                </div>
+
+                                <div>
+                                    <h3 className="text-lg font-semibold text-blue-800">
+                                        Leave Encashment Policy
+                                    </h3>
+
+                                    <p className="mt-2 text-sm leading-6 text-blue-700">
+                                        Remaining paid leaves may be converted into salary payout
+                                        based on the employee’s basic pay and company policy.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="rounded-2xl border border-yellow-200 bg-yellow-50 p-5 shadow-sm">
+                            <div className="flex items-start gap-3">
+
+                                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-yellow-100">
+                                    📅
+                                </div>
+
+                                <div>
+                                    <h3 className="text-lg font-semibold text-yellow-800">
+                                        Monthly Leave Credit
+                                    </h3>
+
+                                    <p className="mt-2 text-sm leading-6 text-yellow-700">
+                                        Casual leaves are credited monthly according to company
+                                        rules instead of giving all yearly leaves at once.
+                                    </p>
+
+                                    <div className="mt-4 rounded-lg border border-yellow-200 bg-white p-3 text-sm text-gray-700">
+                                        Example:
+                                        <span className="font-semibold">
+                                            {" "}18 yearly leaves = 1.5 leaves credited every month.
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 <Modal open={editModal} onClose={() => setEditModal(false)}>
                     <Modal.Header title="Edit Your Leave" />
                     <Modal.Body>
@@ -420,7 +586,7 @@ export default function EmployeeLeave(
                     <Modal.Footer>
                         <button
                             onClick={() => setEditModal(false)}
-                             className="px-4 py-2 border bg-gray-100 text-black rounded-lg hover:bg-gray-200"
+                            className="px-4 py-2 border bg-gray-100 text-black rounded-lg hover:bg-gray-200"
                         >
                             Close
                         </button>

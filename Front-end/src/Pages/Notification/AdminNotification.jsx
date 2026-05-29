@@ -9,6 +9,7 @@ export default function AdminNotification(props) {
     const { user } = props;
     const navigate = useNavigate();
     const [notifications, setNotifications] = useState([]);
+    const [loading, setLoading] = useState(false);
     const [addNotifications, setAddNotifications] = useState(false);
     const [allUsers, setAllUsers] = useState([])
 
@@ -96,7 +97,7 @@ export default function AdminNotification(props) {
     };
 
     const [formData, setFormData] = useState({
-        user: "",
+        users: [],
         title: "",
         message: "",
         type: "announcement",
@@ -113,23 +114,26 @@ export default function AdminNotification(props) {
     };
 
     const sendNotification = async () => {
+        setLoading(true);
         try {
-            const res = await fetch(`${BaseUrl}notifications/admin-send`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                credentials: "include",
-                body: JSON.stringify(formData)
-            });
-            const data = await res.json();
+            if (!formData.sendToAll && formData.users.length === 0) { return toast.error("Please select users"); }
 
+            if (!formData.title || !formData.message) {
+                return toast.error("All fields are required");
+            }
+
+            const res = await fetch(`${BaseUrl}notifications/admin-send`, {
+                method: "POST", headers: { "Content-Type": "application/json" },
+                credentials: "include", body: JSON.stringify(formData)
+            });
+
+            const data = await res.json();
             if (data.success) {
                 toast.success("Notification sent successfully");
                 setAddNotifications(false);
-                getNotifications()
+                getNotifications();
                 setFormData({
-                    user: "",
+                    users: [],
                     title: "",
                     message: "",
                     type: "announcement",
@@ -138,6 +142,8 @@ export default function AdminNotification(props) {
             }
         } catch (error) {
             console.error("Send notification error", error);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -272,27 +278,59 @@ export default function AdminNotification(props) {
                 <Modal.Header title="Add Announcement Here" />
                 <Modal.Body>
                     <div className="space-y-2">
-                        <div className='flex flex-col'>
-                            <label className='ml-1 font-semibold'>User</label>
-                            <div className="flex items-center gap-2 w-full">
-                                <select
-                                    disabled={formData?.sendToAll}
-                                    name="user"
-                                    value={formData?.user}
-                                    onChange={handleChange}
-                                    className={`input w-full ${formData?.sendToAll && "cursor-not-allowed bg-gray-100"}`}
-                                >
-                                    <option>Select</option>
-                                    {allUsers.map((i, idx) => (
-                                        <option key={idx} value={i?._id}>{i?.username}</option>
-                                    ))}
-                                </select>
-                                <button onClick={() => setFormData((prev) => ({ ...prev, sendToAll: !prev.sendToAll, user: "" }))}
-                                    className={`bg-gray-700 hover:bg-gray-800 text-white px-3 py-2 rounded-md`}>
-                                    All
+                        <div className="flex flex-col mt-4">
+                            <label className="block mb-2 font-medium text-sm">
+                                Users
+                            </label>
+
+                            <div className="border rounded-lg max-h-52 overflow-y-auto p-2">
+                                {allUsers?.map((u) => (
+                                    <label key={u._id} className="flex items-center gap-2 py-1 cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            disabled={formData.sendToAll}
+                                            checked={formData.users?.includes(u._id)}
+                                            className="w-5 h-5"
+                                            onChange={(e) => {
+                                                if (e.target.checked) {
+                                                    setFormData((prev) => ({
+                                                        ...prev,
+                                                        users: [...prev.users, u._id]
+                                                    }));
+
+                                                } else {
+                                                    setFormData((prev) => ({
+                                                        ...prev,
+                                                        users: prev.users.filter((id) => id !== u._id)
+                                                    }));
+                                                }
+                                            }}
+                                        />
+                                        <span>
+                                            {u?.username}
+                                        </span>
+                                    </label>
+                                ))}
+                            </div>
+
+                            <div className="flex items-center justify-between mt-2">
+                                <p className="text-xs text-gray-500">
+                                    Leave empty to send notification to all users
+                                </p>
+
+                                <button type="button"
+                                    onClick={() => setFormData((prev) => ({
+                                        ...prev,
+                                        sendToAll: !prev.sendToAll,
+                                        users: []
+                                    }))}
+                                    className={`px-3 py-1 rounded-md text-sm text-white
+                             ${formData.sendToAll ? "bg-green-600 hover:bg-green-700" : "bg-gray-700 hover:bg-gray-800"}`}>
+                                    {formData.sendToAll ? "All Users" : "Select Users"}
                                 </button>
                             </div>
                         </div>
+
                         <div className='flex flex-col'>
                             <label className='ml-1 font-semibold'>Title</label>
                             <input
@@ -339,9 +377,9 @@ export default function AdminNotification(props) {
                         >
                             Close
                         </button>
-                        <button onClick={sendNotification}
+                        <button onClick={sendNotification} disabled={loading}
                             className="px-4 py-2 border rounded-lg bg-gray-700 hover:bg-gray-800 text-white">
-                            Add
+                            {loading ? "Sending..." : "Send"}
                         </button>
                     </div>
                 </Modal.Footer>

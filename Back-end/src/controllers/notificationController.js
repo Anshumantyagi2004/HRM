@@ -1,5 +1,7 @@
 import Notification from "../models/Notification.js";
 import { User } from '../models/User.js';
+import { notificationTemplate } from "../utils/mailTemplate.js";
+import { sendMail } from "../utils/sendMail.js";
 
 //Create
 export const createNotification = async ({
@@ -150,34 +152,47 @@ export const deleteNotification = async (req, res) => {
 //Add admin notification
 export const adminSendNotification = async (req, res) => {
   try {
-    const { user, title, message, type, sendToAll } = req.body;
+    const { users, title, message, type, sendToAll } = req.body;
     let notifications = [];
+    let selectedUsers = [];
 
+    // GET USERS
     if (sendToAll) {
-      const users = await User.find({}, "_id");
-
-      notifications = users.map((u) => ({
-        receiver: u._id,
-        title,
-        message,
-        type,
-        link: "/notification"
-      }));
+      selectedUsers = await User.find({}, "_id username officialEmail");
     } else {
-      notifications.push({
-        receiver: user,
-        title,
-        message,
-        type,
-        link: "/notification"
-      });
+      selectedUsers = await User.find({ _id: { $in: users } }, "_id username officialEmail");
     }
+
+    // CREATE NOTIFICATIONS
+    notifications = selectedUsers.map((u) => ({
+      receiver: u._id,
+      title,
+      message,
+      type,
+      link: "/notification"
+    }));
 
     await Notification.insertMany(notifications);
 
+    // SEND EMAILS
+    for (const user of selectedUsers) {
+      if (user.officialEmail) {
+        await sendMail({
+          to: user.officialEmail,
+          subject: title,
+          html: notificationTemplate({
+            username: user.username,
+            title,
+            message,
+            type
+          })
+        });
+      }
+    }
+
     res.status(200).json({
       success: true,
-      message: "Notification sent"
+      message: "Notification & emails sent successfully"
     });
 
   } catch (error) {

@@ -99,10 +99,22 @@ export default function AdminDashboard(props) {
 
     const dataset = view === "monthly" ? monthlyData["rahul"] : yearlyData["rahul"];
 
-    const labels =
-        view === "monthly"
-            ? ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "July", "Aug", "Semp", "Oct", "Nov", "Dec"]
-            : ["Basic Pay", "HRA", "Bonus", "Special Allo", "TA/DA", "Med Allo", "Variable", "EPF"];
+    const labels = view === "monthly"
+        ? ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "July", "Aug", "Semp", "Oct", "Nov", "Dec"]
+        : ["Basic Pay", "HRA", "Bonus", "Special Allo", "TA/DA", "Med Allo", "Variable", "EPF"];
+
+    const formatDateTime = (date) => {
+        if (!date) return "--";
+        return new Date(date).toLocaleString("en-IN", {
+            timeZone: "Asia/Kolkata",
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: true,
+        });
+    };
 
     return (
         <div className="w-full px-3 mb-4">
@@ -146,9 +158,8 @@ export default function AdminDashboard(props) {
                                 }
                                 const s = getStatus()
 
-                                return (
-                                    <div key={idx}
-                                        className="flex items-center justify-between bg-gray-50 hover:bg-gray-100 transition rounded-lg px-3 py-2 border">
+                                return (<div key={idx} className="flex flex-col bg-gray-50 hover:bg-gray-100 transition rounded-lg px-3 py-2 border">
+                                    <div className="flex items-center justify-between ">
                                         <Link to={`/userProfile/${i?._id}`} className="flex items-center gap-2">
                                             {i?.profileImage ? (
                                                 <img
@@ -167,10 +178,17 @@ export default function AdminDashboard(props) {
                                             </span>
                                         </Link>
 
+                                    </div>
+                                    <div className="flex items-center justify-between mt-1">
+                                        <p className="text-sm text-gray-500 pl-2">
+                                            {formatDateTime(i?.attendance?.clockInTime)}
+                                        </p>
+
                                         <button className={`h-8 w-8 rounded-full text-white text-xs font-bold flex items-center justify-center shadow ${s.color}`} title={s.title}>
                                             {s.label}
                                         </button>
-                                    </div>)
+                                    </div>
+                                </div>)
                             })}
                         </div>
                     </div>

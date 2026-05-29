@@ -61,6 +61,42 @@ export const applyLeave = async (req, res) => {
             });
         }
 
+        // ===== Sick Leave Monthly Limit =====
+        if (leaveType === "Sick Leave") {
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+
+            const firstDay = new Date(start.getFullYear(), start.getMonth(), 1);
+            const lastDay = new Date(start.getFullYear(), start.getMonth() + 1, 0, 23, 59, 59);
+
+            const existingLeaves = await Leave.find({
+                user: userId,
+                leaveType: "Sick Leave",
+                status: { $ne: "Rejected" },
+                startDate: {
+                    $gte: firstDay,
+                    $lte: lastDay,
+                },
+            });
+
+            let usedDays = 0;
+            existingLeaves.forEach((leave) => {
+                const leaveStart = new Date(leave.startDate);
+                const leaveEnd = new Date(leave.endDate);
+                const total = Math.ceil((leaveEnd - leaveStart) / (1000 * 60 * 60 * 24)) + 1;
+                usedDays += total;
+            });
+
+            const applyingDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+            const totalSickLeave = usedDays + applyingDays;
+
+            if (totalSickLeave > 2) {
+                return res.status(400).json({
+                    message: "Only 2 Sick Leaves are allowed per month",
+                });
+            }
+        }
+
         // Create leave
         const leave = await Leave.create({
             user: userId,

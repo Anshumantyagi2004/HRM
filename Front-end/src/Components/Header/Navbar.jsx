@@ -342,15 +342,13 @@ export default function Navbar() {
           </div>
         </Modal.Body>
         <Modal.Footer>
-          <button
-            onClick={() => { setIsOpen(false); setFormData() }}
-            className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+          <button onClick={() => { setIsOpen(false); setFormData() }}
+            className="px-4 py-2 bg-gray-200 text-black rounded-lg hover:bg-gray-300"
           >
             Close
           </button>
-          <button
-            onClick={handleSubmit}
-            className="px-4 py-2 ml-1 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+          <button onClick={handleSubmit}
+            className="px-4 py-2 ml-1 btn-color rounded-lg"
           >
             Add
           </button>

@@ -22,7 +22,7 @@ export default function AdminLeave(
 
     const handleLeaveAction = async (leaveId, status) => {
         if (user?.role === "Sub Admin" && Number(leaveDetails?.totalDays) > 2 && status === "Approved") {
-            toast.error("Sub Admin cannot approve leave for more than 2 days");
+            toast.error("You can approve leave requests for up to 2 days only.");
             return;
         }
         try {
@@ -102,23 +102,27 @@ export default function AdminLeave(
                             onClick={() => { setText("Balance"); fetchMyProfile(); }}>
                             Balance
                         </button>
+                        <button className="btn-color px-3 py-2 rounded-md"
+                            onClick={() => setText("Notice")}
+                        >
+                            Notices
+                        </button>
                     </div>
                     <div className="">
-                        {text == "Balance" &&
-                            <div className="flex gap-2">
-                                <select
-                                    className="input"
-                                // value={year}
-                                // onChange={(e) => setYear(Number(e.target.value))}
-                                >
-                                    {years.map((y) => (
-                                        <option key={y} value={y}>
-                                            {y}
-                                        </option>
-                                    ))}
-                                </select>
+                        <div className="flex gap-2">
+                            <select
+                                className="input"
+                            // value={year}
+                            // onChange={(e) => setYear(Number(e.target.value))}
+                            >
+                                {years.map((y) => (
+                                    <option key={y} value={y}>
+                                        {y}
+                                    </option>
+                                ))}
+                            </select>
 
-                            </div>}
+                        </div>
                     </div>
                 </div>
 
@@ -212,7 +216,7 @@ export default function AdminLeave(
                                         <td className="p-3">{emp?.userWork[0]?.department || "-"}</td>
                                         <td className="p-3">{emp?.userExtraDetail[0]?.casualLeave || "-"}</td>
                                         <td className="p-3">{emp?.userExtraDetail[0]?.casualLeaveRemaining || "-"}</td>
-                                        <td className="p-3">{emp?.userExtraDetail[0]?.compOffRemaining || "-"}</td>
+                                        <td className="p-3">{emp?.userExtraDetail[0]?.compOff || "-"}</td>
                                         <td className="p-3">{emp?.userExtraDetail[0]?.sickLeave || "-"}</td>
                                         <td className="p-3">{emp?.userExtraDetail[0]?.sickLeaveRemaining || "-"}</td>
                                         <td className="px-4 py-3 text-center">
@@ -229,6 +233,167 @@ export default function AdminLeave(
                             </tbody>
                         </table>
                     </div>}
+
+                {text === "Notice" && (
+                    <div className="space-y-4 max-w-4xl mx-auto px-4">
+                        <div className="rounded-2xl border border-red-200 bg-red-50 p-5 shadow-sm">
+                            <div className="flex items-start gap-3">
+
+                                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-100">
+                                    📌
+                                </div>
+
+                                <div>
+                                    <h3 className="text-lg font-semibold text-red-800">
+                                        Sandwich Leave Policy
+                                    </h3>
+
+                                    <p className="mt-2 text-sm leading-6 text-red-700">
+                                        If an employee applies leave before and after a weekly off
+                                        or holiday, then the holiday/weekend between those dates
+                                        will also be counted as leave.
+                                    </p>
+
+                                    <div className="mt-4 rounded-lg border border-red-200 bg-white p-3 text-sm text-gray-700">
+                                        <span className="font-semibold">
+                                            Example:
+                                        </span>
+
+                                        <ul className="mt-2 list-disc pl-5 space-y-1">
+                                            <li>
+                                                Saturday = Leave
+                                            </li>
+
+                                            <li>
+                                                Sunday = Weekly Off
+                                            </li>
+
+                                            <li>
+                                                Monday = Leave
+                                            </li>
+                                        </ul>
+
+                                        <p className="mt-3">
+                                            In this case, Sunday will also be considered as leave.
+                                            Total leave count = <span className="font-semibold">3 days</span>.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="rounded-2xl border border-purple-200 bg-purple-50 p-5 shadow-sm">
+                            <div className="flex items-start gap-3">
+
+                                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-100">
+                                    🏥
+                                </div>
+
+                                <div>
+                                    <h3 className="text-lg font-semibold text-purple-800">
+                                        Sick Leave Monthly Policy
+                                    </h3>
+
+                                    <p className="mt-2 text-sm leading-6 text-purple-700">
+                                        Employees can apply for a maximum of
+                                        <span className="font-semibold"> 2 sick leave days per month</span>.
+                                        Additional sick leave requests may be rejected automatically
+                                        according to company policy.
+                                    </p>
+
+                                    <div className="mt-4 rounded-lg border border-purple-200 bg-white p-3 text-sm text-gray-700">
+                                        <span className="font-semibold">
+                                            Example:
+                                        </span>
+
+                                        <ul className="mt-2 list-disc pl-5 space-y-1">
+                                            <li>
+                                                Employee already used 1 Sick Leave this month
+                                            </li>
+
+                                            <li>
+                                                Applying for 2 more Sick Leaves
+                                            </li>
+                                        </ul>
+
+                                        <p className="mt-3">
+                                            Total becomes
+                                            <span className="font-semibold"> 3 Sick Leaves</span>,
+                                            so the leave request may not be allowed.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="rounded-2xl border border-green-200 bg-green-50 p-5 shadow-sm">
+                            <div className="flex items-start gap-3">
+
+                                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-100">
+                                    🔄
+                                </div>
+
+                                <div>
+                                    <h3 className="text-lg font-semibold text-green-800">
+                                        Leave Carry Forward Policy
+                                    </h3>
+
+                                    <p className="mt-2 text-sm leading-6 text-green-700">
+                                        Unused leaves may be carried forward to the next year
+                                        based on company policy and approval.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="rounded-2xl border border-blue-200 bg-blue-50 p-5 shadow-sm">
+                            <div className="flex items-start gap-3">
+
+                                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100">
+                                    💰
+                                </div>
+
+                                <div>
+                                    <h3 className="text-lg font-semibold text-blue-800">
+                                        Leave Encashment Policy
+                                    </h3>
+
+                                    <p className="mt-2 text-sm leading-6 text-blue-700">
+                                        Remaining paid leaves may be converted into salary payout
+                                        based on the employee’s basic pay and company policy.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="rounded-2xl border border-yellow-200 bg-yellow-50 p-5 shadow-sm">
+                            <div className="flex items-start gap-3">
+
+                                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-yellow-100">
+                                    📅
+                                </div>
+
+                                <div>
+                                    <h3 className="text-lg font-semibold text-yellow-800">
+                                        Monthly Leave Credit
+                                    </h3>
+
+                                    <p className="mt-2 text-sm leading-6 text-yellow-700">
+                                        Casual leaves are credited monthly according to company
+                                        rules instead of giving all yearly leaves at once.
+                                    </p>
+
+                                    <div className="mt-4 rounded-lg border border-yellow-200 bg-white p-3 text-sm text-gray-700">
+                                        Example:
+                                        <span className="font-semibold">
+                                            {" "}18 yearly leaves = 1.5 leaves credited every month.
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 <Modal open={open1} onClose={() => { setOpen1(false); setLeaveDetails() }}>
                     <Modal.Header title="Employee Leave Details" />

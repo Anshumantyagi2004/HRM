@@ -114,7 +114,23 @@ export default function Rules(props) {
                     Rules
                 </h2>
                 {(user?.role == "Admin" || user?.role == "Sub Admin") &&
-                    <button className="p-2 rounded-full hover:bg-gray-100 transition" onClick={() => setEditText("Rules")}>
+                    <button className="p-2 rounded-full hover:bg-gray-100 transition"
+                        onClick={() => {
+                            setRulesForm({
+                                shiftStartTime: rulesInfo?.shiftStartTime || "",
+                                shiftOutTime: rulesInfo?.shiftOutTime || "",
+                                inTimeGrace: rulesInfo?.inTimeGrace || "",
+                                outTimeGrace: rulesInfo?.outTimeGrace || "",
+                                fullDay: rulesInfo?.fullDay || "",
+                                halfDay: rulesInfo?.halfDay || "",
+                                casualLeave: rulesInfo?.casualLeave || "",
+                                sickLeave: rulesInfo?.sickLeave || "",
+                                lossOfPay: rulesInfo?.lossOfPay || "",
+                                compOff: rulesInfo?.compOff || "",
+                            });
+
+                            setEditText("Rules");
+                        }}>
                         <Pencil size={18} />
                     </button>}
             </div>
@@ -252,17 +268,25 @@ export default function Rules(props) {
                         Causal Leave
                     </label>
                     {editText === "Rules" ? (
-                        <select className="input"
+                        // <select className="input"
+                        //     name="casualLeave"
+                        //     defaultValue={""}
+                        //     onChange={handleChangeRules}
+                        //     value={rulesForm?.casualLeave || rulesInfo?.casualLeave || ""}
+                        // >
+                        //     <option value="0">Select</option>
+                        //     {rules.map((i, idx) => (
+                        //         <option>{i?.casualLeave}</option>
+                        //     ))}
+                        // </select>
+                        <input
+                            type="number"
                             name="casualLeave"
-                            defaultValue={""}
+                            value={rulesForm?.casualLeave ?? rulesInfo?.casualLeave ?? ""}
                             onChange={handleChangeRules}
-                            value={rulesForm?.casualLeave || rulesInfo?.casualLeave || ""}
-                        >
-                            <option value="0">Select</option>
-                            {rules.map((i, idx) => (
-                                <option>{i?.casualLeave}</option>
-                            ))}
-                        </select>
+                            placeholder="Add Causal Leave"
+                            className="input w-full"
+                        />
                     ) : (
                         <p className="value">{rulesInfo?.casualLeave || "-"}</p>
                     )}
@@ -273,17 +297,25 @@ export default function Rules(props) {
                         Sick Leave
                     </label>
                     {editText === "Rules" ? (
-                        <select className="input"
+                        // <select className="input"
+                        //     name="sickLeave"
+                        //     defaultValue={""}
+                        //     onChange={handleChangeRules}
+                        //     value={rulesForm?.sickLeave || rulesInfo?.sickLeave || ""}
+                        // >
+                        //     <option value="0">Select</option>
+                        //     {rules.map((i, idx) => (
+                        //         <option>{i?.sickLeave}</option>
+                        //     ))}
+                        // </select>
+                        <input
+                            type="number"
                             name="sickLeave"
-                            defaultValue={""}
+                            value={rulesForm?.sickLeave ?? rulesInfo?.sickLeave ?? ""}
                             onChange={handleChangeRules}
-                            value={rulesForm?.sickLeave || rulesInfo?.sickLeave || ""}
-                        >
-                            <option value="0">Select</option>
-                            {rules.map((i, idx) => (
-                                <option>{i?.sickLeave}</option>
-                            ))}
-                        </select>
+                            placeholder="Add Sick Leave"
+                            className="input w-full"
+                        />
                     ) : (
                         <p className="value">{rulesInfo?.sickLeave || "-"}</p>
                     )}
@@ -314,16 +346,24 @@ export default function Rules(props) {
                         Comp Off
                     </label>
                     {editText === "Rules" ? (
-                        <select className="input"
+                        // <select className="input"
+                        //     name="compOff"
+                        //     defaultValue={""}
+                        //     onChange={handleChangeRules}
+                        //     value={rulesForm?.compOff || rulesInfo?.compOff || ""}
+                        // >
+                        //     <option>Select</option>
+                        //     <option>Yes</option>
+                        //     <option>No</option>
+                        // </select>
+                        <input
+                            type="number"
                             name="compOff"
-                            defaultValue={""}
+                            value={rulesForm?.compOff ?? rulesInfo?.compOff ?? ""}
                             onChange={handleChangeRules}
-                            value={rulesForm?.compOff || rulesInfo?.compOff || ""}
-                        >
-                            <option>Select</option>
-                            <option>Yes</option>
-                            <option>No</option>
-                        </select>
+                            placeholder="Add Comp Off"
+                            className="input w-full"
+                        />
                     ) : (
                         <p className="value">{rulesInfo?.compOff || "-"}</p>
                     )}

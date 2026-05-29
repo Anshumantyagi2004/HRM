@@ -37,25 +37,30 @@ const getISTMinutes = (date) => {
   return utcMinutes + istOffset;
 };
 
-const calculateLateAndStatus = (clockInUTC, userShift) => {
+const calculateLateAndStatus = (clockInUTC, userShift, monthlyAnomalies) => {
   const clockInMinutes = getISTMinutes(clockInUTC);
 
-  const shiftStart = convertToMinutes(userShift.shiftStartTime); // "09:30"
-  const graceMinutes = convertToMinutes(userShift.inTimeGrace); // "00:15" → 15
+  const shiftStart = convertToMinutes(
+    userShift.shiftStartTime
+  );
 
-  const graceLimit = shiftStart + graceMinutes; // 09:45
+  const graceMinutes = convertToMinutes(
+    userShift.inTimeGrace
+  );
+
+  const graceLimit = shiftStart + graceMinutes;
 
   let lateBy = 0;
   let status = "PRESENT";
 
-  // ❌ Beyond grace → ANOMALIES + lateBy starts after grace
+  // User is late
   if (clockInMinutes > graceLimit) {
-    status = "ANOMALIES";
-    lateBy = clockInMinutes - graceLimit; // 🔥 smart late count
-  } else {
-    // ✅ Within grace → PRESENT + no late
-    status = "PRESENT";
-    lateBy = 0;
+    lateBy = clockInMinutes - graceLimit;
+    if (monthlyAnomalies >= 2) {
+      status = "HALF_DAY";
+    } else {
+      status = "ANOMALIES";
+    }
   }
 
   return { lateBy, status };
@@ -125,7 +130,27 @@ export const clockIn = async (req, res) => {
     }
 
     const clockInTimeUTC = new Date();
-    const { lateBy, status } = calculateLateAndStatus(clockInTimeUTC, userShift);
+    // Current month range
+    const startOfMonth = new Date();
+    startOfMonth.setDate(1);
+    startOfMonth.setHours(0, 0, 0, 0);
+
+    const endOfMonth = new Date();
+    endOfMonth.setMonth(endOfMonth.getMonth() + 1);
+    endOfMonth.setDate(0);
+    endOfMonth.setHours(23, 59, 59, 999);
+
+    // Count anomalies this month
+    const monthlyAnomalies = await Attendance.countDocuments({
+      userId,
+      status: "ANOMALIES",
+      date: {
+        $gte: startOfMonth,
+        $lte: endOfMonth
+      }
+    });
+
+    const { lateBy, status } = calculateLateAndStatus(clockInTimeUTC, userShift, monthlyAnomalies);
 
     const attendance = await Attendance.create({
       userId,

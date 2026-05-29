@@ -60,9 +60,9 @@ export default function MyProfile() {
     const [formData, setFormData] = useState({
         username: "",
         dob: "",
-        gender: "",
-        bloodGroup: "",
-        maritalStatus: "",
+        gender: null,
+        bloodGroup: null,
+        maritalStatus: null,
         email: "",
         officialEmail: "",
         contact: "",
@@ -77,9 +77,9 @@ export default function MyProfile() {
             setFormData({
                 username: userData.username || "",
                 dob: userData.dob ? userData.dob.split("T")[0] : "",
-                gender: userData.gender || "",
-                bloodGroup: userData.bloodGroup || "",
-                maritalStatus: userData.maritalStatus || "",
+                gender: userData.gender || null,
+                bloodGroup: userData.bloodGroup || null,
+                maritalStatus: userData.maritalStatus || null,
                 email: userData.email || "",
                 officialEmail: userData.officialEmail || "",
                 contact: userData.contact || "",
@@ -124,6 +124,7 @@ export default function MyProfile() {
             const data = await res.json();
             if (!res.ok) {
                 toast.error(data?.message)
+                return;
                 // throw new Error(data.message);
             }
             toast.success(data?.message)
@@ -749,7 +750,7 @@ export default function MyProfile() {
                                 Social Media
                             </h2>
                             <button className="p-2 rounded-full hover:bg-gray-100 transition">
-                                <Pencil size={18} />    
+                                <Pencil size={18} />
                             </button>
                         </div>
 
