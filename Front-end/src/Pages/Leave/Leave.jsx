@@ -13,6 +13,7 @@ export default function Leave() {
     const { isAuthenticated, user } = useSelector((state) => state.auth);
     const role = user.role
     const [open, setOpen] = useState(false);
+    const [loading, setLoading] = useState(false);
     const [userLeave, setUserLeave] = useState([]);
     const [allLeave, setAllLeave] = useState([]);
     const [formData, setFormData] = useState({
@@ -33,6 +34,7 @@ export default function Leave() {
     const handleSubmit = async (e) => {
         if (formData?.leaveType == "" || formData?.startDate == "" || formData?.endDate == "" || formData?.reason == "") return toast.error('Enter Leave form Properly!');
         try {
+            setLoading(true)
             const res = await fetch(`${BaseUrl}applyLeave`, {
                 method: "POST",
                 credentials: "include",
@@ -52,6 +54,8 @@ export default function Leave() {
             fetchRules()
         } catch (error) {
             toast.error(error)
+        } finally {
+            setLoading(false)
         }
     };
 
@@ -217,10 +221,10 @@ export default function Leave() {
                 >
                     Close
                 </button>
-                <button onClick={handleSubmit}
+                <button disabled={loading} onClick={handleSubmit}
                     className="px-4 py-2 btn-color rounded-lg"
                 >
-                    Apply
+                    {loading ? "Applying..." : "Apply"}
                 </button>
             </Modal.Footer>
         </Modal>

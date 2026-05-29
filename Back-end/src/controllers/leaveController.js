@@ -61,6 +61,49 @@ export const applyLeave = async (req, res) => {
             });
         }
 
+        // ===== Check Remaining Leave Balance =====
+        const userLeaveBalance = await UserExtraDetail.findOne({ userId: userId, });
+
+        if (!userLeaveBalance) {
+            return res.status(404).json({
+                message: "User leave details not found",
+            });
+        }
+
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        const applyingDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+
+        // Casual Leave Check
+        if (leaveType === "Causal Leave") {
+            if (userLeaveBalance.casualLeaveRemaining <
+                applyingDays) {
+                return res.status(400).json({
+                    message:
+                        "Insufficient casual leave balance",
+                });
+            }
+        }
+
+        // Sick Leave Check
+        if (leaveType === "Sick Leave") {
+            if (userLeaveBalance.sickLeaveRemaining < applyingDays) {
+                return res.status(400).json({
+                    message:
+                        "Insufficient sick leave balance",
+                });
+            }
+        }
+
+        // Comp Off Check
+        if (leaveType === "Comp Off") {
+            if (userLeaveBalance.compOffRemaining < applyingDays) {
+                return res.status(400).json({
+                    message: "Insufficient comp off balance",
+                });
+            }
+        }
+
         // ===== Sick Leave Monthly Limit =====
         if (leaveType === "Sick Leave") {
             const start = new Date(startDate);
