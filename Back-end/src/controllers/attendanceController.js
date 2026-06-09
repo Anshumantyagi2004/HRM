@@ -66,28 +66,48 @@ const calculateLateAndStatus = (clockInUTC, userShift, monthlyAnomalies) => {
   return { lateBy, status };
 };
 
+// const calculateClockOutStatus = (clockOutUTC, workDuration, userShift) => {
+//   const clockOutMinutes = getISTMinutes(clockOutUTC);
+
+//   const shiftOut = convertToMinutes(userShift.shiftOutTime);   // "18:30"
+//   const outGrace = convertToMinutes(userShift.outTimeGrace);  // "00:15"
+//   const graceLimit = shiftOut + outGrace;                      // 18:45
+
+//   const halfDayMinutes = convertToMinutes(userShift.halfDay); // "04:30" → 270
+
+//   let status = "PRESENT";
+
+//   // 🌓 Half Day Rule
+//   if (workDuration < halfDayMinutes) {
+//     return "HALF_DAY";
+//   }
+
+//   // ❌ Early out OR late out beyond grace
+//   if (clockOutMinutes < shiftOut || clockOutMinutes > graceLimit) {
+//     return "ANOMALIES";
+//   }
+
+//   return status;
+// };
+
 const calculateClockOutStatus = (clockOutUTC, workDuration, userShift) => {
-  const clockOutMinutes = getISTMinutes(clockOutUTC);
+  const fullDayMinutes = convertToMinutes(userShift.fullDay); // 540
+  const halfDayMinutes = convertToMinutes(userShift.halfDay); // 270
+  const graceMinutes = convertToMinutes(userShift.outTimeGrace); // 15
 
-  const shiftOut = convertToMinutes(userShift.shiftOutTime);   // "18:30"
-  const outGrace = convertToMinutes(userShift.outTimeGrace);  // "00:15"
-  const graceLimit = shiftOut + outGrace;                      // 18:45
-
-  const halfDayMinutes = convertToMinutes(userShift.halfDay); // "04:30" → 270
-
-  let status = "PRESENT";
-
-  // 🌓 Half Day Rule
+  // Half Day
   if (workDuration < halfDayMinutes) {
     return "HALF_DAY";
   }
 
-  // ❌ Early out OR late out beyond grace
-  if (clockOutMinutes < shiftOut || clockOutMinutes > graceLimit) {
-    return "ANOMALIES";
+  // Full Day with grace
+  const minimumFullDay = fullDayMinutes - graceMinutes;
+
+  if (workDuration >= minimumFullDay) {
+    return "PRESENT";
   }
 
-  return status;
+  return "ANOMALIES";
 };
 
 //Clock in
