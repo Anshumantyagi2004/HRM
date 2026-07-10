@@ -20,6 +20,7 @@ export default function AdminLeave(
     const [leaveDetails, setLeaveDetails] = useState();
     const [open1, setOpen1] = useState(false);
     const [allUsers, setAllUsers] = useState([])
+    const [loadingAction, setLoadingAction] = useState(null);
 
     const handleLeaveAction = async (leaveId, status) => {
         const totalDays = calculateLeaveDays(leaveDetails);
@@ -28,6 +29,7 @@ export default function AdminLeave(
             return;
         }
         try {
+            setLoadingAction(status);
             await fetch(`${BaseUrl}leaveStatus/${leaveId}`, {
                 method: "PATCH", headers: { "Content-Type": "application/json", },
                 body: JSON.stringify({
@@ -43,6 +45,8 @@ export default function AdminLeave(
         } catch (error) {
             toast.error("Something went wrong");
             console.error(error);
+        } finally {
+            setLoadingAction(null);
         }
     };
 
@@ -501,50 +505,50 @@ export default function AdminLeave(
                             </button>
                             {leaveDetails?.status === "Pending" && (
                                 <div className="flex gap-3">
-                                    <button onClick={() => handleLeaveAction(leaveDetails._id, "Rejected")}
+                                    <button disabled={loadingAction !== null} onClick={() => handleLeaveAction(leaveDetails._id, "Rejected")}
                                         className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
                                     >
-                                        Reject
+                                        {loadingAction === "Rejected" ? "Rejecting..." : "Reject"}
                                     </button>
 
-                                    <button onClick={() => handleLeaveAction(leaveDetails._id, "Approved")}
+                                    <button disabled={loadingAction !== null} onClick={() => handleLeaveAction(leaveDetails._id, "Approved")}
                                         className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
                                     >
-                                        Approve
+                                        {loadingAction === "Approved" ? "Approving..." : "Approve"}
                                     </button>
                                 </div>
                             )}
                             {leaveDetails?.status === "Approved" && (
                                 <div className="flex gap-3">
-                                    <button
+                                    <button disabled={loadingAction !== null}
                                         onClick={() => handleLeaveAction(leaveDetails._id, "Rejected")}
                                         className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
                                     >
-                                        Reject
+                                        {loadingAction === "Rejected" ? "Rejecting..." : "Reject"}
                                     </button>
 
-                                    <button
+                                    <button disabled={loadingAction !== null}
                                         onClick={() => handleLeaveAction(leaveDetails._id, "Pending")}
                                         className="px-4 py-2 border rounded-lg text-gray-700 hover:bg-gray-100"
                                     >
-                                        Cancel
+                                        {loadingAction === "Pending" ? "Cancelling..." : "Cancel"}
                                     </button>
                                 </div>
                             )}
                             {leaveDetails?.status === "Rejected" && (
                                 <div className="flex gap-3">
-                                    <button
+                                    <button disabled={loadingAction !== null}
                                         onClick={() => handleLeaveAction(leaveDetails._id, "Approved")}
                                         className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
                                     >
-                                        Approve
+                                        {loadingAction === "Approved" ? "Approving..." : "Approve"}
                                     </button>
 
-                                    <button
+                                    <button disabled={loadingAction !== null}
                                         onClick={() => handleLeaveAction(leaveDetails._id, "Pending")}
                                         className="px-4 py-2 border rounded-lg text-gray-700 hover:bg-gray-100"
                                     >
-                                        Cancel
+                                        {loadingAction === "Pending" ? "Cancelling..." : "Cancel"}
                                     </button>
                                 </div>
                             )}
