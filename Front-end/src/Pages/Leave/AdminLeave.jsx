@@ -169,7 +169,9 @@ export default function AdminLeave(
                                         <td className="p-3">{emp?.userWork?.designation || "-"}</td>
                                         <td className="p-3">{emp?.userWork?.department || "-"}</td>
                                         <td className="p-3">{emp?.leaveType}</td>
-                                        <td className="p-3">{emp?.reason}</td>
+                                        <td title={emp?.reason} className="p-3">
+                                            {emp?.reason.toString().length > 20 ? emp?.reason.slice(0, 20) + "..." : emp?.reason}
+                                        </td>
                                         <td className="p-3">
                                             {emp.startDate.toString().split("T")[0]}
                                             {emp.startHalf !== "FULL" && (

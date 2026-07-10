@@ -10,6 +10,7 @@ import toast from "react-hot-toast";
 export default function Attendance() {
     const { user } = useSelector((state) => state.auth);
     const [open, setOpen] = useState(false)
+    const [loading, setLoading] = useState(false)
     const [text, setText] = useState("Daily")
     const [todayAttendance, setTodayAttendance] = useState()
     const [allTodayAttendance, setAllTodayAttendance] = useState([])
@@ -260,6 +261,7 @@ export default function Attendance() {
 
     const handleUpdate = async () => {
         try {
+            setLoading(true)
             const payload = {
                 id: formData._id,
                 userId: formData.userId,
@@ -276,6 +278,7 @@ export default function Attendance() {
                 headers: {
                     "Content-Type": "application/json",
                 },
+                credentials: "include",
                 body: JSON.stringify(payload),
             });
             const data = await response.json();
@@ -288,6 +291,8 @@ export default function Attendance() {
             setOpen(false);
         } catch (error) {
             toast.error("Update failed");
+        } finally {
+            setLoading(false)
         }
     };
 
@@ -758,9 +763,9 @@ export default function Attendance() {
                                 >
                                     Close
                                 </button>
-                                <button onClick={handleUpdate}
+                                <button disabled={loading} onClick={handleUpdate}
                                     className="px-4 py-2 border rounded-lg btn-color">
-                                    Edit
+                                    {loading ? "Editing..." : "Edit"}
                                 </button>
                             </div>
                         </Modal.Footer>

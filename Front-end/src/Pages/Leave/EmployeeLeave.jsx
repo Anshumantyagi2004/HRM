@@ -323,9 +323,10 @@ export default function EmployeeLeave(
                                 </div>
 
                                 <div className="text-sm text-gray-600 space-y-1">
-                                    <p>
+                                    <p title={leave?.reason}>
                                         <span className="font-medium">Reason:</span>{" "}
-                                        {leave?.reason}
+                                        {/* {leave?.reason} */}
+                                        {leave?.reason.toString().length > 40 ? leave?.reason.slice(0, 40) + "..." : leave?.reason}
                                     </p>
 
                                     <p>

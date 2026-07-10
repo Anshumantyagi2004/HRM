@@ -3,6 +3,7 @@ import { User } from '../models/User.js';
 import { UserExtraDetail } from "../models/UserExtraDetails.js";
 import Holiday from "../models/Holiday.js";
 import Leave from "../models/Leave.js";
+import { mailTransporter } from "../config/mail.js";
 
 const OFFICE_LOCATION = {
   latitude: 28.692301898136748,
@@ -993,7 +994,7 @@ export const getMonthlyAttendanceByAdmin = async (req, res) => {
 export const updateAttendanceStatus = async (req, res) => {
   try {
     const { userId, status, clockInTime, clockOutTime, id } = req.body;
-    // const { id } = req.params;
+    const actionBy = req.user.id;
     let attendance;
 
     if (id) {
@@ -1038,11 +1039,90 @@ export const updateAttendanceStatus = async (req, res) => {
       attendance.lateBy = lateBy;
       await attendance.save();
     }
+
+    const employee = await User.findById(attendance.userId);
+    const actionUser = await User.findById(actionBy);
+    const admins = await User.find({
+      role: { $in: ["Admin", "Sub Admin"] },
+      officialEmail: { $exists: true, $ne: "" },
+    });
+
+    const adminEmails = admins.map(admin => admin.officialEmail);
+
+    if (adminEmails.length) {
+      await mailTransporter.sendMail({
+        from: `"HRMS Portal" <${process.env.MAIL_USER}>`,
+        to: adminEmails.join(","),
+        subject: `Attendance Updated - ${employee.username}`,
+        html: `
+        <div style="font-family:Arial,sans-serif;padding:20px">
+            <h2 style="color:#2563eb">
+                Attendance Updated
+            </h2>
+
+            <p>An attendance record has been ${id ? "updated" : "created"}.</p>
+            <table style="border-collapse:collapse;width:100%;margin-top:20px">
+                <tr>
+                    <td style="border:1px solid #ddd;padding:8px"><b>Employee</b></td>
+                    <td style="border:1px solid #ddd;padding:8px">${employee.username}</td>
+                </tr>
+
+                <tr>
+                    <td style="border:1px solid #ddd;padding:8px"><b>Email</b></td>
+                    <td style="border:1px solid #ddd;padding:8px">${employee.officialEmail || "-"}</td>
+                </tr>
+
+                <tr>
+                    <td style="border:1px solid #ddd;padding:8px"><b>Date</b></td>
+                    <td style="border:1px solid #ddd;padding:8px">
+                        ${attendance.date.toISOString().split("T")[0]}
+                    </td>
+                </tr>
+
+                <tr>
+                    <td style="border:1px solid #ddd;padding:8px"><b>Status</b></td>
+                    <td style="border:1px solid #ddd;padding:8px">${attendance.status}</td>
+                </tr>
+
+                <tr>
+                    <td style="border:1px solid #ddd;padding:8px"><b>Clock In</b></td>
+                    <td style="border:1px solid #ddd;padding:8px">
+                        ${attendance.clockInTime ? new Date(attendance.clockInTime).toLocaleString() : "-"}
+                    </td>
+                </tr>
+
+                <tr>
+                    <td style="border:1px solid #ddd;padding:8px"><b>Clock Out</b></td>
+                    <td style="border:1px solid #ddd;padding:8px">
+                        ${attendance.clockOutTime ? new Date(attendance.clockOutTime).toLocaleString() : "-"}
+                    </td>
+                </tr>
+
+                <tr>
+                    <td style="border:1px solid #ddd;padding:8px"><b>Late By</b></td>
+                    <td style="border:1px solid #ddd;padding:8px">
+                        ${attendance.lateBy || 0} minutes
+                    </td>
+                </tr>
+
+                <tr>
+                    <td style="border:1px solid #ddd;padding:8px">
+                    <b>Updated By</b>
+                    </td>
+                    <td style="border:1px solid #ddd;padding:8px">
+                    ${actionUser?.username || "-"}
+                    </td>
+                </tr>
+            </table>
+        </div>
+        `,
+      });
+    }
+
     res.status(200).json({
       message: "Attendance saved successfully",
       data: attendance,
     });
-
   } catch (error) {
     console.error("Attendance update error:", error);
     res.status(500).json({ message: "Failed to update attendance" });

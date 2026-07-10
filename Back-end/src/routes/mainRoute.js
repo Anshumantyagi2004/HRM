@@ -73,7 +73,7 @@ router.get("/allUserAttendance/byDate", getAdminAttendanceByDate);
 router.get("/admin/attendance/month", getMonthlyAttendanceAdmin);
 router.get("/attendance/monthly", authenticateJWT, getMonthlyAttendanceUser);
 router.get("/attendance/monthly/:userId", authenticateJWT, getMonthlyAttendanceByAdmin);
-router.patch("/attendanceStatus", updateAttendanceStatus);
+router.patch("/attendanceStatus", authenticateJWT, updateAttendanceStatus);
 
 // PAYROLL
 router.patch("/userPayroll", authenticateJWT, addOrUpdatePayroll);
