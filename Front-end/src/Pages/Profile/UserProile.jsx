@@ -15,6 +15,7 @@ import Rules from "./Rules";
 import Payroll from "./Payroll";
 import Policy from "./Policy";
 import IdCard from "../../Components/IdCard/IdCard";
+import Attendance from "./Attendance";
 
 export default function MyProfile() {
     const { userId } = useParams();
@@ -532,6 +533,40 @@ export default function MyProfile() {
         }
     };
 
+    //Attendance
+    const [userAttendance, setUserAttendance] = useState([])
+    const years = [2022, 2023, 2024, 2025, 2026];
+    const currentDate = new Date();
+    const [year, setYear] = useState(currentDate.getFullYear());
+    const [month, setMonth] = useState(currentDate.getMonth());
+
+    const fetchUserMonthlyAttendance = async (year, month) => {
+        try {
+            const res = await fetch(`${BaseUrl}attendance/monthly/${userId}/?year=${year}&month=${month + 1}`,
+                {
+                    method: "GET", credentials: "include",
+                    headers: { "Content-Type": "application/json", },
+                }
+            );
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                console.log(data.message || "Failed to fetch attendance");
+            } else {
+                setUserAttendance(data.monthlyAttendance);
+            }
+
+        } catch (err) {
+            console.error(err);
+            console.log("Monthly attendance fetch failed");
+        }
+    };
+
+    useEffect(() => {
+        fetchUserMonthlyAttendance(year, month)
+    }, [year, month])
+
     return (
         <div className="w-full px-3 py-4">
             <div className="grid grid-cols-12 gap-4">
@@ -576,6 +611,7 @@ export default function MyProfile() {
                         <button onClick={() => { setText("Rules"); fetchRules() }} className="bg-[#28374c] text-white hover:bg-[#1f2937] px-2 py-1 rounded-md">Rules</button>
                         <button onClick={() => { setText("Payroll"); fetchPayroll() }} className="bg-[#28374c] text-white hover:bg-[#1f2937] px-2 py-1 rounded-md">Payroll</button>
                         <button onClick={() => { setText("Policy"); }} className="bg-[#28374c] text-white hover:bg-[#1f2937] px-2 py-1 rounded-md">Policy</button>
+                        <button onClick={() => { setText("Attendance"); fetchUserMonthlyAttendance(year, month) }} className="bg-[#28374c] text-white hover:bg-[#1f2937] px-2 py-1 rounded-md">Attendance</button>
                     </div>
 
                     {text == "PersonalInfo" &&
@@ -647,6 +683,16 @@ export default function MyProfile() {
                             userId={userId}
                             fetchPolicy={fetchPolicy}
                             userPolicies={userPolicies}
+                        />}
+
+                    {text == "Attendance" &&
+                        <Attendance
+                            user={user}
+                            userAttendance={userAttendance}
+                            year={year}
+                            setYear={setYear}
+                            month={month}
+                            setMonth={setMonth}
                         />}
                 </div>
 

@@ -13,6 +13,31 @@ const calculateDays = (startDate, endDate) => {
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
 };
 
+export const calculateLeaveDays1 = (leave) => {
+    const start = new Date(leave.startDate);
+    const end = new Date(leave.endDate);
+
+    if (start > end) return 0;
+    let days = Math.floor((end - start) / (1000 * 60 * 60 * 24)) + 1;
+
+    // Same day
+    if (start.toDateString() === end.toDateString()) {
+        if (leave.startHalf === "FULL" && leave.endHalf === "FULL") {
+            return 1;
+        }
+
+        if (leave.startHalf === leave.endHalf && leave.startHalf !== "FULL") {
+            return 0.5;
+        }
+        return 0;
+    }
+
+    // Multi-day
+    if (leave.startHalf !== "FULL") days -= 0.5;
+    if (leave.endHalf !== "FULL") days -= 0.5;
+    return days;
+};
+
 const deductLeave = (userExtra, leaveType, days, leave) => {
     if (leaveType === "Causal Leave") {
         if (userExtra.casualLeaveRemaining < days) {
@@ -41,10 +66,26 @@ const restoreLeave = (userExtra, leaveType, days) => {
     }
 };
 
+function calculateLeaveDays(startDate, endDate, startHalf, endHalf) {
+    const oneDay = 1000 * 60 * 60 * 24;
+    let days = Math.ceil((new Date(endDate) - new Date(startDate)) / oneDay) + 1;
+
+    if (days === 1) {
+        if (startHalf !== "FULL" && endHalf !== "FULL") {
+            return 0.5;
+        }
+        return 1;
+    }
+
+    if (startHalf !== "FULL") days -= 0.5;
+    if (endHalf !== "FULL") days -= 0.5;
+    return days;
+}
+
 export const applyLeave = async (req, res) => {
     try {
         const userId = req.user.id;
-        const { leaveType, startDate, endDate, reason } = req.body;
+        const { leaveType, startDate, endDate, reason, startHalf, endHalf } = req.body;
 
         if (new Date(startDate) > new Date(endDate)) {
             return res.status(400).json({
@@ -72,7 +113,7 @@ export const applyLeave = async (req, res) => {
 
         const start = new Date(startDate);
         const end = new Date(endDate);
-        const applyingDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+        const applyingDays = calculateLeaveDays(startDate, endDate, startHalf, endHalf)
 
         // Casual Leave Check
         if (leaveType === "Causal Leave") {
@@ -146,7 +187,9 @@ export const applyLeave = async (req, res) => {
             leaveType,
             startDate,
             endDate,
-            reason,
+            startHalf,
+            endHalf,
+            reason
         });
 
         // Fetch Admin & Sub Admin
@@ -154,6 +197,8 @@ export const applyLeave = async (req, res) => {
             role: { $in: ["Admin", "Sub Admin"] },
             officialEmail: { $exists: true, $ne: "" },
         });
+
+        // console.log(admins)
 
         // Extract emails
         const adminEmails = admins.map((admin) => admin.officialEmail);
@@ -374,7 +419,8 @@ export const updateLeaveStatus = async (req, res) => {
         const userExtra = await UserExtraDetail.findOne({ userId: leave.user._id });
         if (!userExtra) return res.status(404).json({ message: "User extra details not found" });
 
-        const days = calculateDays(leave.startDate, leave.endDate);
+        // const days = calculateDays(leave.startDate, leave.endDate);
+        const days = calculateLeaveDays1(leave);
         const oldStatus = leave.status;
         const leaveType = leave.leaveType;
 
@@ -413,6 +459,118 @@ export const updateLeaveStatus = async (req, res) => {
 
         await userExtra.save();
         await leave.save();
+
+        const actionUser = await User.findById(actionBy);
+
+        const admins = await User.find({
+            role: { $in: ["Admin", "Sub Admin"] },
+            officialEmail: { $exists: true, $ne: "" },
+        });
+
+        const adminEmails = admins.map(a => a.officialEmail);
+
+        if (leave.user.officialEmail) {
+            await mailTransporter.sendMail({
+                from: `"HRMS Portal" <${process.env.MAIL_USER}>`,
+                to: leave.user.officialEmail,
+                subject: `Leave ${status}`,
+                html: `
+        <div style="font-family:Arial;padding:20px">
+
+            <h2 style="color:${status === "Approved" ? "#16a34a" : status === "Rejected" ? "#dc2626" : "#2563eb"}">
+                Leave ${status}
+            </h2>
+
+            <p>Dear ${leave.user.username},</p>
+
+            <p>Your leave request has been <b>${status}</b>.</p>
+
+            <table style="border-collapse:collapse;width:100%;margin-top:20px">
+
+                <tr>
+                    <td style="border:1px solid #ddd;padding:8px"><b>Leave Type</b></td>
+                    <td style="border:1px solid #ddd;padding:8px">${leave.leaveType}</td>
+                </tr>
+
+                <tr>
+                    <td style="border:1px solid #ddd;padding:8px"><b>Start Date</b></td>
+                    <td style="border:1px solid #ddd;padding:8px">${leave.startDate.toISOString().split("T")[0]}</td>
+                </tr>
+
+                <tr>
+                    <td style="border:1px solid #ddd;padding:8px"><b>End Date</b></td>
+                    <td style="border:1px solid #ddd;padding:8px">${leave.endDate.toISOString().split("T")[0]}</td>
+                </tr>
+
+                <tr>
+                    <td style="border:1px solid #ddd;padding:8px"><b>Total Days</b></td>
+                    <td style="border:1px solid #ddd;padding:8px">${days}</td>
+                </tr>
+
+                <tr>
+                    <td style="border:1px solid #ddd;padding:8px"><b>Action By</b></td>
+                    <td style="border:1px solid #ddd;padding:8px">${actionUser?.username || "-"}</td>
+                </tr>
+
+            </table>
+
+        </div>
+        `,
+            });
+        }
+
+        if (adminEmails.length) {
+            await mailTransporter.sendMail({
+                from: `"HRMS Portal" <${process.env.MAIL_USER}>`,
+                to: adminEmails.join(","),
+                subject: `Leave ${status} - ${leave.user.username}`,
+                html: `
+        <div style="font-family:Arial;padding:20px">
+
+            <h2 style="color:${status === "Approved" ? "#16a34a" : status === "Rejected" ? "#dc2626" : "#2563eb"}">
+                Leave ${status}
+            </h2>
+
+            <p>The leave request has been updated.</p>
+
+            <table style="border-collapse:collapse;width:100%;margin-top:20px">
+
+                <tr>
+                    <td style="border:1px solid #ddd;padding:8px"><b>Employee</b></td>
+                    <td style="border:1px solid #ddd;padding:8px">${leave.user.username}</td>
+                </tr>
+
+                <tr>
+                    <td style="border:1px solid #ddd;padding:8px"><b>Email</b></td>
+                    <td style="border:1px solid #ddd;padding:8px">${leave.user.officialEmail}</td>
+                </tr>
+
+                <tr>
+                    <td style="border:1px solid #ddd;padding:8px"><b>Leave Type</b></td>
+                    <td style="border:1px solid #ddd;padding:8px">${leave.leaveType}</td>
+                </tr>
+
+                <tr>
+                    <td style="border:1px solid #ddd;padding:8px"><b>Status</b></td>
+                    <td style="border:1px solid #ddd;padding:8px">${status}</td>
+                </tr>
+
+                <tr>
+                    <td style="border:1px solid #ddd;padding:8px"><b>Total Days</b></td>
+                    <td style="border:1px solid #ddd;padding:8px">${days}</td>
+                </tr>
+
+                <tr>
+                    <td style="border:1px solid #ddd;padding:8px"><b>Action By</b></td>
+                    <td style="border:1px solid #ddd;padding:8px">${actionUser?.username || "-"}</td>
+                </tr>
+
+            </table>
+
+        </div>
+        `,
+            });
+        }
 
         res.status(200).json({
             message: `Leave ${oldStatus} → ${status} successfully`,

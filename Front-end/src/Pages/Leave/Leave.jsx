@@ -19,7 +19,9 @@ export default function Leave() {
     const [formData, setFormData] = useState({
         leaveType: "",
         startDate: "",
+        startHalf: "FULL",
         endDate: "",
+        endHalf: "FULL",
         reason: "",
     });
 
@@ -38,9 +40,7 @@ export default function Leave() {
             const res = await fetch(`${BaseUrl}applyLeave`, {
                 method: "POST",
                 credentials: "include",
-                headers: {
-                    "Content-Type": "application/json",
-                },
+                headers: { "Content-Type": "application/json", },
                 body: JSON.stringify(formData),
             });
 
@@ -108,6 +108,39 @@ export default function Leave() {
         }
     };
 
+    const calculateLeaveDays = (leave) => {
+        if (!leave?.startDate || !leave?.endDate) return 0;
+
+        const start = new Date(leave?.startDate);
+        const end = new Date(leave?.endDate);
+
+        if (start > end) return 0;
+        let days = Math.floor((end - start) / (1000 * 60 * 60 * 24)) + 1;
+
+        // Same-day leave
+        if (start.toDateString() === end.toDateString()) {
+            // Full day
+            if (leave?.startHalf === "FULL" && leave?.endHalf === "FULL") {
+                return 1;
+            }
+
+            // Half day
+            if (leave?.startHalf === leave?.endHalf && leave?.startHalf !== "FULL") {
+                return 0.5;
+            }
+
+            // Invalid combination
+            return 0;
+        }
+
+        // Multi-day leave
+        if (leave?.startHalf !== "FULL") days -= 0.5;
+        if (leave?.endHalf !== "FULL") days -= 0.5;
+        return days;
+    };
+
+    const totalLeave = calculateLeaveDays(formData);
+
     return (<>
         {(role === "Admin" || role === "Sub Admin") &&
             <AdminLeave
@@ -118,6 +151,7 @@ export default function Leave() {
                 open={open}
                 setOpen={setOpen}
                 allLeave={allLeave}
+                calculateLeaveDays={calculateLeaveDays}
             />}
 
         {role == "Employee" &&
@@ -130,6 +164,7 @@ export default function Leave() {
                 years={years}
                 open={open}
                 setOpen={setOpen}
+                calculateLeaveDays={calculateLeaveDays}
             />}
 
         <Modal open={open} onClose={() => setOpen(false)}>
@@ -169,10 +204,15 @@ export default function Leave() {
                             <label className="text-sm font-medium text-gray-700 mb-1">
                                 Select Half
                             </label>
-                            <select name="" className="input">
-                                <option>Select</option>
-                                <option value="First Half">First Half</option>
-                                <option value="Second Half">Second Half</option>
+                            <select
+                                name="startHalf"
+                                value={formData?.startHalf}
+                                onChange={handleChange}
+                                className="input"
+                            >
+                                <option value="FULL">Full Day</option>
+                                <option value="FIRST_HALF">First Half</option>
+                                <option value="SECOND_HALF">Second Half</option>
                             </select>
                         </div>
                     </div>
@@ -193,10 +233,15 @@ export default function Leave() {
                             <label className="text-sm font-medium text-gray-700 mb-1">
                                 Select Half
                             </label>
-                            <select name="" className="input">
-                                <option>Select</option>
-                                <option value="First Half">First Half</option>
-                                <option value="Second Half">Second Half</option>
+                            <select
+                                name="endHalf"
+                                value={formData?.endHalf}
+                                onChange={handleChange}
+                                className="input"
+                            >
+                                <option value="FULL">Full Day</option>
+                                <option value="FIRST_HALF">First Half</option>
+                                <option value="SECOND_HALF">Second Half</option>
                             </select>
                         </div>
                     </div>
@@ -212,6 +257,15 @@ export default function Leave() {
                             placeholder="Enter reason..."
                             className="input"
                         />
+                    </div>
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                        <div className="flex justify-between">
+                            <span className="font-medium">Total Leave</span>
+
+                            <span className="font-bold text-blue-700">
+                                {totalLeave} Day{totalLeave !== 1 ? "s" : ""}
+                            </span>
+                        </div>
                     </div>
                 </div>
             </Modal.Body>

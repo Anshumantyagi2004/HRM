@@ -13,7 +13,8 @@ export default function AdminLeave(
         open,
         setOpen,
         fetchAllLeave,
-        allLeave
+        allLeave,
+        calculateLeaveDays
     }) {
     const [text, setText] = useState("Logs");
     const [leaveDetails, setLeaveDetails] = useState();
@@ -21,7 +22,8 @@ export default function AdminLeave(
     const [allUsers, setAllUsers] = useState([])
 
     const handleLeaveAction = async (leaveId, status) => {
-        if (user?.role === "Sub Admin" && Number(leaveDetails?.totalDays) > 2 && status === "Approved") {
+        const totalDays = calculateLeaveDays(leaveDetails);
+        if (user?.role === "Sub Admin" && totalDays > 2 && status === "Approved") {
             toast.error("You can approve leave requests for up to 2 days only.");
             return;
         }
@@ -148,7 +150,7 @@ export default function AdminLeave(
                                 {allLeave?.map((emp, idx) => {
                                     const start = new Date(emp?.startDate);
                                     const end = new Date(emp?.endDate);
-                                    const totalDays = Math.floor((end - start) / (1000 * 60 * 60 * 24)) + 1;
+                                    const totalDays = calculateLeaveDays(emp);
                                     return (<tr key={idx} className="border-b hover:bg-gray-50">
                                         <td className="p-3 font-medium">
                                             <Link to={`/userProfile/${emp?.user?._id}`} className="flex items-center justify-start">
@@ -164,8 +166,27 @@ export default function AdminLeave(
                                         <td className="p-3">{emp?.userWork?.department || "-"}</td>
                                         <td className="p-3">{emp?.leaveType}</td>
                                         <td className="p-3">{emp?.reason}</td>
-                                        <td className="p-3">{emp?.startDate.toString()?.split("T")[0]}</td>
-                                        <td className="p-3">{emp?.endDate.toString()?.split("T")[0]}</td>
+                                        <td className="p-3">
+                                            {emp.startDate.toString().split("T")[0]}
+                                            {emp.startHalf !== "FULL" && (
+                                                <div className="text-xs text-indigo-600">
+                                                    {emp.startHalf === "FIRST_HALF"
+                                                        ? "First Half"
+                                                        : "Second Half"}
+                                                </div>
+                                            )}
+                                        </td>
+
+                                        <td className="p-3">
+                                            {emp.endDate.toString().split("T")[0]}
+                                            {emp.endHalf !== "FULL" && (
+                                                <div className="text-xs text-indigo-600">
+                                                    {emp.endHalf === "FIRST_HALF"
+                                                        ? "First Half"
+                                                        : "Second Half"}
+                                                </div>
+                                            )}
+                                        </td>
                                         <td className="p-3">{totalDays}</td>
                                         <td className="p-3">{emp?.status}</td>
                                         <td className="p-3 text-center">
@@ -441,10 +462,11 @@ export default function AdminLeave(
 
                                     <p>
                                         <span className="font-medium">Total Days:</span>{" "}
-                                        {Math.ceil(
+                                        {calculateLeaveDays(leaveDetails)}
+                                        {/* {Math.ceil(
                                             (new Date(leaveDetails?.endDate) - new Date(leaveDetails?.startDate)) /
                                             (1000 * 60 * 60 * 24)
-                                        ) + 1}
+                                        ) + 1} */}
                                     </p>
                                 </div>
 

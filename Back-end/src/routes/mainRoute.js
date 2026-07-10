@@ -3,7 +3,7 @@ import { authenticateJWT } from '../middleware/authMiddleware.js';
 import { sendLoginOTP, verifyLoginOTP, signup, login, logout, getUserById, getAllUsers, addNewUser, updateUserById, educationUserById, getEducationByUser, workUserById, getWorkByUser, workHistoryUserById, updateUserByAdmin, getUserByAdmin, educationUserByAdmin, getEducationByAdmin, workUserByAdmin, getWorkByAdmin, workHistoryUserByAdmin, rulesById, getRuleById, rulesByAdmin, getRuleByAdmin, addOrUpdatePayroll, getUserPayroll, addOrUpdatePayrollByAdmin, getUserPayrollByAdmin, getAllUsersPayroll, findUserPayroll, getAllUsersLeave, deleteUserById, changePassword, verifyForgotPasswordOTP, forgotPassword } from '../controllers/authController.js';
 import { applyLeave, getAllLeave, getLeaveByUser, updateLeaveStatus, updateUserLeave } from '../controllers/leaveController.js';
 import documentRoutes from "./documentRoutes.js";
-import { clockIn, clockOut, getAdminAttendanceByDate, getAttendanceByDate, getMonthlyAttendanceAdmin, getMonthlyAttendanceUser, getTodayAttendance, updateAttendanceStatus } from '../controllers/attendanceController.js';
+import { clockIn, clockOut, getAdminAttendanceByDate, getAttendanceByDate, getMonthlyAttendanceAdmin, getMonthlyAttendanceByAdmin, getMonthlyAttendanceUser, getTodayAttendance, updateAttendanceStatus } from '../controllers/attendanceController.js';
 import { addRules, getAllInfo } from '../controllers/CompanyController.js';
 import { sendPolicyOTP, verifyOtpAndSignPolicy } from '../controllers/policyOtpController.js';
 import { addHoliday, getHolidays, updateHoliday, deleteHoliday, } from "../controllers/holidayController.js";
@@ -72,6 +72,7 @@ router.post("/clock-out", authenticateJWT, clockOut);
 router.get("/allUserAttendance/byDate", getAdminAttendanceByDate);
 router.get("/admin/attendance/month", getMonthlyAttendanceAdmin);
 router.get("/attendance/monthly", authenticateJWT, getMonthlyAttendanceUser);
+router.get("/attendance/monthly/:userId", authenticateJWT, getMonthlyAttendanceByAdmin);
 router.patch("/attendanceStatus", updateAttendanceStatus);
 
 // PAYROLL

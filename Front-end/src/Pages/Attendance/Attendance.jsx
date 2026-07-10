@@ -219,8 +219,7 @@ export default function Attendance() {
 
     const fetchUserMonthlyAttendance = async (year, month) => {
         try {
-            const res = await fetch(
-                `${BaseUrl}attendance/monthly?year=${year}&month=${month + 1}`,
+            const res = await fetch(`${BaseUrl}attendance/monthly?year=${year}&month=${month + 1}`,
                 {
                     method: "GET",
                     credentials: "include",
@@ -291,6 +290,41 @@ export default function Attendance() {
             toast.error("Update failed");
         }
     };
+
+    const statusStyles = {
+        PRESENT: "bg-emerald-500",
+        ABSENT: "bg-rose-500",
+        HALF_DAY: "bg-indigo-500",
+        ANOMALIES: "bg-amber-500",
+        LEAVE: "bg-blue-500",
+        HOLIDAY: "bg-purple-500",
+        SUNDAY: "bg-orange-500",
+        NA: "bg-gray-400",
+    };
+
+    const statusLabel = (d) => {
+        switch (d?.status) {
+            case "PRESENT":
+                return "P";
+            case "ABSENT":
+                return "A";
+            case "HALF_DAY":
+                return "H";
+            case "ANOMALIES":
+                return "AR";
+            case "LEAVE":
+                return "L";
+            case "HOLIDAY":
+                return "HD";
+            case "SUNDAY":
+                return "S";
+            case "NA":
+                return "-";
+            default:
+                return "A";
+        }
+    };
+    // console.log(attendanceList, userAttendance)
 
     return (<>{user?.role == "Employee" ?
         <div className="w-full px-1 md:px-3">
@@ -419,14 +453,24 @@ export default function Attendance() {
                                             <td className="p-2 border-r">
                                                 {item.date}
                                             </td>
-                                            <td className="p-2 border-r font-semibold">
-                                                <span className={`px-2 py-1 rounded text-xs text-white
-                                            ${item.status === "PRESENT" ? "bg-emerald-500" :
-                                                        item.status === "ANOMALIES" ? "bg-yellow-500" :
-                                                            item.status === "HALF_DAY" ? "bg-indigo-500" :
-                                                                "bg-rose-500"}`}>
-                                                    {item.status}
+                                            <td className="p-2 border-r font-semibold flex items-center gap-2">
+                                                <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-semibold text-white
+                                    ${item.status === "PRESENT" ? "bg-emerald-500"
+                                                        : item.status === "ANOMALIES" ? "bg-amber-500"
+                                                            : item.status === "HALF_DAY" ? "bg-indigo-500"
+                                                                : item.status === "LEAVE" ? "bg-blue-500"
+                                                                    : item.status === "HOLIDAY" ? "bg-purple-500"
+                                                                        : item.status === "SUNDAY" ? "bg-orange-500"
+                                                                            : item.status === "NA" ? "bg-gray-400"
+                                                                                : "bg-rose-500"}`}>
+                                                    {item.status === "LEAVE" ? item.leaveType : item.status === "HOLIDAY" ? "Holiday" : item.status === "SUNDAY" ? "Sunday" : item.status}
                                                 </span>
+
+                                                {item.status === "HOLIDAY" && item.holidayTitle && (
+                                                    <div className="text-[10px] text-purple-600">
+                                                        {item.holidayTitle}
+                                                    </div>
+                                                )}
                                             </td>
                                             <td className="p-2 border-r">
                                                 {formatDateTime(item.clockInTime)}
@@ -633,19 +677,28 @@ export default function Attendance() {
                                     <tbody>
                                         {attendanceList.map((u, idx) => (
                                             <tr key={idx} className="border-b hover:bg-indigo-50">
-                                                <td className="px-4 py-2 sticky left-0 bg-white z-10 border-r font-medium whitespace-nowrap">
-                                                    {u.user.username}
+                                                <td className="sticky left-0 bg-white z-10 border-r font-medium whitespace-nowrap">
+                                                    <Link to={`/userProfile/${u?.user?._id}`} className="block px-4 py-2">
+                                                        {u.user.username}
+                                                    </Link>
                                                 </td>
 
                                                 {u.monthlyAttendance.map((d) => {
                                                     return (
                                                         <td className="px-2 py-2 text-center border-r">
                                                             <span
-                                                                title={d?.status || "ABSENT"}
-                                                                className={`h-7 w-7 rounded-full text-white text-xs font-bold
-                                                                flex items-center justify-center shadow-sm
-                                                                ${styles[d?.status || "ABSENT"] || "bg-gray-400"}`}>
-                                                                {d?.status?.[0]}
+                                                                title={
+                                                                    d?.status === "LEAVE"
+                                                                        ? `${d.leaveType} Leave`
+                                                                        : d?.status === "HOLIDAY"
+                                                                            ? d.holidayTitle
+                                                                            : d?.status || "ABSENT"
+                                                                }
+                                                                className={`h-7 w-7 rounded-full text-white text-[10px] font-bold
+      flex items-center justify-center shadow-sm
+      ${statusStyles[d?.status] || "bg-rose-500"}`}
+                                                            >
+                                                                {statusLabel(d)}
                                                             </span>
                                                         </td>
                                                     );

@@ -2,6 +2,7 @@ import { Attendance } from '../models/Attendance.js';
 import { User } from '../models/User.js';
 import { UserExtraDetail } from "../models/UserExtraDetails.js";
 import Holiday from "../models/Holiday.js";
+import Leave from "../models/Leave.js";
 
 const OFFICE_LOCATION = {
   latitude: 28.692301898136748,
@@ -447,13 +448,14 @@ export const getMonthlyAttendanceAdmin = async (req, res) => {
     const { month, year } = req.query;
 
     if (!month || !year) {
-      return res.status(400).json({ message: "Month and year are required" });
+      return res
+        .status(400)
+        .json({ message: "Month and year are required" });
     }
 
-    const m = Number(month); // 1-12
+    const m = Number(month);
     const y = Number(year);
 
-    // 🔒 Timezone-locked IST range
     const { start, end } = getISTRangeForMonth(y, m);
 
     const users = await User.find({}, "username email employeeId");
@@ -466,66 +468,144 @@ export const getMonthlyAttendanceAdmin = async (req, res) => {
       date: { $gte: start, $lte: end },
     });
 
+    const leaveRecords = await Leave.find({
+      status: "Approved",
+      $or: [
+        {
+          startDate: { $gte: start, $lte: end },
+        },
+        {
+          endDate: { $gte: start, $lte: end },
+        },
+        {
+          startDate: { $lte: start },
+          endDate: { $gte: end },
+        },
+      ],
+    });
+
+    const todayKey = toISTKey(new Date());
+
     const daysInMonth = new Date(y, m, 0).getDate();
 
     const dates = [];
+
     for (let day = 1; day <= daysInMonth; day++) {
-      const key = `${y}-${String(m).padStart(2, "0")}-${String(day).padStart(
-        2,
-        "0"
-      )}`;
-      dates.push(key);
+      dates.push(
+        `${y}-${String(m).padStart(2, "0")}-${String(day).padStart(2, "0")}`
+      );
     }
 
-    // ✅ Holiday Map
+    // --------------------------
+    // Holiday Map
+    // --------------------------
+
     const holidayMap = {};
-    holidayRecords.forEach((h) => {
-      const key = toISTKey(new Date(h.date));
-      holidayMap[key] = h;
+
+    holidayRecords.forEach((holiday) => {
+      holidayMap[toISTKey(new Date(holiday.date))] = holiday;
+    });
+
+    // --------------------------
+    // Attendance Map
+    // attendanceMap[userId][date]
+    // --------------------------
+
+    const attendanceMap = {};
+
+    attendanceRecords.forEach((attendance) => {
+      const userId = attendance.userId.toString();
+
+      if (!attendanceMap[userId]) attendanceMap[userId] = {};
+
+      attendanceMap[userId][toISTKey(new Date(attendance.date))] = attendance;
+    });
+
+    // --------------------------
+    // Leave Map
+    // leaveMap[userId][date]
+    // --------------------------
+
+    const leaveMap = {};
+
+    leaveRecords.forEach((leave) => {
+      const userId = leave.user.toString();
+
+      if (!leaveMap[userId]) leaveMap[userId] = {};
+
+      let current = new Date(toISTKey(new Date(leave.startDate)) + "T00:00:00");
+      const endDate = new Date(toISTKey(new Date(leave.endDate)) + "T00:00:00");
+
+      while (current <= endDate) {
+        leaveMap[userId][toISTKey(current)] = leave;
+        current.setDate(current.getDate() + 1);
+      }
     });
 
     const result = users.map((user) => {
-      const userAttendance = attendanceRecords.filter(
-        (a) => a.userId.toString() === user._id.toString()
-      );
-
-      const attendanceMap = {};
-
-      userAttendance.forEach((a) => {
-        const key = toISTKey(new Date(a.date));
-        attendanceMap[key] = a;
-      });
+      const userAttendance = attendanceMap[user._id.toString()] || {};
+      const userLeaves = leaveMap[user._id.toString()] || {};
 
       const monthlyAttendance = dates.map((date) => {
-        const attendance = attendanceMap[date];
-        const holiday = holidayMap[date];
+        const jsDate = new Date(date + "T00:00:00");
 
-        // ✅ Holiday priority
-        if (holiday) {
+        // Future Date
+        if (date > todayKey) {
+          return {
+            date,
+            status: "NA",
+          };
+        }
+
+        // Attendance
+        if (userAttendance[date]) {
+          return {
+            date,
+            status: userAttendance[date].status,
+          };
+        }
+
+        // Leave
+        if (userLeaves[date]) {
+          return {
+            date,
+            status: "LEAVE",
+            leaveType: userLeaves[date].leaveType,
+          };
+        }
+
+        // Holiday
+        if (holidayMap[date]) {
           return {
             date,
             status: "HOLIDAY",
-            holidayName: holiday.title || "",
+            holidayTitle: holidayMap[date].title,
+            holidayType: holidayMap[date].type,
           };
         }
 
-        if (attendance) {
+        // Sunday
+        if (jsDate.getDay() === 0) {
           return {
             date,
-            status: attendance.status,
+            status: "SUNDAY",
           };
         }
 
+        // Absent
         return {
           date,
           status: "ABSENT",
         };
       });
 
-      return { user, monthlyAttendance };
+      return {
+        user,
+        monthlyAttendance,
+      };
     });
 
-    res.status(200).json({
+    return res.status(200).json({
       month: m,
       year: y,
       range: { start, end },
@@ -533,7 +613,9 @@ export const getMonthlyAttendanceAdmin = async (req, res) => {
     });
   } catch (error) {
     console.error("Monthly Attendance Error:", error);
-    res.status(500).json({ message: "Server error" });
+    return res.status(500).json({
+      message: "Server error",
+    });
   }
 };
 
@@ -544,67 +626,366 @@ export const getMonthlyAttendanceUser = async (req, res) => {
     const { month, year } = req.query;
 
     if (!month || !year) {
-      return res.status(400).json({ message: "Month and year are required" });
+      return res.status(400).json({
+        message: "Month and year are required",
+      });
     }
 
-    const m = Number(month); // 1-12
+    const m = Number(month);
     const y = Number(year);
 
-    // 🔒 IST-locked range
+    // IST month range
     const { start, end } = getISTRangeForMonth(y, m);
 
-    const records = await Attendance.find({
+    // Today's IST date key
+    const todayKey = toISTKey(new Date());
+
+    // Attendance
+    const attendanceRecords = await Attendance.find({
       userId,
-      date: { $gte: start, $lte: end },
+      date: {
+        $gte: start,
+        $lte: end,
+      },
     }).sort({ date: 1 });
+
+    // Holidays
+    const holidays = await Holiday.find({
+      date: {
+        $gte: start,
+        $lte: end,
+      },
+    });
+
+    // Approved Leaves
+    const approvedLeaves = await Leave.find({
+      user: userId,
+      status: "Approved",
+      $or: [
+        {
+          startDate: {
+            $gte: start,
+            $lte: end,
+          },
+        },
+        {
+          endDate: {
+            $gte: start,
+            $lte: end,
+          },
+        },
+        {
+          startDate: { $lte: start },
+          endDate: { $gte: end },
+        },
+      ],
+    });
+
+    const attendanceMap = {};
+    attendanceRecords.forEach((record) => {
+      attendanceMap[toISTKey(new Date(record.date))] = record;
+    });
+
+    const holidayMap = {};
+    holidays.forEach((holiday) => {
+      holidayMap[toISTKey(new Date(holiday.date))] = holiday;
+    });
+
+    const leaveMap = {};
+
+    approvedLeaves.forEach((leave) => {
+      const startKey = toISTKey(new Date(leave.startDate));
+      const endKey = toISTKey(new Date(leave.endDate));
+
+      let current = new Date(startKey + "T00:00:00");
+      const endDate = new Date(endKey + "T00:00:00");
+
+      while (current <= endDate) {
+        const key = toISTKey(current);
+        leaveMap[key] = leave;
+        current.setDate(current.getDate() + 1);
+      }
+    });
 
     const daysInMonth = new Date(y, m, 0).getDate();
 
-    // Generate IST calendar days
-    const dates = [];
+    const monthlyAttendance = [];
+
     for (let day = 1; day <= daysInMonth; day++) {
-      const key = `${y}-${String(m).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-      dates.push(key);
-    }
+      const dateKey = `${y}-${String(m).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 
-    const attendanceMap = {};
-    records.forEach((r) => {
-      const key = toISTKey(new Date(r.date));
-      attendanceMap[key] = r;
-    });
+      const jsDate = new Date(`${dateKey}T00:00:00`);
 
-    const monthlyAttendance = dates.map((date) => {
-      const record = attendanceMap[date];
-
-      if (!record) {
-        return {
-          date,
-          status: "ABSENT",
+      // Future Date
+      if (dateKey > todayKey) {
+        monthlyAttendance.push({
+          date: dateKey,
+          status: "NA",
           clockInTime: null,
           clockOutTime: null,
           workDuration: 0,
-        };
+        });
+        continue;
       }
 
-      return {
-        date,
-        status: record.status,
-        clockInTime: record.clockInTime,
-        clockOutTime: record.clockOutTime,
-        workDuration: record.workDuration,
-      };
-    });
+      // Attendance
+      const attendance = attendanceMap[dateKey];
 
-    res.status(200).json({
+      if (attendance) {
+        monthlyAttendance.push({
+          date: dateKey,
+          status: attendance.status,
+          clockInTime: attendance.clockInTime,
+          clockOutTime: attendance.clockOutTime,
+          workDuration: attendance.workDuration,
+        });
+        continue;
+      }
+
+      // Approved Leave
+      if (leaveMap[dateKey]) {
+        monthlyAttendance.push({
+          date: dateKey,
+          status: "LEAVE",
+          leaveType: leaveMap[dateKey].leaveType,
+          clockInTime: null,
+          clockOutTime: null,
+          workDuration: 0,
+        });
+        continue;
+      }
+
+      // Holiday
+      if (holidayMap[dateKey]) {
+        monthlyAttendance.push({
+          date: dateKey,
+          status: "HOLIDAY",
+          holidayTitle: holidayMap[dateKey].title,
+          holidayType: holidayMap[dateKey].type,
+          clockInTime: null,
+          clockOutTime: null,
+          workDuration: 0,
+        });
+        continue;
+      }
+
+      // Sunday
+      if (jsDate.getDay() === 0) {
+        monthlyAttendance.push({
+          date: dateKey,
+          status: "SUNDAY",
+          clockInTime: null,
+          clockOutTime: null,
+          workDuration: 0,
+        });
+        continue;
+      }
+
+      // Absent
+      monthlyAttendance.push({
+        date: dateKey,
+        status: "ABSENT",
+        clockInTime: null,
+        clockOutTime: null,
+        workDuration: 0,
+      });
+    }
+
+    return res.status(200).json({
       month: m,
       year: y,
-      range: { start, end },
       monthlyAttendance,
     });
-
   } catch (error) {
     console.error("User Monthly Attendance Error:", error);
-    res.status(500).json({ message: "Server error" });
+    return res.status(500).json({
+      message: "Server Error",
+    });
+  }
+};
+
+//for user monthly att for admin
+export const getMonthlyAttendanceByAdmin = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { month, year } = req.query;
+
+    if (!month || !year) {
+      return res.status(400).json({
+        message: "Month and year are required",
+      });
+    }
+
+    const m = Number(month);
+    const y = Number(year);
+
+    // IST month range
+    const { start, end } = getISTRangeForMonth(y, m);
+
+    // Today's IST date key
+    const todayKey = toISTKey(new Date());
+
+    // Attendance
+    const attendanceRecords = await Attendance.find({
+      userId,
+      date: {
+        $gte: start,
+        $lte: end,
+      },
+    }).sort({ date: 1 });
+
+    // Holidays
+    const holidays = await Holiday.find({
+      date: {
+        $gte: start,
+        $lte: end,
+      },
+    });
+
+    // Approved Leaves
+    const approvedLeaves = await Leave.find({
+      user: userId,
+      status: "Approved",
+      $or: [
+        {
+          startDate: {
+            $gte: start,
+            $lte: end,
+          },
+        },
+        {
+          endDate: {
+            $gte: start,
+            $lte: end,
+          },
+        },
+        {
+          startDate: { $lte: start },
+          endDate: { $gte: end },
+        },
+      ],
+    });
+
+    const attendanceMap = {};
+    attendanceRecords.forEach((record) => {
+      attendanceMap[toISTKey(new Date(record.date))] = record;
+    });
+
+    const holidayMap = {};
+    holidays.forEach((holiday) => {
+      holidayMap[toISTKey(new Date(holiday.date))] = holiday;
+    });
+
+    const leaveMap = {};
+
+    approvedLeaves.forEach((leave) => {
+      const startKey = toISTKey(new Date(leave.startDate));
+      const endKey = toISTKey(new Date(leave.endDate));
+
+      let current = new Date(startKey + "T00:00:00");
+      const endDate = new Date(endKey + "T00:00:00");
+
+      while (current <= endDate) {
+        const key = toISTKey(current);
+        leaveMap[key] = leave;
+        current.setDate(current.getDate() + 1);
+      }
+    });
+
+    const daysInMonth = new Date(y, m, 0).getDate();
+
+    const monthlyAttendance = [];
+
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dateKey = `${y}-${String(m).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+
+      const jsDate = new Date(`${dateKey}T00:00:00`);
+
+      // Future Date
+      if (dateKey > todayKey) {
+        monthlyAttendance.push({
+          date: dateKey,
+          status: "NA",
+          clockInTime: null,
+          clockOutTime: null,
+          workDuration: 0,
+        });
+        continue;
+      }
+
+      // Attendance
+      const attendance = attendanceMap[dateKey];
+
+      if (attendance) {
+        monthlyAttendance.push({
+          date: dateKey,
+          status: attendance.status,
+          clockInTime: attendance.clockInTime,
+          clockOutTime: attendance.clockOutTime,
+          workDuration: attendance.workDuration,
+        });
+        continue;
+      }
+
+      // Approved Leave
+      if (leaveMap[dateKey]) {
+        monthlyAttendance.push({
+          date: dateKey,
+          status: "LEAVE",
+          leaveType: leaveMap[dateKey].leaveType,
+          clockInTime: null,
+          clockOutTime: null,
+          workDuration: 0,
+        });
+        continue;
+      }
+
+      // Holiday
+      if (holidayMap[dateKey]) {
+        monthlyAttendance.push({
+          date: dateKey,
+          status: "HOLIDAY",
+          holidayTitle: holidayMap[dateKey].title,
+          holidayType: holidayMap[dateKey].type,
+          clockInTime: null,
+          clockOutTime: null,
+          workDuration: 0,
+        });
+        continue;
+      }
+
+      // Sunday
+      if (jsDate.getDay() === 0) {
+        monthlyAttendance.push({
+          date: dateKey,
+          status: "SUNDAY",
+          clockInTime: null,
+          clockOutTime: null,
+          workDuration: 0,
+        });
+        continue;
+      }
+
+      // Absent
+      monthlyAttendance.push({
+        date: dateKey,
+        status: "ABSENT",
+        clockInTime: null,
+        clockOutTime: null,
+        workDuration: 0,
+      });
+    }
+
+    return res.status(200).json({
+      month: m,
+      year: y,
+      monthlyAttendance,
+    });
+  } catch (error) {
+    console.error("User Monthly Attendance Error:", error);
+    return res.status(500).json({
+      message: "Server Error",
+    });
   }
 };
 

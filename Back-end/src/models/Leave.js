@@ -23,6 +23,18 @@ const leaveSchema = new mongoose.Schema(
             required: true,
         },
 
+        startHalf: {
+            type: String,
+            enum: ["FULL", "FIRST_HALF", "SECOND_HALF"],
+            default: "FULL",
+        },
+
+        endHalf: {
+            type: String,
+            enum: ["FULL", "FIRST_HALF", "SECOND_HALF"],
+            default: "FULL",
+        },
+
         reason: {
             type: String,
             trim: true,

@@ -14,7 +14,8 @@ export default function EmployeeLeave(
         open,
         setOpen,
         fetchUserLeave,
-        userLeave
+        userLeave,
+        calculateLeaveDays
     }) {
     const [text, setText] = useState("Balance");
     const [detailModal, setDetailModal] = useState(false);
@@ -31,9 +32,7 @@ export default function EmployeeLeave(
         try {
             const res = await fetch(`${BaseUrl}editLeave/${leaveEditModal._id}`, {
                 method: "PATCH",
-                headers: {
-                    "Content-Type": "application/json",
-                },
+                headers: { "Content-Type": "application/json", },
                 body: JSON.stringify(leaveEditModal),
             });
 
@@ -70,6 +69,8 @@ export default function EmployeeLeave(
     useEffect(() => {
         fetchUserLeave()
     }, [])
+
+    const totalLeave = calculateLeaveDays(leaveEditModal);
 
     return (
         <div className="w-full px-3">
@@ -300,7 +301,7 @@ export default function EmployeeLeave(
                         {userLeave?.map((leave, idx) => {
                             const startDate = new Date(leave?.startDate);
                             const endDate = new Date(leave?.endDate);
-                            const totalDays = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
+                            const totalDays = calculateLeaveDays(leave);
                             return (<div key={idx} className={`bg-white rounded-xl shadow-md hover:shadow-lg transition p-5 border-l-4
                                     ${leave.status === "Approved" ? "border-green-500" : leave.status === "Rejected" ? "border-red-500" : "border-yellow-500"}`}>
                                 <div className="flex justify-between items-center mb-3">
@@ -326,14 +327,31 @@ export default function EmployeeLeave(
                                         <span className="font-medium">Reason:</span>{" "}
                                         {leave?.reason}
                                     </p>
+
                                     <p>
                                         <span className="font-medium">From:</span>{" "}
                                         {startDate.toISOString().split("T")[0]}
+                                        {leave.startHalf !== "FULL" && (
+                                            <span className="text-xs text-indigo-600 ml-1">
+                                                ({leave.startHalf === "FIRST_HALF"
+                                                    ? "First Half"
+                                                    : "Second Half"})
+                                            </span>
+                                        )}
                                     </p>
+
                                     <p>
                                         <span className="font-medium">To:</span>{" "}
                                         {endDate.toISOString().split("T")[0]}
+                                        {leave.endHalf !== "FULL" && (
+                                            <span className="text-xs text-indigo-600 ml-1">
+                                                ({leave.endHalf === "FIRST_HALF"
+                                                    ? "First Half"
+                                                    : "Second Half"})
+                                            </span>
+                                        )}
                                     </p>
+
                                     <p>
                                         <span className="font-medium">Total Days:</span> {totalDays}
                                     </p>
@@ -541,31 +559,68 @@ export default function EmployeeLeave(
                                     <option value="Loss of Pay">Loss of Pay</option>
                                 </select>
                             </div>
-                            <div className="flex flex-col">
-                                <label className="text-sm font-medium text-gray-700 mb-1">
-                                    Start Date
-                                </label>
-                                <input
-                                    value={leaveEditModal?.startDate?.split("T")[0] || ""}
-                                    onChange={handleChangeEdit}
-                                    name="startDate"
-                                    type="date"
-                                    className="border border-gray-300 rounded-lg px-3 py-2 text-sm
-                                    focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                />
+                            <div className="flex gap-3">
+                                <div className="flex flex-col w-full">
+                                    <label className="text-sm font-medium text-gray-700 mb-1">
+                                        Start Date
+                                    </label>
+                                    <input
+                                        value={leaveEditModal?.startDate?.split("T")[0] || ""}
+                                        onChange={handleChangeEdit}
+                                        name="startDate"
+                                        type="date"
+                                        className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                    />
+                                </div>
+
+                                <div className="flex flex-col w-full">
+                                    <label className="text-sm font-medium text-gray-700 mb-1">
+                                        Start Half
+                                    </label>
+
+                                    <select
+                                        name="startHalf"
+                                        value={leaveEditModal?.startHalf || "FULL"}
+                                        onChange={handleChangeEdit}
+                                        className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                                    >
+                                        <option value="FULL">Full Day</option>
+                                        <option value="FIRST_HALF">First Half</option>
+                                        <option value="SECOND_HALF">Second Half</option>
+                                    </select>
+                                </div>
                             </div>
-                            <div className="flex flex-col">
-                                <label className="text-sm font-medium text-gray-700 mb-1">
-                                    End Date
-                                </label>
-                                <input
-                                    value={leaveEditModal?.endDate?.split("T")[0] || ""}
-                                    onChange={handleChangeEdit}
-                                    name="endDate"
-                                    type="date"
-                                    className="border border-gray-300 rounded-lg px-3 py-2 text-sm
-                                    focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                />
+                            <div className="flex gap-3">
+                                <div className="flex flex-col w-full">
+                                    <label className="text-sm font-medium text-gray-700 mb-1">
+                                        End Date
+                                    </label>
+
+                                    <input
+                                        value={leaveEditModal?.endDate?.split("T")[0] || ""}
+                                        onChange={handleChangeEdit}
+                                        name="endDate"
+                                        type="date"
+                                        className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                    />
+                                </div>
+
+                                <div className="flex flex-col w-full">
+                                    <label className="text-sm font-medium text-gray-700 mb-1">
+                                        End Half
+                                    </label>
+
+                                    <select
+                                        name="endHalf"
+                                        value={leaveEditModal?.endHalf || "FULL"}
+                                        onChange={handleChangeEdit}
+                                        className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                                    >
+                                        <option value="FULL">Full Day</option>
+                                        <option value="FIRST_HALF">First Half</option>
+                                        <option value="SECOND_HALF">Second Half</option>
+                                    </select>
+                                </div>
                             </div>
                             <div className="flex flex-col">
                                 <label className="text-sm font-medium text-gray-700 mb-1">
@@ -580,6 +635,15 @@ export default function EmployeeLeave(
                                     className="border border-gray-300 rounded-lg px-3 py-2 text-sm resize-none
                                     focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                 />
+                            </div>
+                            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                                <div className="flex justify-between">
+                                    <span className="font-medium">Total Leave</span>
+
+                                    <span className="font-bold text-blue-700">
+                                        {totalLeave} Day{totalLeave !== 1 ? "s" : ""}
+                                    </span>
+                                </div>
                             </div>
                         </div>
                     </Modal.Body>
@@ -625,15 +689,43 @@ export default function EmployeeLeave(
                                     </p>
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-3">
-                                    <p>
-                                        <span className="font-medium">Start Date:</span>{" "}
-                                        {new Date(leaveDetailModal?.startDate)?.toISOString().split("T")[0]}
-                                    </p>
-                                    <p>
-                                        <span className="font-medium">End Date:</span>{" "}
-                                        {new Date(leaveDetailModal?.endDate)?.toISOString().split("T")[0]}
-                                    </p>
+                                <div className="grid grid-cols-2 gap-4">
+
+                                    <div>
+                                        <span className="font-medium">Start Date:</span>
+                                        <div>
+                                            {new Date(leaveDetailModal.startDate)
+                                                .toISOString()
+                                                .split("T")[0]}
+                                        </div>
+
+                                        <div className="text-xs text-indigo-600">
+                                            {leaveDetailModal.startHalf === "FULL"
+                                                ? "Full Day"
+                                                : leaveDetailModal.startHalf === "FIRST_HALF"
+                                                    ? "First Half"
+                                                    : "Second Half"}
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <span className="font-medium">End Date:</span>
+
+                                        <div>
+                                            {new Date(leaveDetailModal.endDate)
+                                                .toISOString()
+                                                .split("T")[0]}
+                                        </div>
+
+                                        <div className="text-xs text-indigo-600">
+                                            {leaveDetailModal.endHalf === "FULL"
+                                                ? "Full Day"
+                                                : leaveDetailModal.endHalf === "FIRST_HALF"
+                                                    ? "First Half"
+                                                    : "Second Half"}
+                                        </div>
+                                    </div>
+
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-3">
@@ -644,10 +736,7 @@ export default function EmployeeLeave(
 
                                     <p>
                                         <span className="font-medium">Total Days:</span>{" "}
-                                        {Math.ceil(
-                                            (new Date(leaveDetailModal?.endDate) - new Date(leaveDetailModal?.startDate)) /
-                                            (1000 * 60 * 60 * 24)
-                                        ) + 1}
+                                        {calculateLeaveDays(leaveDetailModal)}
                                     </p>
                                 </div>
 

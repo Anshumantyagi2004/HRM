@@ -380,10 +380,8 @@ export const addNewUser = async (req, res) => {
       outTimeGrace: companyInfo.outTimeGrace,
       fullDay: companyInfo.fullDay,
       halfDay: companyInfo.halfDay,
-
       casualLeave: monthlyCasualLeave,
       casualLeaveRemaining: monthlyCasualLeave,
-
       sickLeave: companyInfo.sickLeave,
       sickLeaveRemaining: companyInfo.sickLeave,
       lastLeaveCreditMonth: currentMonth,
