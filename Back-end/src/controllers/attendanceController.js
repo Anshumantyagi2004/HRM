@@ -993,7 +993,7 @@ export const getMonthlyAttendanceByAdmin = async (req, res) => {
 //edit Status
 export const updateAttendanceStatus = async (req, res) => {
   try {
-    const { userId, status, clockInTime, clockOutTime, id } = req.body;
+    const { userId, status, clockInTime, clockOutTime, id,notes } = req.body;
     const actionBy = req.user.id;
     let attendance;
 
@@ -1111,6 +1111,14 @@ export const updateAttendanceStatus = async (req, res) => {
                     </td>
                     <td style="border:1px solid #ddd;padding:8px">
                     ${actionUser?.username || "-"}
+                    </td>
+                </tr>
+                 <tr>
+                    <td style="border:1px solid #ddd;padding:8px">
+                    <b>Notes</b>
+                    </td>
+                    <td style="border:1px solid #ddd;padding:8px">
+                    ${notes || "-"}
                     </td>
                 </tr>
             </table>
