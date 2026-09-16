@@ -8,770 +8,912 @@ import Modal from "../../Components/Modal/Modal";
 import toast from "react-hot-toast";
 
 export default function Attendance() {
-    const { user } = useSelector((state) => state.auth);
-    const [open, setOpen] = useState(false)
-    const [loading, setLoading] = useState(false)
-    const [text, setText] = useState("Daily")
-    const [todayAttendance, setTodayAttendance] = useState()
-    const [allTodayAttendance, setAllTodayAttendance] = useState([])
-    const [userAttendance, setUserAttendance] = useState([])
-    const [date, setdate] = useState(new Date().toISOString().split('T')[0]);
+  const { user } = useSelector((state) => state.auth);
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [text, setText] = useState("Daily");
+  const [todayAttendance, setTodayAttendance] = useState();
+  const [allTodayAttendance, setAllTodayAttendance] = useState([]);
+  const [userAttendance, setUserAttendance] = useState([]);
+  const [date, setdate] = useState(new Date().toISOString().split("T")[0]);
 
-    const months = [
-        { name: "January", id: 0 },
-        { name: "February", id: 1 },
-        { name: "March", id: 2 },
-        { name: "April", id: 3 },
-        { name: "May", id: 4 },
-        { name: "June", id: 5 },
-        { name: "July", id: 6 },
-        { name: "August", id: 7 },
-        { name: "September", id: 8 },
-        { name: "October", id: 9 },
-        { name: "November", id: 10 },
-        { name: "December", id: 11 },
-    ];
-    const years = [2022, 2023, 2024, 2025, 2026];
+  const months = [
+    { name: "January", id: 0 },
+    { name: "February", id: 1 },
+    { name: "March", id: 2 },
+    { name: "April", id: 3 },
+    { name: "May", id: 4 },
+    { name: "June", id: 5 },
+    { name: "July", id: 6 },
+    { name: "August", id: 7 },
+    { name: "September", id: 8 },
+    { name: "October", id: 9 },
+    { name: "November", id: 10 },
+    { name: "December", id: 11 },
+  ];
+  const years = [2022, 2023, 2024, 2025, 2026];
 
-    const currentDate = new Date();
-    const [year, setYear] = useState(currentDate.getFullYear());
-    const [month, setMonth] = useState(currentDate.getMonth());
+  const currentDate = new Date();
+  const [year, setYear] = useState(currentDate.getFullYear());
+  const [month, setMonth] = useState(currentDate.getMonth());
 
-    const fetchAttendanceByDate = async (getDate = date) => {
-        try {
-            const res = await fetch(`${BaseUrl}attendanceByDate/${user?._id}?date=${getDate}`);
-            const data = await res.json();
+  const fetchAttendanceByDate = async (getDate = date) => {
+    try {
+      const res = await fetch(
+        `${BaseUrl}attendanceByDate/${user?._id}?date=${getDate}`,
+      );
+      const data = await res.json();
 
-            if (res.ok && data.attendance) {
-                setTodayAttendance(data.attendance);
-            } else {
-                setTodayAttendance();
-            }
+      if (res.ok && data.attendance) {
+        setTodayAttendance(data.attendance);
+      } else {
+        setTodayAttendance();
+      }
+    } catch (error) {
+      console.info("Failed to fetch attendance");
+    }
+  };
 
-        } catch (error) {
-            console.info("Failed to fetch attendance");
-        }
-    };
+  useEffect(() => {
+    if (user?.role == "Employee") {
+      fetchAttendanceByDate();
+    } else {
+      fetchAdminAllAttendance();
+    }
+  }, [date]);
 
-    useEffect(() => {
-        if (user?.role == "Employee") {
-            fetchAttendanceByDate();
-        } else {
-            fetchAdminAllAttendance()
-        }
-    }, [date])
+  useEffect(() => {
+    if (user?.role == "Employee") {
+      fetchUserMonthlyAttendance(year, month);
+    } else {
+      fetchMonthlyAttendance(year, month);
+    }
+  }, [year, month]);
 
-    useEffect(() => {
-        if (user?.role == "Employee") {
-            fetchUserMonthlyAttendance(year, month)
-        } else {
-            fetchMonthlyAttendance(year, month)
-        }
-    }, [year, month])
-
-    const formatDateTime = (date) => {
-        if (!date) return "--";
-        return new Date(date).toLocaleString("en-IN", {
-            timeZone: "Asia/Kolkata",
-            day: "2-digit",
-            month: "short",
-            year: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
-            hour12: true,
-        });
-    };
-
-    const formatDate = (date) => {
-        if (!date) return "--";
-        return new Date(date).toLocaleDateString("en-IN", {
-            timeZone: "Asia/Kolkata",
-            day: "2-digit",
-            month: "short",
-            year: "numeric",
-        });
-    };
-
-    const formatWorkDuration = (minutes) => {
-        if (!minutes) return "--";
-        const h = Math.floor(minutes / 60);
-        const m = minutes % 60;
-        return `${h}h ${m}m`;
-    };
-
-    const formatLateBy = (minutes) => {
-        if (!minutes || minutes <= 0) return "--";
-        const h = Math.floor(minutes / 60);
-        const m = minutes % 60;
-        return h > 0 ? `${h}h ${m}m` : `${m}m`;
-    };
-
-    const OFFICE_LOCATION = {
-        latitude: 28.692301898136748,
-        longitude: 77.1483210938225,
-        radius: 100, // meters
-    };
-
-    const getDistanceInMeters = (lat1, lon1, lat2, lon2) => {
-        const R = 6371e3;
-        const toRad = (v) => (v * Math.PI) / 180;
-
-        const dLat = toRad(lat2 - lat1);
-        const dLon = toRad(lon2 - lon1);
-
-        const a =
-            Math.sin(dLat / 2) ** 2 +
-            Math.cos(toRad(lat1)) *
-            Math.cos(toRad(lat2)) *
-            Math.sin(dLon / 2) ** 2;
-
-        return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    };
-
-    const formatLocation = (loc) => {
-        if (!loc) return "--";
-
-        const distance = getDistanceInMeters(
-            loc.latitude,
-            loc.longitude,
-            OFFICE_LOCATION.latitude,
-            OFFICE_LOCATION.longitude
-        );
-
-        if (distance <= OFFICE_LOCATION.radius) {
-            return "Registered Office";
-        }
-
-        return `${loc.latitude.toFixed(4)}, ${loc.longitude.toFixed(4)}`;
-    };
-
-    const fetchAdminAllAttendance = async (getDate = date) => {
-        try {
-            const res = await fetch(`${BaseUrl}allUserAttendance/byDate?date=${getDate}`,
-                {
-                    method: "GET",
-                    headers: { "Content-Type": "application/json", },
-                }
-            );
-            const data = await res.json();
-            if (!res.ok) {
-                toast.error(data.message || "Failed to fetch attendance");
-            } else {
-                // console.log(data);
-                setAllTodayAttendance(data.data);
-            }
-
-        } catch (error) {
-            console.info("Admin attendance error:", error);
-            toast.error(error.message);
-        }
-    };
-
-    const [attendanceList, setAttendanceList] = useState([]);
-    const fetchMonthlyAttendance = async (year, month) => {
-        try {
-            const res = await fetch(`${BaseUrl}admin/attendance/month?year=${year}&month=${month + 1}`,
-                {
-                    method: "GET",
-                    headers: { "Content-Type": "application/json", },
-                }
-            );
-            const data = await res.json();
-
-            if (!res.ok) {
-                toast.error(data.message || "Failed to fetch attendance");
-            } else {
-                console.log(data);
-                setAttendanceList(data.users);
-            }
-
-        } catch (error) {
-            toast.error("Fetch Monthly Attendance Error:", error);
-        }
-    };
-
-    const getMonthDays = (year, month) => {
-        const daysInMonth = new Date(year, month + 1, 0).getDate();
-
-        return Array.from({ length: daysInMonth }, (_, i) => {
-            const date = new Date(year, month, i + 1);
-
-            // IST-safe date key (NO toISOString)
-            const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
-
-            return {
-                day: i + 1,
-                label: date.toLocaleDateString("en-IN", {
-                    weekday: "short",
-                }),
-                key,
-            };
-        });
-    };
-
-    const monthDays = getMonthDays(year, month);
-    const styles = {
-        PRESENT: "bg-emerald-500",
-        ABSENT: "bg-rose-500",
-        ANOMALIES: "bg-amber-500",
-        HALF_DAY: "bg-blue-500",
-        WORK_FROM_HOME: "bg-indigo-500",
-    };
-
-    const fetchUserMonthlyAttendance = async (year, month) => {
-        try {
-            const res = await fetch(`${BaseUrl}attendance/monthly?year=${year}&month=${month + 1}`,
-                {
-                    method: "GET",
-                    credentials: "include",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                }
-            );
-
-            const data = await res.json();
-
-            if (!res.ok) {
-                console.log(data.message || "Failed to fetch attendance");
-            } else {
-                setUserAttendance(data.monthlyAttendance);
-            }
-
-        } catch (err) {
-            console.error(err);
-            console.log("Monthly attendance fetch failed");
-        }
-    };
-
-    const [formData, setFormData] = useState({
-        status: "",
-        clockInTime: "",
-        clockOutTime: "",
-        lateBy: 0,
+  const formatDateTime = (date) => {
+    if (!date) return "--";
+    return new Date(date).toLocaleString("en-IN", {
+      timeZone: "Asia/Kolkata",
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
     });
+  };
 
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: value,
-        }));
-    };
+  const formatDate = (date) => {
+    if (!date) return "--";
+    return new Date(date).toLocaleDateString("en-IN", {
+      timeZone: "Asia/Kolkata",
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  };
 
-    const handleUpdate = async () => {
-        try {
-            setLoading(true)
-            const payload = {
-                id: formData._id,
-                userId: formData.userId,
-                status: formData.status,
-                clockInTime: formData.clockInTime
-                    ? new Date(`${date}T${formData.clockInTime}`).toISOString()
-                    : null,
-                clockOutTime: formData.clockOutTime
-                    ? new Date(`${date}T${formData.clockOutTime}`).toISOString()
-                    : null,
-            };
-            const response = await fetch(`${BaseUrl}attendanceStatus`, {
-                method: "PATCH",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                credentials: "include",
-                body: JSON.stringify(payload),
-            });
-            const data = await response.json();
-            if (!response.ok) {
-                throw new Error(data.message);
-            }
+  const formatWorkDuration = (minutes) => {
+    if (!minutes) return "--";
+    const h = Math.floor(minutes / 60);
+    const m = minutes % 60;
+    return `${h}h ${m}m`;
+  };
 
-            toast.success("Attendance updated");
-            fetchAdminAllAttendance();
-            setOpen(false);
-        } catch (error) {
-            toast.error("Update failed");
-        } finally {
-            setLoading(false)
-        }
-    };
+  const formatLateBy = (minutes) => {
+    if (!minutes || minutes <= 0) return "--";
+    const h = Math.floor(minutes / 60);
+    const m = minutes % 60;
+    return h > 0 ? `${h}h ${m}m` : `${m}m`;
+  };
 
-    const statusStyles = {
-        PRESENT: "bg-emerald-500",
-        ABSENT: "bg-rose-500",
-        HALF_DAY: "bg-indigo-500",
-        ANOMALIES: "bg-amber-500",
-        LEAVE: "bg-blue-500",
-        HOLIDAY: "bg-purple-500",
-        SUNDAY: "bg-orange-500",
-        NA: "bg-gray-400",
-    };
+  const OFFICE_LOCATION = {
+    latitude: 28.692301898136748,
+    longitude: 77.1483210938225,
+    radius: 100, // meters
+  };
 
-    const statusLabel = (d) => {
-        switch (d?.status) {
-            case "PRESENT":
-                return "P";
-            case "ABSENT":
-                return "A";
-            case "HALF_DAY":
-                return "H";
-            case "ANOMALIES":
-                return "AR";
-            case "LEAVE":
-                return "L";
-            case "HOLIDAY":
-                return "HD";
-            case "SUNDAY":
-                return "S";
-            case "NA":
-                return "-";
-            default:
-                return "A";
-        }
-    };
-    // console.log(attendanceList, userAttendance)
+  const getDistanceInMeters = (lat1, lon1, lat2, lon2) => {
+    const R = 6371e3;
+    const toRad = (v) => (v * Math.PI) / 180;
 
-    return (<>{user?.role == "Employee" ?
+    const dLat = toRad(lat2 - lat1);
+    const dLon = toRad(lon2 - lon1);
+
+    const a =
+      Math.sin(dLat / 2) ** 2 +
+      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+
+    return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  };
+
+  const formatLocation = (loc) => {
+    if (!loc) return "--";
+
+    const distance = getDistanceInMeters(
+      loc.latitude,
+      loc.longitude,
+      OFFICE_LOCATION.latitude,
+      OFFICE_LOCATION.longitude,
+    );
+
+    if (distance <= OFFICE_LOCATION.radius) {
+      return "Registered Office";
+    }
+
+    return `${loc.latitude.toFixed(4)}, ${loc.longitude.toFixed(4)}`;
+  };
+
+  const fetchAdminAllAttendance = async (getDate = date) => {
+    try {
+      const res = await fetch(
+        `${BaseUrl}allUserAttendance/byDate?date=${getDate}`,
+        {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+        },
+      );
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data.message || "Failed to fetch attendance");
+      } else {
+        // console.log(data);
+        setAllTodayAttendance(data.data);
+      }
+    } catch (error) {
+      console.info("Admin attendance error:", error);
+      toast.error(error.message);
+    }
+  };
+
+  const [attendanceList, setAttendanceList] = useState([]);
+  const fetchMonthlyAttendance = async (year, month) => {
+    try {
+      const res = await fetch(
+        `${BaseUrl}admin/attendance/month?year=${year}&month=${month + 1}`,
+        {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+        },
+      );
+      const data = await res.json();
+
+      if (!res.ok) {
+        toast.error(data.message || "Failed to fetch attendance");
+      } else {
+        console.log(data);
+        setAttendanceList(data.users);
+      }
+    } catch (error) {
+      toast.error("Fetch Monthly Attendance Error:", error);
+    }
+  };
+
+  const getMonthDays = (year, month) => {
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+    return Array.from({ length: daysInMonth }, (_, i) => {
+      const date = new Date(year, month, i + 1);
+
+      // IST-safe date key (NO toISOString)
+      const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+
+      return {
+        day: i + 1,
+        label: date.toLocaleDateString("en-IN", {
+          weekday: "short",
+        }),
+        key,
+      };
+    });
+  };
+
+  const monthDays = getMonthDays(year, month);
+  const styles = {
+    PRESENT: "bg-emerald-500",
+    ABSENT: "bg-rose-500",
+    ANOMALIES: "bg-amber-500",
+    HALF_DAY: "bg-blue-500",
+    WORK_FROM_HOME: "bg-indigo-500",
+  };
+
+  const fetchUserMonthlyAttendance = async (year, month) => {
+    try {
+      const res = await fetch(
+        `${BaseUrl}attendance/monthly?year=${year}&month=${month + 1}`,
+        {
+          method: "GET",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        },
+      );
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        console.log(data.message || "Failed to fetch attendance");
+      } else {
+        setUserAttendance(data.monthlyAttendance);
+      }
+    } catch (err) {
+      console.error(err);
+      console.log("Monthly attendance fetch failed");
+    }
+  };
+
+  const [formData, setFormData] = useState({
+    status: "",
+    clockInTime: "",
+    clockOutTime: "",
+    lateBy: 0,
+    notes:""
+  });
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleUpdate = async () => {
+    try {
+      setLoading(true);
+      const payload = {
+        id: formData._id,
+        userId: formData.userId,
+        status: formData.status,
+        clockInTime: formData.clockInTime
+          ? new Date(`${date}T${formData.clockInTime}`).toISOString()
+          : null,
+        clockOutTime: formData.clockOutTime
+          ? new Date(`${date}T${formData.clockOutTime}`).toISOString()
+          : null,
+        notes:formData.notes
+      };
+      const response = await fetch(`${BaseUrl}attendanceStatus`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify(payload),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message);
+      }
+
+      toast.success("Attendance updated");
+      fetchAdminAllAttendance();
+      setOpen(false);
+    } catch (error) {
+      toast.error("Update failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const statusStyles = {
+    PRESENT: "bg-emerald-500",
+    ABSENT: "bg-rose-500",
+    HALF_DAY: "bg-indigo-500",
+    ANOMALIES: "bg-amber-500",
+    LEAVE: "bg-blue-500",
+    HOLIDAY: "bg-purple-500",
+    SUNDAY: "bg-orange-500",
+    NA: "bg-gray-400",
+  };
+
+  const statusLabel = (d) => {
+    switch (d?.status) {
+      case "PRESENT":
+        return "P";
+      case "ABSENT":
+        return "A";
+      case "HALF_DAY":
+        return "H";
+      case "ANOMALIES":
+        return "AR";
+      case "LEAVE":
+        return "L";
+      case "HOLIDAY":
+        return "HD";
+      case "SUNDAY":
+        return "S";
+      case "NA":
+        return "-";
+      default:
+        return "A";
+    }
+  };
+  // console.log(attendanceList, userAttendance)
+
+  return (
+    <>
+      {user?.role == "Employee" ? (
         <div className="w-full px-1 md:px-3">
-            <div className="bg-white shadow-md rounded-xl hover:shadow-lg transition md:p-5 p-2">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-                    <h2 className="text-lg font-semibold text-gray-800">Attendance log</h2>
-                    <div className="relative w-full sm:w-64">
-                        <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-orange-600" />
-                        <input
-                            type="text"
-                            placeholder="Search employees..."
-                            className="w-full pl-10 pr-4 py-2 text-sm border rounded-lg border-orange-300
+          <div className="bg-white shadow-md rounded-xl hover:shadow-lg transition md:p-5 p-2">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+              <h2 className="text-lg font-semibold text-gray-800">
+                Attendance log
+              </h2>
+              <div className="relative w-full sm:w-64">
+                <Search
+                  size={18}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-orange-600"
+                />
+                <input
+                  type="text"
+                  placeholder="Search employees..."
+                  className="w-full pl-10 pr-4 py-2 text-sm border rounded-lg border-orange-300
               focus:outline-none focus:ring-1 focus:ring-orange-500"
-                        />
-                    </div>
-                </div>
-
-                <div className="flex flex-col">
-                    <div className="flex items-center gap-2 justify-between">
-                        <div className="flex items-center gap-2">
-                            <button className="btn-color py-2 px-2 rounded-md"
-                                onClick={() => setText("Daily")}>
-                                Daily Log
-                            </button>
-                            <button className="btn-color py-2 px-2 rounded-md"
-                                onClick={() => { setText("Monthly"), fetchUserMonthlyAttendance(year, month) }}>
-                                Monthly Log
-                            </button>
-                        </div>
-                        <div>
-                            {text == "Daily" ?
-                                <input type="date"
-                                    value={date}
-                                    onChange={(e) => setdate(e.target.value)}
-                                    className="input" />
-                                :
-                                <div className="flex gap-2">
-                                    <select
-                                        className="input"
-                                        value={year}
-                                        onChange={(e) => setYear(Number(e.target.value))}
-                                    >
-                                        {years.map((y) => (
-                                            <option key={y} value={y}>
-                                                {y}
-                                            </option>
-                                        ))}
-                                    </select>
-
-                                    <select
-                                        className="input"
-                                        value={month}
-                                        onChange={(e) => setMonth(Number(e.target.value))}
-                                    >
-                                        {months.map((m) => (
-                                            <option key={m.id} value={m.id}>
-                                                {m.name}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>}
-                        </div>
-                    </div>
-                    {text == "Daily" && (<>
-                        <div className="mt-4 border rounded-lg overflow-x-auto">
-                            <table className="w-full text-sm">
-                                <thead>
-                                    <tr className="bg-gray-800 text-white">
-                                        <th className="px-4 py-3 text-left">S No</th>
-                                        <th className="px-4 py-3 text-left">ClockIn Time</th>
-                                        <th className="px-4 py-3 text-left">ClockOut Time</th>
-                                        <th className="px-4 py-3 text-left">Status</th>
-                                        <th className="px-4 py-3 text-left">Date</th>
-                                        <th className="px-4 py-3 text-left">Late by</th>
-                                        <th className="px-4 py-3 text-left">Location</th>
-                                        <th className="px-4 py-3 text-left">Work Duration</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr className="border-t">
-                                        <td className="px-4 py-3">{todayAttendance ? "1" : "--"}</td>
-                                        <td className="px-4 py-3">
-                                            {formatDateTime(todayAttendance?.clockInTime)}
-                                        </td>
-                                        <td className="px-4 py-3">
-                                            {formatDateTime(todayAttendance?.clockOutTime)}
-                                        </td>
-                                        <td className="px-4 py-3 font-semibold">
-                                            {todayAttendance?.status || "--"}
-                                        </td>
-                                        <td className="px-4 py-3">
-                                            {formatDate(todayAttendance?.clockInTime)}
-                                        </td>
-                                        <td className="px-4 py-3 text-red-600">
-                                            {formatLateBy(todayAttendance?.lateBy)}
-                                        </td>
-                                        <td className="px-4 py-3">
-                                            {formatLocation(todayAttendance?.userLocation)}
-                                        </td>
-                                        <td className="px-4 py-3 text-green-600">
-                                            {formatWorkDuration(todayAttendance?.workDuration)}
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </>)}
-
-                    {text == "Monthly" && (
-                        <div className="mt-4 overflow-auto h-80">
-                            <table className="w-full text-sm">
-                                <thead>
-                                    <tr className="bg-gray-800 text-white text-left sticky top-0">
-                                        <th className="px-4 py-3 border-r border-indigo-400">Date</th>
-                                        <th className="px-4 py-3 border-r border-indigo-400">Status</th>
-                                        <th className="px-4 py-3 border-r border-indigo-400">In Time</th>
-                                        <th className="px-4 py-3 border-r border-indigo-400">Out Time</th>
-                                        <th className="px-4 py-3 border-r border-indigo-400">Work Duration</th>
-                                        <th className="px-4 py-3 text-center border-r border-indigo-400">Action</th>
-                                    </tr>
-                                </thead>
-
-                                <tbody>
-                                    {userAttendance.map((item, i) => (
-                                        <tr key={i} className="border-b hover:bg-gray-50">
-                                            <td className="p-2 border-r">
-                                                {item.date}
-                                            </td>
-                                            <td className="p-2 border-r font-semibold flex items-center gap-2">
-                                                <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-semibold text-white
-                                    ${item.status === "PRESENT" ? "bg-emerald-500"
-                                                        : item.status === "ANOMALIES" ? "bg-amber-500"
-                                                            : item.status === "HALF_DAY" ? "bg-indigo-500"
-                                                                : item.status === "LEAVE" ? "bg-blue-500"
-                                                                    : item.status === "HOLIDAY" ? "bg-purple-500"
-                                                                        : item.status === "SUNDAY" ? "bg-orange-500"
-                                                                            : item.status === "NA" ? "bg-gray-400"
-                                                                                : "bg-rose-500"}`}>
-                                                    {item.status === "LEAVE" ? item.leaveType : item.status === "HOLIDAY" ? "Holiday" : item.status === "SUNDAY" ? "Sunday" : item.status}
-                                                </span>
-
-                                                {item.status === "HOLIDAY" && item.holidayTitle && (
-                                                    <div className="text-[10px] text-purple-600">
-                                                        {item.holidayTitle}
-                                                    </div>
-                                                )}
-                                            </td>
-                                            <td className="p-2 border-r">
-                                                {formatDateTime(item.clockInTime)}
-                                            </td>
-                                            <td className="p-2 border-r">
-                                                {formatDateTime(item.clockOutTime)}
-                                            </td>
-                                            <td className="p-2 border-r">
-                                                {formatWorkDuration(item.workDuration)}
-                                            </td>
-                                            <td className="p-2 text-center">
-                                                <button
-                                                    //   onClick={() => handleOpen(emp)}
-                                                    className="inline-flex items-center justify-center w-9 h-9 rounded-full 
-                                                         bg-indigo-50 text-gray-800 hover:bg-indigo-100 transition">
-                                                    <Eye size={18} />
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>)}
-                </div>
+                />
+              </div>
             </div>
-        </div>
-        :
-        <div className="w-full px-1 md:px-3">
-            <div className="bg-white shadow-md rounded-xl hover:shadow-lg transition md:p-5 p-2">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-                    <h2 className="text-lg font-semibold text-gray-800">Attendance log</h2>
-                    <div className="relative w-full sm:w-64">
-                        <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-orange-600" />
-                        <input
-                            type="text"
-                            placeholder="Search employees..."
-                            className="w-full pl-10 pr-4 py-2 text-sm border rounded-lg border-orange-300
-              focus:outline-none focus:ring-1 focus:ring-orange-500"
-                        />
-                    </div>
+
+            <div className="flex flex-col">
+              <div className="flex items-center gap-2 justify-between">
+                <div className="flex items-center gap-2">
+                  <button
+                    className="btn-color py-2 px-2 rounded-md"
+                    onClick={() => setText("Daily")}
+                  >
+                    Daily Log
+                  </button>
+                  <button
+                    className="btn-color py-2 px-2 rounded-md"
+                    onClick={() => {
+                      (setText("Monthly"),
+                        fetchUserMonthlyAttendance(year, month));
+                    }}
+                  >
+                    Monthly Log
+                  </button>
                 </div>
+                <div>
+                  {text == "Daily" ? (
+                    <input
+                      type="date"
+                      value={date}
+                      onChange={(e) => setdate(e.target.value)}
+                      className="input"
+                    />
+                  ) : (
+                    <div className="flex gap-2">
+                      <select
+                        className="input"
+                        value={year}
+                        onChange={(e) => setYear(Number(e.target.value))}
+                      >
+                        {years.map((y) => (
+                          <option key={y} value={y}>
+                            {y}
+                          </option>
+                        ))}
+                      </select>
 
-                <div className="flex flex-col">
-                    <div className="flex items-center gap-2 justify-between">
-                        <div className="flex items-center gap-2">
-                            <button className="btn-color py-2 px-2 rounded-md"
-                                onClick={() => setText("Daily")}>
-                                Daily Log
-                            </button>
-                            <button className="btn-color py-2 px-2 rounded-md"
-                                onClick={() => { setText("Monthly"); fetchMonthlyAttendance(year, month) }}>
-                                Monthly Log
-                            </button>
-                        </div>
-                        <div>
-                            {text == "Daily" ?
-                                <input
-                                    type="date"
-                                    className="input"
-                                    value={date}
-                                    onChange={(e) => setdate(e.target.value)}
-                                />
-                                :
-                                <div className="flex gap-2">
-                                    <select
-                                        className="input"
-                                        value={year}
-                                        onChange={(e) => setYear(Number(e.target.value))}
-                                    >
-                                        {years.map((y) => (
-                                            <option key={y} value={y}>
-                                                {y}
-                                            </option>
-                                        ))}
-                                    </select>
-
-                                    <select
-                                        className="input"
-                                        value={month}
-                                        onChange={(e) => setMonth(Number(e.target.value))}
-                                    >
-                                        {months.map((m) => (
-                                            <option key={m.id} value={m.id}>
-                                                {m.name}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>}
-                        </div>
+                      <select
+                        className="input"
+                        value={month}
+                        onChange={(e) => setMonth(Number(e.target.value))}
+                      >
+                        {months.map((m) => (
+                          <option key={m.id} value={m.id}>
+                            {m.name}
+                          </option>
+                        ))}
+                      </select>
                     </div>
-                    {text == "Daily" && (
-                        <div className="mt-4 overflow-x-auto border rounded-lg">
-                            <table className="w-full text-sm">
-                                <thead>
-                                    <tr className="bg-gray-800 text-white text-left">
-                                        <th className="px-4 py-3" style={{ width: "200px" }}>Emp Name</th>
-                                        <th className="px-4 py-3">Status</th>
-                                        <th className="px-4 py-3">In Time</th>
-                                        <th className="px-4 py-3">Late by</th>
-                                        <th className="px-4 py-3">Out Time</th>
-                                        <th className="px-4 py-3">Work Duration</th>
-                                        <th className="px-4 py-3">Location</th>
-                                        {/* <th className="px-4 py-3">Designation</th> */}
-                                        <th className="px-4 py-3">Action</th>
-                                    </tr>
-                                </thead>
+                  )}
+                </div>
+              </div>
+              {text == "Daily" && (
+                <>
+                  <div className="mt-4 border rounded-lg overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="bg-gray-800 text-white">
+                          <th className="px-4 py-3 text-left">S No</th>
+                          <th className="px-4 py-3 text-left">ClockIn Time</th>
+                          <th className="px-4 py-3 text-left">ClockOut Time</th>
+                          <th className="px-4 py-3 text-left">Status</th>
+                          <th className="px-4 py-3 text-left">Date</th>
+                          <th className="px-4 py-3 text-left">Late by</th>
+                          <th className="px-4 py-3 text-left">Location</th>
+                          <th className="px-4 py-3 text-left">Work Duration</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr className="border-t">
+                          <td className="px-4 py-3">
+                            {todayAttendance ? "1" : "--"}
+                          </td>
+                          <td className="px-4 py-3">
+                            {formatDateTime(todayAttendance?.clockInTime)}
+                          </td>
+                          <td className="px-4 py-3">
+                            {formatDateTime(todayAttendance?.clockOutTime)}
+                          </td>
+                          <td className="px-4 py-3 font-semibold">
+                            {todayAttendance?.status || "--"}
+                          </td>
+                          <td className="px-4 py-3">
+                            {formatDate(todayAttendance?.clockInTime)}
+                          </td>
+                          <td className="px-4 py-3 text-red-600">
+                            {formatLateBy(todayAttendance?.lateBy)}
+                          </td>
+                          <td className="px-4 py-3">
+                            {formatLocation(todayAttendance?.userLocation)}
+                          </td>
+                          <td className="px-4 py-3 text-green-600">
+                            {formatWorkDuration(todayAttendance?.workDuration)}
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </>
+              )}
 
-                                <tbody>
-                                    {allTodayAttendance.map((i, idx) => (
-                                        <tr className="border-b hover:bg-gray-50">
-                                            <td className="px-4 py-3 font-semibold text-md">
-                                                <Link to={`/userProfile/${i?._id}`} className="flex items-center justify-start">
-                                                    {i?.profileImage ?
-                                                        <img src={i?.profileImage} alt={i?.username.slice(0, 1).toUpperCase()} className="w-8 h-8 rounded-full mr-2" />
-                                                        : <div className="w-8 h-8 rounded-full bg-orange-500 text-white flex items-center justify-center mr-2">
-                                                            {i?.username.slice(0, 1).toUpperCase()}
-                                                        </div>}
-                                                    {i?.username}
-                                                </Link>
-                                            </td>
-                                            <td className="px-4 py-3">
-                                                <button title={!i?.attendance ? "Absent" : i?.attendance?.status === "PRESENT" ? "Present"
-                                                    : i?.attendance?.status === "ANOMALIES" ? "Anomalies (Late Arrive/Early Leave)"
-                                                        : i?.attendance?.status === "HALF_DAY" ? "Half Day" : "Absent"}
-                                                    className={`h-8 w-8 rounded-full text-white text-sm font-bold flex items-center justify-center shadow-md
-                                                        ${!i?.attendance ? "bg-rose-500 hover:bg-rose-600"
-                                                            : i?.attendance?.status === "PRESENT" ? "bg-emerald-500 hover:bg-emerald-600"
-                                                                : i?.attendance?.status === "ANOMALIES" ? "bg-yellow-400 hover:bg-yellow-500"
-                                                                    : i?.attendance?.status === "HALF_DAY" ? "bg-blue-500 hover:bg-blue-600"
-                                                                        : "bg-rose-500 hover:bg-rose-600"}`}>
-                                                    {!i?.attendance
-                                                        ? "A" : i?.attendance?.status === "PRESENT"
-                                                            ? "P" : i?.attendance?.status === "ANOMALIES"
-                                                                ? "AN" : i?.attendance?.status === "HALF_DAY"
-                                                                    ? "HD" : "A"}
-                                                </button>
-                                            </td>
-                                            <td className="px-4 py-3">{formatDateTime(i?.attendance?.clockInTime)}</td>
-                                            <td className="px-4 py-3 text-red-600">{formatLateBy(i?.attendance?.lateBy)}</td>
-                                            <td className="px-4 py-3">{formatDateTime(i?.attendance?.clockOutTime)}</td>
-                                            <td className="px-4 py-3 text-green-600">{formatWorkDuration(i?.attendance?.workDuration)}</td>
-                                            <td className="px-4 py-3">{formatLocation(i?.attendance?.userLocation)}</td>
-                                            {/* <td className="px-4 py-3">{i?.designation || "-"}</td> */}
-                                            <td className="px-4 py-3">
-                                                <button onClick={() => {
-                                                    setOpen(true);
-                                                    setFormData({
-                                                        _id: i?.attendance?._id,
-                                                        userId: i?._id,
-                                                        status: i?.attendance?.status || "PRESENT",
-                                                        clockInTime: i?.attendance?.clockInTime
-                                                            ? new Date(i.attendance.clockInTime).toLocaleTimeString("en-GB", {
-                                                                timeZone: "Asia/Kolkata",
-                                                                hour: "2-digit",
-                                                                minute: "2-digit",
-                                                                hour12: false,
-                                                            })
-                                                            : "",
-                                                        clockOutTime: i?.attendance?.clockOutTime
-                                                            ? new Date(i.attendance.clockOutTime).toLocaleTimeString("en-GB", {
-                                                                timeZone: "Asia/Kolkata",
-                                                                hour: "2-digit",
-                                                                minute: "2-digit",
-                                                                hour12: false,
-                                                            })
-                                                            : "",
-                                                    });
-                                                }}
-                                                    className="inline-flex items-center justify-center w-9 h-9 rounded-full 
-                                                         bg-indigo-50 text-gray-800 hover:bg-indigo-100 transition">
-                                                    <Edit size={18} />
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>)}
+              {text == "Monthly" && (
+                <div className="mt-4 overflow-auto h-80">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="bg-gray-800 text-white text-left sticky top-0">
+                        <th className="px-4 py-3 border-r border-indigo-400">
+                          Date
+                        </th>
+                        <th className="px-4 py-3 border-r border-indigo-400">
+                          Status
+                        </th>
+                        <th className="px-4 py-3 border-r border-indigo-400">
+                          In Time
+                        </th>
+                        <th className="px-4 py-3 border-r border-indigo-400">
+                          Out Time
+                        </th>
+                        <th className="px-4 py-3 border-r border-indigo-400">
+                          Work Duration
+                        </th>
+                        <th className="px-4 py-3 text-center border-r border-indigo-400">
+                          Action
+                        </th>
+                      </tr>
+                    </thead>
 
-                    {text == "Monthly" && (
-                        <div className="mt-4">
-                            <div className="w-full overflow-x-auto border rounded-lg">
-                                <table className="min-w-max text-sm border-collapse w-full">
-                                    <thead>
-                                        <tr className="bg-gray-800 text-white">
-                                            {/* Sticky Employee Column */}
-                                            <th className="px-4 py-3 text-left sticky left-0 z-20 bg-gray-800 border-r border-gray-600">
-                                                Emp Name
-                                            </th>
+                    <tbody>
+                      {userAttendance.map((item, i) => (
+                        <tr key={i} className="border-b hover:bg-gray-50">
+                          <td className="p-2 border-r">{item.date}</td>
+                          <td className="p-2 border-r font-semibold flex items-center gap-2">
+                            <span
+                              className={`inline-flex items-center px-2 py-1 rounded text-xs font-semibold text-white
+                                    ${
+                                      item.status === "PRESENT"
+                                        ? "bg-emerald-500"
+                                        : item.status === "ANOMALIES"
+                                          ? "bg-amber-500"
+                                          : item.status === "HALF_DAY"
+                                            ? "bg-indigo-500"
+                                            : item.status === "LEAVE"
+                                              ? "bg-blue-500"
+                                              : item.status === "HOLIDAY"
+                                                ? "bg-purple-500"
+                                                : item.status === "SUNDAY"
+                                                  ? "bg-orange-500"
+                                                  : item.status === "NA"
+                                                    ? "bg-gray-400"
+                                                    : "bg-rose-500"
+                                    }`}
+                            >
+                              {item.status === "LEAVE"
+                                ? item.leaveType
+                                : item.status === "HOLIDAY"
+                                  ? "Holiday"
+                                  : item.status === "SUNDAY"
+                                    ? "Sunday"
+                                    : item.status}
+                            </span>
 
-                                            {/* Month Days */}
-                                            {monthDays.map((d) => (
-                                                <th
-                                                    key={d.key}
-                                                    className="px-3 py-2 text-center border-r border-gray-600"
-                                                >
-                                                    <div className="text-xs">{d.day}</div>
-                                                    <div className="text-[10px] opacity-80">{d.label}</div>
-                                                </th>
-                                            ))}
-                                        </tr>
-                                    </thead>
+                            {item.status === "HOLIDAY" && item.holidayTitle && (
+                              <div className="text-[10px] text-purple-600">
+                                {item.holidayTitle}
+                              </div>
+                            )}
+                          </td>
+                          <td className="p-2 border-r">
+                            {formatDateTime(item.clockInTime)}
+                          </td>
+                          <td className="p-2 border-r">
+                            {formatDateTime(item.clockOutTime)}
+                          </td>
+                          <td className="p-2 border-r">
+                            {formatWorkDuration(item.workDuration)}
+                          </td>
+                          <td className="p-2 text-center">
+                            <button
+                              //   onClick={() => handleOpen(emp)}
+                              className="inline-flex items-center justify-center w-9 h-9 rounded-full 
+                                                         bg-indigo-50 text-gray-800 hover:bg-indigo-100 transition"
+                            >
+                              <Eye size={18} />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="w-full px-1 md:px-3">
+          <div className="bg-white shadow-md rounded-xl hover:shadow-lg transition md:p-5 p-2">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+              <h2 className="text-lg font-semibold text-gray-800">
+                Attendance log
+              </h2>
+              <div className="relative w-full sm:w-64">
+                <Search
+                  size={18}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-orange-600"
+                />
+                <input
+                  type="text"
+                  placeholder="Search employees..."
+                  className="w-full pl-10 pr-4 py-2 text-sm border rounded-lg border-orange-300
+              focus:outline-none focus:ring-1 focus:ring-orange-500"
+                />
+              </div>
+            </div>
 
-                                    <tbody>
-                                        {attendanceList.map((u, idx) => (
-                                            <tr key={idx} className="border-b hover:bg-indigo-50">
-                                                <td className="sticky left-0 bg-white z-10 border-r font-medium whitespace-nowrap">
-                                                    <Link to={`/userProfile/${u?.user?._id}`} className="block px-4 py-2">
-                                                        {u.user.username}
-                                                    </Link>
-                                                </td>
+            <div className="flex flex-col">
+              <div className="flex items-center gap-2 justify-between">
+                <div className="flex items-center gap-2">
+                  <button
+                    className="btn-color py-2 px-2 rounded-md"
+                    onClick={() => setText("Daily")}
+                  >
+                    Daily Log
+                  </button>
+                  <button
+                    className="btn-color py-2 px-2 rounded-md"
+                    onClick={() => {
+                      setText("Monthly");
+                      fetchMonthlyAttendance(year, month);
+                    }}
+                  >
+                    Monthly Log
+                  </button>
+                </div>
+                <div>
+                  {text == "Daily" ? (
+                    <input
+                      type="date"
+                      className="input"
+                      value={date}
+                      onChange={(e) => setdate(e.target.value)}
+                    />
+                  ) : (
+                    <div className="flex gap-2">
+                      <select
+                        className="input"
+                        value={year}
+                        onChange={(e) => setYear(Number(e.target.value))}
+                      >
+                        {years.map((y) => (
+                          <option key={y} value={y}>
+                            {y}
+                          </option>
+                        ))}
+                      </select>
 
-                                                {u.monthlyAttendance.map((d) => {
-                                                    return (
-                                                        <td className="px-2 py-2 text-center border-r">
-                                                            <span
-                                                                title={
-                                                                    d?.status === "LEAVE"
-                                                                        ? `${d.leaveType} Leave`
-                                                                        : d?.status === "HOLIDAY"
-                                                                            ? d.holidayTitle
-                                                                            : d?.status || "ABSENT"
-                                                                }
-                                                                className={`h-7 w-7 rounded-full text-white text-[10px] font-bold
+                      <select
+                        className="input"
+                        value={month}
+                        onChange={(e) => setMonth(Number(e.target.value))}
+                      >
+                        {months.map((m) => (
+                          <option key={m.id} value={m.id}>
+                            {m.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+                </div>
+              </div>
+              {text == "Daily" && (
+                <div className="mt-4 overflow-x-auto border rounded-lg">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="bg-gray-800 text-white text-left">
+                        <th className="px-4 py-3" style={{ width: "200px" }}>
+                          Emp Name
+                        </th>
+                        <th className="px-4 py-3">Status</th>
+                        <th className="px-4 py-3">In Time</th>
+                        <th className="px-4 py-3">Late by</th>
+                        <th className="px-4 py-3">Out Time</th>
+                        <th className="px-4 py-3">Work Duration</th>
+                        <th className="px-4 py-3">Location</th>
+                        {/* <th className="px-4 py-3">Designation</th> */}
+                        <th className="px-4 py-3">Action</th>
+                      </tr>
+                    </thead>
+
+                    <tbody>
+                      {allTodayAttendance.map((i, idx) => (
+                        <tr className="border-b hover:bg-gray-50">
+                          <td className="px-4 py-3 font-semibold text-md">
+                            <Link
+                              to={`/userProfile/${i?._id}`}
+                              className="flex items-center justify-start"
+                            >
+                              {i?.profileImage ? (
+                                <img
+                                  src={i?.profileImage}
+                                  alt={i?.username.slice(0, 1).toUpperCase()}
+                                  className="w-8 h-8 rounded-full mr-2"
+                                />
+                              ) : (
+                                <div className="w-8 h-8 rounded-full bg-orange-500 text-white flex items-center justify-center mr-2">
+                                  {i?.username.slice(0, 1).toUpperCase()}
+                                </div>
+                              )}
+                              {i?.username}
+                            </Link>
+                          </td>
+                          <td className="px-4 py-3">
+                            <button
+                              title={
+                                !i?.attendance
+                                  ? "Absent"
+                                  : i?.attendance?.status === "PRESENT"
+                                    ? "Present"
+                                    : i?.attendance?.status === "ANOMALIES"
+                                      ? "Anomalies (Late Arrive/Early Leave)"
+                                      : i?.attendance?.status === "HALF_DAY"
+                                        ? "Half Day"
+                                        : "Absent"
+                              }
+                              className={`h-8 w-8 rounded-full text-white text-sm font-bold flex items-center justify-center shadow-md
+                                                        ${
+                                                          !i?.attendance
+                                                            ? "bg-rose-500 hover:bg-rose-600"
+                                                            : i?.attendance
+                                                                  ?.status ===
+                                                                "PRESENT"
+                                                              ? "bg-emerald-500 hover:bg-emerald-600"
+                                                              : i?.attendance
+                                                                    ?.status ===
+                                                                  "ANOMALIES"
+                                                                ? "bg-yellow-400 hover:bg-yellow-500"
+                                                                : i?.attendance
+                                                                      ?.status ===
+                                                                    "HALF_DAY"
+                                                                  ? "bg-blue-500 hover:bg-blue-600"
+                                                                  : "bg-rose-500 hover:bg-rose-600"
+                                                        }`}
+                            >
+                              {!i?.attendance
+                                ? "A"
+                                : i?.attendance?.status === "PRESENT"
+                                  ? "P"
+                                  : i?.attendance?.status === "ANOMALIES"
+                                    ? "AN"
+                                    : i?.attendance?.status === "HALF_DAY"
+                                      ? "HD"
+                                      : "A"}
+                            </button>
+                          </td>
+                          <td className="px-4 py-3">
+                            {formatDateTime(i?.attendance?.clockInTime)}
+                          </td>
+                          <td className="px-4 py-3 text-red-600">
+                            {formatLateBy(i?.attendance?.lateBy)}
+                          </td>
+                          <td className="px-4 py-3">
+                            {formatDateTime(i?.attendance?.clockOutTime)}
+                          </td>
+                          <td className="px-4 py-3 text-green-600">
+                            {formatWorkDuration(i?.attendance?.workDuration)}
+                          </td>
+                          <td className="px-4 py-3">
+                            {formatLocation(i?.attendance?.userLocation)}
+                          </td>
+                          {/* <td className="px-4 py-3">{i?.designation || "-"}</td> */}
+                          <td className="px-4 py-3">
+                            <button
+                              onClick={() => {
+                                setOpen(true);
+                                setFormData({
+                                  _id: i?.attendance?._id,
+                                  userId: i?._id,
+                                  status: i?.attendance?.status || "PRESENT",
+                                  clockInTime: i?.attendance?.clockInTime
+                                    ? new Date(
+                                        i.attendance.clockInTime,
+                                      ).toLocaleTimeString("en-GB", {
+                                        timeZone: "Asia/Kolkata",
+                                        hour: "2-digit",
+                                        minute: "2-digit",
+                                        hour12: false,
+                                      })
+                                    : "",
+                                  clockOutTime: i?.attendance?.clockOutTime
+                                    ? new Date(
+                                        i.attendance.clockOutTime,
+                                      ).toLocaleTimeString("en-GB", {
+                                        timeZone: "Asia/Kolkata",
+                                        hour: "2-digit",
+                                        minute: "2-digit",
+                                        hour12: false,
+                                      })
+                                    : "",
+                                });
+                              }}
+                              className="inline-flex items-center justify-center w-9 h-9 rounded-full 
+                                                         bg-indigo-50 text-gray-800 hover:bg-indigo-100 transition"
+                            >
+                              <Edit size={18} />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {text == "Monthly" && (
+                <div className="mt-4">
+                  <div className="w-full overflow-x-auto border rounded-lg">
+                    <table className="min-w-max text-sm border-collapse w-full">
+                      <thead>
+                        <tr className="bg-gray-800 text-white">
+                          {/* Sticky Employee Column */}
+                          <th className="px-4 py-3 text-left sticky left-0 z-20 bg-gray-800 border-r border-gray-600">
+                            Emp Name
+                          </th>
+
+                          {/* Month Days */}
+                          {monthDays.map((d) => (
+                            <th
+                              key={d.key}
+                              className="px-3 py-2 text-center border-r border-gray-600"
+                            >
+                              <div className="text-xs">{d.day}</div>
+                              <div className="text-[10px] opacity-80">
+                                {d.label}
+                              </div>
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+
+                      <tbody>
+                        {attendanceList.map((u, idx) => (
+                          <tr key={idx} className="border-b hover:bg-indigo-50">
+                            <td className="sticky left-0 bg-white z-10 border-r font-medium whitespace-nowrap">
+                              <Link
+                                to={`/userProfile/${u?.user?._id}`}
+                                className="block px-4 py-2"
+                              >
+                                {u.user.username}
+                              </Link>
+                            </td>
+
+                            {u.monthlyAttendance.map((d) => {
+                              return (
+                                <td className="px-2 py-2 text-center border-r">
+                                  <span
+                                    title={
+                                      d?.status === "LEAVE"
+                                        ? `${d.leaveType} Leave`
+                                        : d?.status === "HOLIDAY"
+                                          ? d.holidayTitle
+                                          : d?.status || "ABSENT"
+                                    }
+                                    className={`h-7 w-7 rounded-full text-white text-[10px] font-bold
       flex items-center justify-center shadow-sm
       ${statusStyles[d?.status] || "bg-rose-500"}`}
-                                                            >
-                                                                {statusLabel(d)}
-                                                            </span>
-                                                        </td>
-                                                    );
-                                                })}
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>)}
-
-                    <Modal open={open} onClose={() => { setOpen(false); }}>
-                        <Modal.Header title="Edit Attendance" />
-                        <Modal.Body>
-                            <div className="space-y-2">
-                                <div className='flex flex-col'>
-                                    <label className='ml-1 font-semibold'>Status</label>
-                                    <select
-                                        name="status"
-                                        value={formData?.status}
-                                        onChange={handleChange}
-                                        className={`input w-full`}
-                                    >
-                                        <option>PRESENT</option>
-                                        <option>ABSENT</option>
-                                        <option>ANOMALIES</option>
-                                        <option>HALF_DAY</option>
-                                    </select>
-                                </div>
-                                <div className='flex flex-col'>
-                                    <label className='ml-1 font-semibold'>In Time</label>
-                                    <input
-                                        type="time"
-                                        name="clockInTime"
-                                        value={formData?.clockInTime}
-                                        onChange={handleChange}
-                                        className='input'
-                                    />
-                                </div>
-                                <div className='flex flex-col'>
-                                    <label className='ml-1 font-semibold'>Out Time</label>
-                                    <input
-                                        type="time"
-                                        name="clockOutTime"
-                                        value={formData?.clockOutTime}
-                                        onChange={handleChange}
-                                        className='input'
-                                    />
-                                </div>
-                            </div>
-                        </Modal.Body>
-                        <Modal.Footer>
-                            <div className="flex justify-end w-full gap-2">
-                                <button
-                                    onClick={() => { setOpen(false); }}
-                                    className="px-4 py-2 border rounded-lg text-gray-700 hover:bg-gray-100"
-                                >
-                                    Close
-                                </button>
-                                <button disabled={loading} onClick={handleUpdate}
-                                    className="px-4 py-2 border rounded-lg btn-color">
-                                    {loading ? "Editing..." : "Edit"}
-                                </button>
-                            </div>
-                        </Modal.Footer>
-                    </Modal>
+                                  >
+                                    {statusLabel(d)}
+                                  </span>
+                                </td>
+                              );
+                            })}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
+              )}
+
+              <Modal
+                open={open}
+                onClose={() => {
+                  setOpen(false);
+                }}
+              >
+                <Modal.Header title="Edit Attendance" />
+                <Modal.Body>
+                  <div className="space-y-2">
+                    <div className="flex flex-col">
+                      <label className="ml-1 font-semibold">Status</label>
+                      <select
+                        name="status"
+                        value={formData?.status}
+                        onChange={handleChange}
+                        className={`input w-full`}
+                      >
+                        <option>PRESENT</option>
+                        <option>ABSENT</option>
+                        <option>ANOMALIES</option>
+                        <option>HALF_DAY</option>
+                      </select>
+                    </div>
+                    <div className="flex flex-col">
+                      <label className="ml-1 font-semibold">In Time</label>
+                      <input
+                        type="time"
+                        name="clockInTime"
+                        value={formData?.clockInTime}
+                        onChange={handleChange}
+                        className="input"
+                      />
+                    </div>
+                    <div className="flex flex-col">
+                      <label className="ml-1 font-semibold">Out Time</label>
+                      <input
+                        type="time"
+                        name="clockOutTime"
+                        value={formData?.clockOutTime}
+                        onChange={handleChange}
+                        className="input"
+                      />
+                    </div>
+                    <div className="w-full mx-auto">
+                    <div className="flex flex-col  justify-center items-start gap-1">
+                      <label className="ml-1 font-semibold">Notes</label>
+                      <textarea className="input w-full " value={formData.notes} onChange={handleChange} name="notes" id=""></textarea>
+                    </div>
+                    </div>
+                  </div>
+                </Modal.Body>
+                <Modal.Footer>
+                  <div className="flex justify-end w-full gap-2">
+                    <button
+                      onClick={() => {
+                        setOpen(false);
+                      }}
+                      className="px-4 py-2 border rounded-lg text-gray-700 hover:bg-gray-100"
+                    >
+                      Close
+                    </button>
+                    <button
+                      disabled={loading}
+                      onClick={handleUpdate}
+                      className="px-4 py-2 border rounded-lg btn-color"
+                    >
+                      {loading ? "Editing..." : "Edit"}
+                    </button>
+                  </div>
+                </Modal.Footer>
+              </Modal>
             </div>
-        </div>}
-    </>);
+          </div>
+        </div>
+      )}
+    </>
+  );
 }
