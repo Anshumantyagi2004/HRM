@@ -9,6 +9,7 @@ import { initSocket } from "./src/socket/socket.js";
 import cookieParser from "cookie-parser";
 import { connectRedis } from "./src/config/redis.js";
 import "./src/cron/leaveCron.js";
+import "./src/cron/absenceEmailCron.js";
 dotenv.config();
 
 const app = express();
